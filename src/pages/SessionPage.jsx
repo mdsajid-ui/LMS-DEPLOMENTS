@@ -22,15 +22,21 @@ import {
   Bookmark,
   Sparkles,
   Eye,
-  CheckCircle2
+  CheckCircle2,
+  Play,
+  Link2,
+  ExternalLink
 } from 'lucide-react';
 import { excelSessions, studentProfile } from '../data/mockData';
+import { generateAndDownloadExcel } from '../utils/excelHelper';
 
 export default function SessionPage({ 
   student = studentProfile, 
   subjectName = "EXCEL BASE AND ADVANCED",
   onBackToCourses 
 }) {
+  const defaultEmbedUrl = "https://player.vdocipher.com/v2/?otp=20160313versASE3232Tj8PbBLlQCLHDTQp2I37Tn35428tQ5YVO2eMzx1M59M5y&playbackInfo=eyJ2aWRlb0lkIjoiYjVmYzAwZTcxMWI0NDFjMTg2ZjYwMmI2NmQ4NmQ3YTUifQ==";
+
   // Active selected session and accordion expansion states
   const [expandedSessions, setExpandedSessions] = useState({
     'practical-questions': true,
@@ -42,10 +48,11 @@ export default function SessionPage({
 
   const [activeItem, setActiveItem] = useState({
     sessionTitle: "Session 1: Advanced Formulae & Dynamic Cell References",
-    itemTitle: "Session Recording (Part 1 - Core Concepts)",
+    itemTitle: "Excel Session 1 Class 1 Video",
     type: "video",
+    embedUrl: defaultEmbedUrl,
     instructor: "Dr. Sandip Mukherjee",
-    date: "07.06.2026"
+    date: "05.06.2026"
   });
 
   const [activeTab, setActiveTab] = useState('resources'); // resources, notes, qa
@@ -191,97 +198,59 @@ export default function SessionPage({
 
       {/* Interactive Main Area: Video Player & Lecture details */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-        {/* Simulated High-Res Video Player */}
-        <div className="relative aspect-video sm:aspect-[21/9] bg-slate-950 flex flex-col justify-between p-4 sm:p-6 text-white group overflow-hidden select-none">
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 z-10 pointer-events-none"></div>
-
-          {/* Background Poster / Graphic */}
-          <div className="absolute inset-0 opacity-25 bg-[radial-gradient(#f97316_1px,transparent_1px)] [background-size:16px_16px]"></div>
-
-          {/* Top Bar inside player */}
-          <div className="relative z-20 flex items-center justify-between">
-            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-xs font-medium text-slate-200">
-              <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-red-500 animate-ping' : 'bg-slate-400'}`}></span>
-              {activeItem.sessionTitle}
-            </div>
-            <div className="flex items-center gap-2">
-              <button className="p-2 rounded-full bg-black/50 hover:bg-black/80 text-white transition-all backdrop-blur-md">
-                <Bookmark className="w-4 h-4" />
-              </button>
-              <button className="p-2 rounded-full bg-black/50 hover:bg-black/80 text-white transition-all backdrop-blur-md">
-                <Share2 className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Center Play/Pause Button */}
-          <div className="relative z-20 self-center flex flex-col items-center">
-            <button 
-              onClick={() => setIsPlaying(!isPlaying)}
-              className="w-16 h-16 rounded-full bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center shadow-xl shadow-orange-500/30 transform hover:scale-110 active:scale-95 transition-all cursor-pointer"
-            >
-              {isPlaying ? (
-                <PauseCircle className="w-9 h-9" />
-              ) : (
-                <PlayCircle className="w-9 h-9" />
-              )}
-            </button>
-            <span className="text-xs font-semibold text-white/90 mt-2 bg-black/50 px-3 py-0.5 rounded-full backdrop-blur-xs">
-              {isPlaying ? "Playing recording... Click to pause" : "Click to Play High-Definition Recording"}
-            </span>
-          </div>
-
-          {/* Bottom Video Progress & Controls */}
-          <div className="relative z-20 space-y-2">
-            {/* Interactive Progress Bar */}
-            <div 
-              onClick={handleSeek}
-              className="w-full bg-white/20 hover:bg-white/30 h-2 rounded-full overflow-hidden cursor-pointer transition-all"
-            >
-              <div 
-                style={{ width: `${(playbackSeconds / playbackDuration) * 100}%` }}
-                className="bg-orange-500 h-full rounded-full transition-all duration-200"
-              ></div>
-            </div>
-            <div className="flex items-center justify-between text-xs text-slate-300">
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-[11px]">
-                  {formatVideoTime(playbackSeconds)} / {formatVideoTime(playbackDuration)}
-                </span>
-                <span className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] font-mono">1.0x</span>
-                <span className="px-1.5 py-0.5 rounded bg-white/10 text-[10px]">1080p Full HD</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Volume2 className="w-4 h-4 cursor-pointer hover:text-white" />
-                <Maximize2 className="w-4 h-4 cursor-pointer hover:text-white" />
-              </div>
-            </div>
+        {/* VdoCipher High-Definition Encrypted Video Player */}
+        <div className="relative bg-black overflow-hidden select-none shadow-inner">
+          <div style={{ paddingTop: '56.25%', position: 'relative' }}>
+            <iframe 
+              src={activeItem.embedUrl || defaultEmbedUrl}
+              style={{ 
+                border: 0, 
+                maxWidth: '100%', 
+                position: 'absolute', 
+                top: 0, 
+                left: 0, 
+                height: '100%', 
+                width: '100%' 
+              }} 
+              allowFullScreen={true} 
+              allow="encrypted-media"
+              title={activeItem.itemTitle}
+            />
           </div>
         </div>
 
         {/* Video Metadata & Tabs */}
         <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2.5 py-1 rounded-md border border-orange-100">
-              Now Viewing
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2.5 py-1 rounded-md border border-orange-100">
+                Now Viewing
+              </span>
+              <span className="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                VdoCipher Encrypted HD Stream
+              </span>
+            </div>
             <h3 className="text-lg font-bold text-slate-900 mt-2">
               {activeItem.itemTitle}
             </h3>
             <p className="text-xs text-slate-500 mt-1">
-              Faculty: <span className="font-medium text-slate-800">{activeItem.instructor}</span> • Recorded on: {activeItem.date}
+              Faculty: <span className="font-medium text-slate-800">{activeItem.instructor}</span> • Recorded on: {activeItem.date} • Batch: {student.courseCode}
             </p>
           </div>
 
           {/* Resource Download Button */}
-          <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-colors self-start md:self-auto shadow-xs">
+          <button 
+            onClick={() => generateAndDownloadExcel("Excel_Session1_Class1_Exercise.xlsx")}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-colors self-start md:self-auto shadow-xs cursor-pointer"
+          >
             <Download className="w-4 h-4 text-orange-400" />
-            Download Class Workbooks (.zip)
+            Download Class Workbook (.xlsx)
           </button>
         </div>
 
         {/* Tabs: Practice Files & Notes */}
-        <div className="px-6 pt-2 border-b border-slate-100 flex items-center gap-6 text-xs font-semibold">
+        <div id="session-tab-container" className="px-6 pt-2 border-b border-slate-100 flex items-center gap-6 text-xs font-semibold">
           <button
             onClick={() => setActiveTab('resources')}
             className={`pb-3 border-b-2 transition-all ${
@@ -447,9 +416,72 @@ export default function SessionPage({
 
                 {/* Expanded Session Files & Videos */}
                 {isExpanded && (
-                  <div className="px-5 py-3 bg-white border-t border-slate-100 divide-y divide-slate-100">
+                  <div className="px-5 py-4 bg-white border-t border-slate-100 space-y-3">
+                    {/* Real LMS Action Buttons for Session 1 (Matching edu.dvanalyticsmds.com Screenshot) */}
+                    {session.hasActionButtons && (
+                      <div className="space-y-2.5 pb-2">
+                        {/* 1. Green Button: Session Videos */}
+                        <button
+                          onClick={() => {
+                            setActiveItem({
+                              sessionTitle: session.fullTitle || session.title,
+                              itemTitle: "Excel Session 1 Class 1 Video",
+                              type: "video",
+                              embedUrl: session.vdocipherEmbedUrl || defaultEmbedUrl,
+                              instructor: session.instructor,
+                              date: session.recordingDate
+                            });
+                            window.scrollTo({ top: 120, behavior: 'smooth' });
+                          }}
+                          className="w-full bg-[#2dbd9f] hover:bg-[#25a98d] text-white font-semibold py-3 px-4 rounded-xl shadow-xs flex items-center justify-between transition-all transform active:scale-[0.99] cursor-pointer group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                              <Play className="w-3.5 h-3.5 fill-white" />
+                            </div>
+                            <span className="text-xs sm:text-sm font-bold tracking-wide">Session Videos</span>
+                          </div>
+                          <ExternalLink className="w-4 h-4 opacity-80 group-hover:opacity-100 transition-opacity" />
+                        </button>
+
+                        {/* 2. Blue Button: Session Materials */}
+                        <button
+                          onClick={() => {
+                            setActiveTab('resources');
+                            const el = document.getElementById('session-tab-container');
+                            if (el) el.scrollIntoView({ behavior: 'smooth' });
+                          }}
+                          className="w-full bg-[#3b97e9] hover:bg-[#2a85d6] text-white font-semibold py-3 px-4 rounded-xl shadow-xs flex items-center justify-between transition-all transform active:scale-[0.99] cursor-pointer group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                              <Play className="w-3.5 h-3.5 fill-white" />
+                            </div>
+                            <span className="text-xs sm:text-sm font-bold tracking-wide">Session Materials</span>
+                          </div>
+                          <ExternalLink className="w-4 h-4 opacity-80 group-hover:opacity-100 transition-opacity" />
+                        </button>
+
+                        {/* 3. Orange Button: Session Assignments */}
+                        <button
+                          onClick={() => {
+                            generateAndDownloadExcel("Excel_Session1_Class1_Exercise.xlsx");
+                          }}
+                          className="w-full bg-[#f39c12] hover:bg-[#e08e0b] text-white font-semibold py-3 px-4 rounded-xl shadow-xs flex items-center justify-between transition-all transform active:scale-[0.99] cursor-pointer group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                              <Play className="w-3.5 h-3.5 fill-white" />
+                            </div>
+                            <span className="text-xs sm:text-sm font-bold tracking-wide">Session Assignments</span>
+                          </div>
+                          <ExternalLink className="w-4 h-4 opacity-80 group-hover:opacity-100 transition-opacity" />
+                        </button>
+                      </div>
+                    )}
+
                     {session.summary && (
-                      <div className="py-2.5 text-xs text-slate-500 leading-relaxed italic bg-slate-50/60 p-3 rounded-xl mb-2">
+                      <div className="py-2.5 text-xs text-slate-500 leading-relaxed italic bg-slate-50/70 p-3 rounded-xl">
                         {session.summary}
                       </div>
                     )}

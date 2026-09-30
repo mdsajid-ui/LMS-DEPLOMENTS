@@ -127,20 +127,28 @@ export const excelSessions = [
   },
   {
     id: "session-1",
-    title: "Session 1: Advanced Formulae & Dynamic Cell References",
+    title: "Session 1",
+    fullTitle: "Session 1: Advanced Formulae & Dynamic Cell References",
     isFolder: true,
-    videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+    hasActionButtons: true,
+    vdocipherEmbedUrl: "https://player.vdocipher.com/v2/?otp=20160313versASE3232Tj8PbBLlQCLHDTQp2I37Tn35428tQ5YVO2eMzx1M59M5y&playbackInfo=eyJ2aWRlb0lkIjoiYjVmYzAwZTcxMWI0NDFjMTg2ZjYwMmI2NmQ4NmQ3YTUifQ==",
+    videoUrl: "https://player.vdocipher.com/v2/?otp=20160313versASE3232Tj8PbBLlQCLHDTQp2I37Tn35428tQ5YVO2eMzx1M59M5y&playbackInfo=eyJ2aWRlb0lkIjoiYjVmYzAwZTcxMWI0NDFjMTg2ZjYwMmI2NmQ4NmQ3YTUifQ==",
     duration: "1h 45m",
     watchedMinutes: 105,
     totalMinutes: 105,
-    recordingDate: "07.06.2026",
+    recordingDate: "05.06.2026",
     instructor: "Dr. Sandip Mukherjee",
     summary: "Deep dive into absolute, relative, and mixed references, formula auditing, array formulas, and core best practices for enterprise datasets.",
     items: [
-      { id: "s1-1", title: "Session Recording (Part 1 - Core Concepts)", duration: "48 mins", type: "video" },
-      { id: "s1-2", title: "Session Recording (Part 2 - Live Hands-on)", duration: "57 mins", type: "video" },
-      { id: "s1-3", title: "Class Slide Deck (Formulas.pptx)", duration: "PDF (4.8 MB)", type: "pdf" },
-      { id: "s1-4", title: "Class Exercise Workbook - Raw Data", duration: "XLSX (2.1 MB)", type: "file" }
+      { 
+        id: "s1-1", 
+        title: "Excel Session 1 Class 1 Video (Live VdoCipher Stream)", 
+        duration: "1h 45m", 
+        type: "video",
+        embedUrl: "https://player.vdocipher.com/v2/?otp=20160313versASE3232Tj8PbBLlQCLHDTQp2I37Tn35428tQ5YVO2eMzx1M59M5y&playbackInfo=eyJ2aWRlb0lkIjoiYjVmYzAwZTcxMWI0NDFjMTg2ZjYwMmI2NmQ4NmQ3YTUifQ==" 
+      },
+      { id: "s1-2", title: "Class Slide Deck (Formulas.pptx)", duration: "PDF (4.8 MB)", type: "pdf" },
+      { id: "s1-3", title: "Class Exercise Workbook - Raw Data", duration: "XLSX (2.1 MB)", type: "file" }
     ]
   },
   {

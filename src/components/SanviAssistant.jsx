@@ -599,6 +599,26 @@ Under his visionary leadership, DV Analytics was built to deliver industry-grade
     }
 
     // ==========================================
+    // REQUIREMENT: JARVIS ACTION: "PLAY SESSION 1 VIDEO" / "EXCEL CLASS 1 VIDEO"
+    // ==========================================
+    else if (
+      (lower.includes('session 1') && (lower.includes('video') || lower.includes('class') || lower.includes('play') || lower.includes('watch') || lower.includes('open'))) ||
+      (lower.includes('class 1') && (lower.includes('video') || lower.includes('play') || lower.includes('open') || lower.includes('watch'))) ||
+      (lower.includes('excel') && lower.includes('video')) ||
+      lower.includes('session 1 video') ||
+      lower.includes('session-1 video') ||
+      lower.includes('session 1 class 1') ||
+      lower.includes('play class 1')
+    ) {
+      if (onNavigate) onNavigate('session');
+      replyText = `Opening **Excel Session 1 Class 1 Video** for you right away!
+
+The high-definition encrypted VdoCipher video player for Session 1 (Advanced Formulae & Dynamic Cell References) is now active and ready to stream.`;
+      actionType = "session_video_opened";
+      spokenVoiceText = "Opening Excel Session 1 Class 1 video for you right now.";
+    }
+
+    // ==========================================
     // REQUIREMENT 2: JARVIS ACTION: "OPEN AN EXCEL SHEET"
     // "If I am asking him to open an Excel sheet, he is opening like that. I want this Sanvi should work like that."
     // ==========================================
