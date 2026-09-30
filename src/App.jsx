@@ -29,7 +29,38 @@ import AdminPortalPage from './pages/AdminPortalPage';
 import { studentProfile } from './data/mockData';
 
 export default function App() {
-  const [isAdminPortal, setIsAdminPortal] = useState(false);
+  const checkIsAdminUrl = () => {
+    const hash = window.location.hash.toLowerCase();
+    const search = window.location.search.toLowerCase();
+    const pathname = window.location.pathname.toLowerCase();
+    return hash.includes('admin') || search.includes('admin') || pathname.includes('/admin');
+  };
+
+  const [isAdminPortal, setIsAdminPortal] = useState(() => checkIsAdminUrl());
+
+  useEffect(() => {
+    const handleUrlChange = () => {
+      setIsAdminPortal(checkIsAdminUrl());
+    };
+    window.addEventListener('hashchange', handleUrlChange);
+    window.addEventListener('popstate', handleUrlChange);
+    return () => {
+      window.removeEventListener('hashchange', handleUrlChange);
+      window.removeEventListener('popstate', handleUrlChange);
+    };
+  }, []);
+
+  const handleOpenAdmin = () => {
+    window.location.hash = '/admin/Reg.aspx';
+    setIsAdminPortal(true);
+  };
+
+  const handleBackToStudentLms = () => {
+    window.location.hash = '';
+    history.pushState("", document.title, window.location.pathname + window.location.search);
+    setIsAdminPortal(false);
+  };
+
   const [currentTab, setCurrentTab] = useState('welcome');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState('BATCH 202606');
@@ -59,8 +90,8 @@ export default function App() {
 
   if (isAdminPortal) {
     return (
-      <ErrorBoundary onReset={() => setIsAdminPortal(false)}>
-        <AdminPortalPage onBackToStudentLms={() => setIsAdminPortal(false)} />
+      <ErrorBoundary onReset={handleBackToStudentLms}>
+        <AdminPortalPage onBackToStudentLms={handleBackToStudentLms} />
       </ErrorBoundary>
     );
   }
@@ -91,7 +122,7 @@ export default function App() {
           onOpenSchedule={() => setScheduleOpen(true)}
           onOpenSupport={handleOpenSupport}
           onOpenChat={handleOpenChat}
-          onOpenAdmin={() => setIsAdminPortal(true)}
+          onOpenAdmin={handleOpenAdmin}
           selectedBatch={selectedBatch}
           setSelectedBatch={setSelectedBatch}
         />

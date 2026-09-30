@@ -60,8 +60,29 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
   const [rememberMe, setRememberMe] = useState(true);
   const [loginError, setLoginError] = useState("");
 
-  // Navigation State
-  const [activeMenu, setActiveMenu] = useState('reg'); // 'dashboard', 'reg', 'session', 'assignment', 'fee', 'batch', 'mentor', 'reports'
+  // Navigation State with URL Hash Synchronization
+  const getInitialMenu = () => {
+    const url = (window.location.hash + window.location.pathname).toLowerCase();
+    if (url.includes('session')) return 'session';
+    if (url.includes('assignment')) return 'assignment';
+    if (url.includes('fee')) return 'fee';
+    if (url.includes('batch')) return 'batch';
+    if (url.includes('report')) return 'reports';
+    if (url.includes('dashboard')) return 'dashboard';
+    return 'reg'; // Default to Reg.aspx as requested!
+  };
+
+  const [activeMenu, setActiveMenu] = useState(() => getInitialMenu());
+
+  const handleSelectMenu = (menuKey) => {
+    setActiveMenu(menuKey);
+    if (menuKey === 'reg') window.location.hash = '/admin/Reg.aspx';
+    else if (menuKey === 'session') window.location.hash = '/admin/Session.aspx';
+    else if (menuKey === 'assignment') window.location.hash = '/admin/AssignmentApproval.aspx';
+    else if (menuKey === 'fee') window.location.hash = '/admin/Fee.aspx';
+    else window.location.hash = `/admin/${menuKey}`;
+  };
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Notifications
@@ -685,7 +706,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
         <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-1 text-xs">
           {/* 1. Dashboard */}
           <button
-            onClick={() => setActiveMenu('dashboard')}
+            onClick={() => handleSelectMenu('dashboard')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
               activeMenu === 'dashboard'
                 ? 'bg-[#1abb9c] text-white font-bold shadow-xs'
@@ -698,7 +719,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
 
           {/* 2. Registration (Reg.aspx) */}
           <button
-            onClick={() => setActiveMenu('reg')}
+            onClick={() => handleSelectMenu('reg')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
               activeMenu === 'reg'
                 ? 'bg-[#1abb9c] text-white font-bold shadow-xs'
@@ -711,7 +732,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
 
           {/* 3. Live Session (Session.aspx) */}
           <button
-            onClick={() => setActiveMenu('session')}
+            onClick={() => handleSelectMenu('session')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
               activeMenu === 'session'
                 ? 'bg-[#1abb9c] text-white font-bold shadow-xs'
@@ -724,7 +745,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
 
           {/* 4. Assignment Approval */}
           <button
-            onClick={() => setActiveMenu('assignment')}
+            onClick={() => handleSelectMenu('assignment')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
               activeMenu === 'assignment'
                 ? 'bg-[#1abb9c] text-white font-bold shadow-xs'
@@ -737,7 +758,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
 
           {/* 5. Fee Management */}
           <button
-            onClick={() => setActiveMenu('fee')}
+            onClick={() => handleSelectMenu('fee')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
               activeMenu === 'fee'
                 ? 'bg-[#1abb9c] text-white font-bold shadow-xs'
@@ -750,7 +771,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
 
           {/* 6. Batch Master */}
           <button
-            onClick={() => setActiveMenu('batch')}
+            onClick={() => handleSelectMenu('batch')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
               activeMenu === 'batch'
                 ? 'bg-[#1abb9c] text-white font-bold shadow-xs'
@@ -763,7 +784,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
 
           {/* 7. Reports */}
           <button
-            onClick={() => setActiveMenu('reports')}
+            onClick={() => handleSelectMenu('reports')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
               activeMenu === 'reports'
                 ? 'bg-[#1abb9c] text-white font-bold shadow-xs'
