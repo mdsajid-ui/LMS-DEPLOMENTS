@@ -30,9 +30,10 @@ export default function DashboardPage({
   student = studentProfile, 
   onNavigateToCourses, 
   onNavigateToAssignments, 
-  onNavigateToAttendance,
-  onNavigateToSession,
+  onNavigateToAttendance, 
+  onNavigateToSession, 
   onNavigateToCat,
+  onOpenSanviAssistant,
   onOpenDvAssistant
 }) {
   // Read dynamic watch time from localStorage if updated during video playback
@@ -232,32 +233,32 @@ export default function DashboardPage({
           </div>
         </div>
 
-        {/* Right 1 Col: Jarvis "DV" Assistant Performance Insights */}
-        <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950 text-white rounded-2xl p-5 border border-cyan-500/30 shadow-md flex flex-col justify-between">
+        {/* Right 1 Col: Sanvi AI Voice Advisor Performance Insights */}
+        <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950 text-white rounded-2xl p-5 border border-rose-500/30 shadow-md flex flex-col justify-between">
           <div className="space-y-3">
-            <div className="flex items-center justify-between border-b border-cyan-500/20 pb-3">
+            <div className="flex items-center justify-between border-b border-rose-500/20 pb-3">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-300">
-                  DV Jarvis AI Advisor
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-400 animate-ping"></span>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-rose-300">
+                  Sanvi AI Voice Advisor
                 </h4>
               </div>
-              <span className="text-[10px] font-mono bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded border border-cyan-500/30">
-                Live Insights
+              <span className="text-[10px] font-mono bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded border border-rose-500/30">
+                Voice Enabled
               </span>
             </div>
 
             <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 text-xs leading-relaxed text-slate-300">
               <p>
-                <strong className="text-cyan-400 font-semibold">Recommended Action:</strong> You have completed 100% of Excel recorded lectures and scored 94% on SQL Assignment 3.
+                <strong className="text-rose-400 font-semibold">Sanvi's Recommendation:</strong> You have completed 100% of Excel recorded lectures and scored 94% on SQL Assignment 3.
               </p>
               <p className="text-slate-400 text-[11px]">
                 To stay on schedule for your next milestone, finish the remaining 4 hours of SQL Server recordings before Saturday's live workshop.
               </p>
             </div>
 
-            <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/20 text-[11px] space-y-1">
-              <div className="flex items-center justify-between text-cyan-300 font-semibold">
+            <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/20 text-[11px] space-y-1">
+              <div className="flex items-center justify-between text-rose-300 font-semibold">
                 <span>Coordination Helpline:</span>
                 <span>+91 98300 12345</span>
               </div>
@@ -268,11 +269,11 @@ export default function DashboardPage({
           </div>
 
           <button
-            onClick={onOpenDvAssistant}
-            className="w-full mt-4 py-2.5 px-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-950/50 transition-all active:scale-95"
+            onClick={onOpenSanviAssistant || onOpenDvAssistant}
+            className="w-full mt-4 py-2.5 px-3 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-400 hover:to-orange-400 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-rose-950/50 transition-all active:scale-95 cursor-pointer"
           >
             <Sparkles className="w-4 h-4" />
-            Open DV Assignment Assistant
+            Talk with Sanvi (Voice AI)
           </button>
         </div>
       </div>

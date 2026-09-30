@@ -4,7 +4,7 @@ import Header from './components/Header';
 import NotificationModal from './components/NotificationModal';
 import ScheduleModal from './components/ScheduleModal';
 import SupportModal from './components/SupportModal';
-import DvAssistant from './components/DvAssistant';
+import SanviAssistant from './components/SanviAssistant';
 
 import WelcomePage from './pages/WelcomePage';
 import DashboardPage from './pages/DashboardPage';
@@ -37,11 +37,11 @@ export default function App() {
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [supportTab, setSupportTab] = useState('hotline');
-  const [dvAssistantOpen, setDvAssistantOpen] = useState(false);
+  const [sanviAssistantOpen, setSanviAssistantOpen] = useState(false);
 
   const handleOpenChat = () => {
-    // Open Jarvis-powered DV Assistant directly
-    setDvAssistantOpen(true);
+    // Open Sanvi Voice AI Assistant directly
+    setSanviAssistantOpen(true);
   };
 
   const handleOpenSupport = () => {
@@ -101,7 +101,7 @@ export default function App() {
               onNavigateToAttendance={() => setCurrentTab('attendance')}
               onNavigateToSession={() => setCurrentTab('session')}
               onNavigateToCat={() => setCurrentTab('application-test')}
-              onOpenDvAssistant={() => setDvAssistantOpen(true)}
+              onOpenSanviAssistant={() => setSanviAssistantOpen(true)}
             />
           )}
 
@@ -223,10 +223,10 @@ export default function App() {
         initialTab={supportTab}
       />
 
-      {/* Jarvis DV Assistant (Floats across all screens) */}
-      <DvAssistant
-        isOpenExternal={dvAssistantOpen}
-        onCloseExternal={() => setDvAssistantOpen(false)}
+      {/* Sanvi Voice AI Assistant (Floats across all screens with two-way voice) */}
+      <SanviAssistant
+        isOpenExternal={sanviAssistantOpen}
+        onCloseExternal={() => setSanviAssistantOpen(false)}
       />
     </div>
   );
