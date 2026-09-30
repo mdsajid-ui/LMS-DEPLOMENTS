@@ -442,20 +442,24 @@ export default function SanviAssistant({
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.rate = 1.0;
     utterance.pitch = 1.05; // natural friendly tone
+    utterance.volume = 1.0; // explicit maximum volume
 
-    // Choose preferred female natural voice
-    const voices = window.speechSynthesis.getVoices();
-    const preferredVoice = voices.find(v => 
-      (v.name.includes('Female') || 
-       v.name.includes('Samantha') || 
-       v.name.includes('Zira') || 
-       v.name.includes('Google UK English Female') || 
-       v.name.includes('Jenny') || 
-       v.name.includes('Victoria')) && v.lang.startsWith('en')
-    ) || voices.find(v => v.lang.startsWith('en'));
+    // Prioritize offline local Windows / SAPI voices that never fail or require network
+    const voices = window.speechSynthesis.getVoices() || [];
+    const preferredVoice = 
+      voices.find(v => v.name.includes('Microsoft') && (v.name.includes('Zira') || v.name.includes('Jenny') || v.name.includes('Heera') || v.name.includes('Natural'))) ||
+      voices.find(v => v.name.includes('Zira')) ||
+      voices.find(v => v.localService && (v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Jenny') || v.name.includes('Victoria'))) ||
+      voices.find(v => v.name.includes('Microsoft') && v.lang.startsWith('en')) ||
+      voices.find(v => v.localService && v.lang.startsWith('en')) ||
+      voices.find(v => v.lang.startsWith('en')) ||
+      voices[0];
 
     if (preferredVoice) {
       utterance.voice = preferredVoice;
+      utterance.lang = preferredVoice.lang || 'en-US';
+    } else {
+      utterance.lang = 'en-US';
     }
 
     currentUtteranceRef.current = utterance;
@@ -517,22 +521,31 @@ export default function SanviAssistant({
     // Play subtle wake chime for instant audio confirmation
     playWakeChime();
 
-    // Robust speak trigger handling Chrome's cancel() latency
+    // Robust speak trigger handling Chrome's cancel() latency and pending queue
     const executeSpeak = () => {
       try {
         if (window.speechSynthesis.paused) {
           window.speechSynthesis.resume();
         }
         window.speechSynthesis.speak(utterance);
+        
+        // Secondary resume to bypass Chromium audio output freeze
+        setTimeout(() => {
+          try {
+            if (window.speechSynthesis.paused) {
+              window.speechSynthesis.resume();
+            }
+          } catch (_e) {}
+        }, 60);
       } catch (err) {
         console.error("speechSynthesis.speak error:", err);
         handleSpeechEnded();
       }
     };
 
-    if (window.speechSynthesis.speaking) {
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
       window.speechSynthesis.cancel();
-      setTimeout(executeSpeak, 180);
+      setTimeout(executeSpeak, 120);
     } else {
       executeSpeak();
     }
@@ -1066,13 +1079,18 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
               {/* TTS Voice Toggle */}
               <button
                 onClick={() => {
-                  setVoiceEnabled(!voiceEnabled);
-                  if (voiceEnabled) stopSpeaking();
+                  const next = !voiceEnabled;
+                  setVoiceEnabled(next);
+                  if (!next) {
+                    stopSpeaking();
+                  } else {
+                    speakSanviResponse("Sanvi voice is active.");
+                  }
                 }}
-                title={voiceEnabled ? "Voice Output Active" : "Enable Voice Output"}
+                title={voiceEnabled ? "Voice Output Active - Click to Test or Mute" : "Voice Output Muted - Click to Enable"}
                 className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                   voiceEnabled 
-                    ? 'text-rose-400 bg-rose-950/60 border border-rose-500/40' 
+                    ? 'text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 shadow-xs' 
                     : 'text-slate-400 hover:text-white hover:bg-slate-800'
                 }`}
               >
