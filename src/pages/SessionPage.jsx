@@ -53,6 +53,7 @@ export default function SessionPage({
 
   // Video playback engine: 'direct' (unrestricted on mdsajid-ui.github.io), 'vdocipher' (encrypted DRM), 'drive' (Google Drive)
   const [playerEngine, setPlayerEngine] = useState('direct');
+  const videoRef = useRef(null);
 
   // Expandable folder state for Session.aspx
   const [expandedFolders, setExpandedFolders] = useState({
@@ -127,7 +128,7 @@ export default function SessionPage({
     return () => clearInterval(interval);
   }, []);
 
-  // DRM & Anti-Screen Capture Key & Focus Watcher
+  // DRM & Anti-Screen Capture Key Watcher
   useEffect(() => {
     const handleKeyDown = (e) => {
       // PrintScreen key
@@ -140,26 +141,17 @@ export default function SessionPage({
         e.preventDefault();
         triggerBlackout("Developer tools inspection blocked");
       }
-      // Windows Snipping Tool (Win+Shift+S) / Mac (Cmd+Shift+3/4) / Print (Ctrl+P) / Save (Ctrl+S)
+      // Screen export / Print (Ctrl+P) / Save (Ctrl+S)
       if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S')) {
         e.preventDefault();
         triggerBlackout("Screen export / Print shortcut blocked");
       }
     };
 
-    // When user activates Snipping tool or screen recorder, the window loses focus
-    const handleWindowBlur = () => {
-      if (viewMode === 'videos') {
-        triggerBlackout("Window unfocused / Screen capture tool detected");
-      }
-    };
-
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('blur', handleWindowBlur);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('blur', handleWindowBlur);
     };
   }, [viewMode]);
 
@@ -626,9 +618,9 @@ export default function SessionPage({
                 <div style={{ paddingTop: '56.25%', position: 'relative' }}>
                   {playerEngine === 'direct' && (
                     <video
+                      ref={videoRef}
                       key={activeVideo.sNo}
                       controls
-                      autoPlay
                       playsInline
                       controlsList="nodownload noplaybackrate"
                       disablePictureInPicture
@@ -641,7 +633,8 @@ export default function SessionPage({
                         height: '100%', 
                         width: '100%' 
                       }}
-                      className="bg-black"
+                      className="bg-black w-full h-full object-contain"
+                      poster="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80"
                       src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
                     />
                   )}
