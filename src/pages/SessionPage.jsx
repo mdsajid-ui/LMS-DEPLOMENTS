@@ -48,6 +48,9 @@ export default function SessionPage({
     embedUrl: defaultEmbedUrl
   });
 
+  // Video playback engine: 'direct' (unrestricted on mdsajid-ui.github.io), 'vdocipher' (encrypted DRM), 'drive' (Google Drive)
+  const [playerEngine, setPlayerEngine] = useState('direct');
+
   // Expandable folder state for Session.aspx
   const [expandedFolders, setExpandedFolders] = useState({
     'session-1': true,
@@ -468,10 +471,56 @@ export default function SessionPage({
               </div>
             </div>
 
-            {/* Right Side: Video Player Container with Anti-Screenshot / Blackout Protection */}
-            <div className="lg:col-span-7 space-y-4">
+            {/* Right Side: Video Player Container with Domain Engine Selector & Anti-Screenshot / Blackout Protection */}
+            <div className="lg:col-span-7 space-y-3">
+              {/* Domain & Player Engine Bar (Allowing playback on mdsajid-ui.github.io) */}
+              <div className="bg-slate-900 text-white p-3 rounded-2xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="font-semibold text-slate-200">
+                    Playback Domain: <span className="text-emerald-400 font-mono">mdsajid-ui.github.io</span> (Active)
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-[11px] self-start sm:self-auto">
+                  <button
+                    onClick={() => setPlayerEngine('direct')}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      playerEngine === 'direct'
+                        ? 'bg-[#2dbd9f] text-white shadow-xs'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Play className="w-3 h-3 fill-current" />
+                    <span>Direct Player</span>
+                  </button>
+                  <button
+                    onClick={() => setPlayerEngine('vdocipher')}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      playerEngine === 'vdocipher'
+                        ? 'bg-[#3b97e9] text-white shadow-xs'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Lock className="w-3 h-3" />
+                    <span>VdoCipher DRM</span>
+                  </button>
+                  <button
+                    onClick={() => setPlayerEngine('drive')}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      playerEngine === 'drive'
+                        ? 'bg-[#f39c12] text-white shadow-xs'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Folder className="w-3 h-3" />
+                    <span>Drive Hub</span>
+                  </button>
+                </div>
+              </div>
+
               <div 
-                className="relative bg-black rounded-2xl overflow-hidden shadow-lg border border-slate-800 select-none group"
+                className="relative bg-black rounded-2xl overflow-hidden shadow-xl border border-slate-800 select-none group"
                 onContextMenu={(e) => e.preventDefault()}
               >
                 {/* 1. BLACKOUT SHIELD - Activated on PrintScreen, Snipping tool, recording detection */}
@@ -511,23 +560,76 @@ export default function SessionPage({
                   {student.name} • {student.courseCode} • DRM PROTECTED
                 </div>
 
-                {/* 3. Secure Video Stream (VdoCipher Encrypted Iframe) */}
+                {/* 3. Secure Video Stream Player */}
                 <div style={{ paddingTop: '56.25%', position: 'relative' }}>
-                  <iframe 
-                    src={activeVideo.embedUrl || defaultEmbedUrl}
-                    style={{ 
-                      border: 0, 
-                      maxWidth: '100%', 
-                      position: 'absolute', 
-                      top: 0, 
-                      left: 0, 
-                      height: '100%', 
-                      width: '100%' 
-                    }} 
-                    allowFullScreen={true} 
-                    allow="encrypted-media"
-                    title={activeVideo.title}
-                  />
+                  {playerEngine === 'direct' && (
+                    <video
+                      key={activeVideo.sNo}
+                      controls
+                      autoPlay
+                      playsInline
+                      controlsList="nodownload noplaybackrate"
+                      disablePictureInPicture
+                      style={{ 
+                        border: 0, 
+                        maxWidth: '100%', 
+                        position: 'absolute', 
+                        top: 0, 
+                        left: 0, 
+                        height: '100%', 
+                        width: '100%' 
+                      }}
+                      className="bg-black"
+                      src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                    />
+                  )}
+
+                  {playerEngine === 'vdocipher' && (
+                    <iframe 
+                      src={activeVideo.embedUrl || defaultEmbedUrl}
+                      referrerPolicy="no-referrer"
+                      style={{ 
+                        border: 0, 
+                        maxWidth: '100%', 
+                        position: 'absolute', 
+                        top: 0, 
+                        left: 0, 
+                        height: '100%', 
+                        width: '100%' 
+                      }} 
+                      allowFullScreen={true} 
+                      allow="encrypted-media *; autoplay *; fullscreen *"
+                      title={activeVideo.title}
+                    />
+                  )}
+
+                  {playerEngine === 'drive' && (
+                    <div 
+                      style={{ 
+                        position: 'absolute', 
+                        top: 0, 
+                        left: 0, 
+                        height: '100%', 
+                        width: '100%' 
+                      }}
+                      className="flex flex-col items-center justify-center p-6 text-center bg-slate-950 text-white space-y-3"
+                    >
+                      <Folder className="w-12 h-12 text-amber-400" />
+                      <h4 className="text-sm font-bold">{selectedSession.title} Master Cloud Video</h4>
+                      <p className="text-xs text-slate-400 max-w-sm">
+                        Direct Google Drive video stream: {selectedSession.videoFileName || "SESSION-1.mp4"} ({selectedSession.videoSize || "HD"})
+                      </p>
+                      <a
+                        href={selectedSession.driveFolderUrl || getSubjectDriveUrl()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Watch on Google Drive Hub</span>
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
 
