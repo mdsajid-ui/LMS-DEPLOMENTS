@@ -384,18 +384,6 @@ export default function SessionPage({
                             </div>
                             <ExternalLink className="w-3.5 h-3.5 opacity-90" />
                           </button>
-
-                          {/* 4. Emerald Pill: ⬆ Upload Session Solution */}
-                          <button
-                            onClick={() => handleOpenUploadModal(session)}
-                            className="w-full bg-[#10b981] hover:bg-[#059669] text-white font-medium text-xs sm:text-sm py-2.5 px-4 rounded-full flex items-center justify-between shadow-2xs transition-all transform active:scale-[0.99] cursor-pointer"
-                          >
-                            <div className="flex items-center gap-2">
-                              <UploadCloud className="w-3.5 h-3.5" />
-                              <span>Upload Session Assignment / Solution</span>
-                            </div>
-                            <ExternalLink className="w-3.5 h-3.5 opacity-90" />
-                          </button>
                         </div>
                       ) : (
                         // If it's a practical questions folder
