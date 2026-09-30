@@ -223,10 +223,12 @@ export default function App() {
         initialTab={supportTab}
       />
 
-      {/* Sanvi Voice AI Assistant (Floats across all screens with two-way voice) */}
+      {/* Sanvi Voice AI Assistant (Floats across all screens with two-way voice & Jarvis actions) */}
       <SanviAssistant
         isOpenExternal={sanviAssistantOpen}
         onCloseExternal={() => setSanviAssistantOpen(false)}
+        currentTab={currentTab}
+        onNavigate={(tab) => setCurrentTab(tab)}
       />
     </div>
   );

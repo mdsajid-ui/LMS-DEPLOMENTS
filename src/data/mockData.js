@@ -641,3 +641,103 @@ FROM CustomerOrderAgg;`,
     ]
   }
 };
+
+// Full Company Knowledge Base from https://www.dvanalyticsmds.com/
+export const dvCompanyProfile = {
+  companyName: "DV Analytics (DV Data & Analytics Pvt Ltd)",
+  founder: "Devender Devgan Das",
+  founderRole: "Founder & Managing Director of DV Analytics",
+  founderFact: "Devender Devgan Das is the founder of DV Analytics.",
+  founderBio: "Devender Devgan Das is the founder of DV Analytics. A visionary leader and educator in data analytics and artificial intelligence, he established DV Analytics to provide industry-aligned practical training in Data Science, Machine Learning, Generative AI, and Industrial Analytics, empowering learners across India and internationally to build successful tech careers.",
+  website: "https://www.dvanalyticsmds.com/",
+  officialEmail: "info@dvanalyticsmds.com",
+  phoneNumbers: ["+91-9019030033", "+91-9830012345"],
+  locations: [
+    {
+      city: "Bangalore",
+      state: "Karnataka",
+      country: "India",
+      role: "Head Office & Training Center",
+      address: "Bangalore, Karnataka, India"
+    },
+    {
+      city: "Bhubaneswar",
+      state: "Odisha",
+      country: "India",
+      role: "Regional Center & Training Institute",
+      address: "Bhubaneswar, Odisha, India"
+    },
+    {
+      city: "Dubai",
+      state: "Dubai",
+      country: "United Arab Emirates",
+      role: "International Office",
+      address: "Dubai, UAE"
+    },
+    {
+      city: "Online / Global",
+      state: "Worldwide",
+      country: "Global",
+      role: "Live Online & Flexi Learning",
+      address: "https://www.dvanalyticsmds.com"
+    }
+  ],
+  corePrograms: [
+    {
+      code: "APIDS",
+      name: "Advanced Program in Industrial Data Science with AI Deployment",
+      duration: "6-8 Months",
+      tools: ["Python", "SQL Server", "Excel AI", "Power BI", "Tableau", "SAS", "PySpark", "Machine Learning", "Deep Learning", "Generative AI", "Agentic AI", "MLOps", "AWS/Azure"]
+    },
+    {
+      code: "APIDA",
+      name: "Advanced Program in Industrial Data Science with Gen AI",
+      duration: "6 Months",
+      tools: ["Python", "SQL", "Excel AI", "Power BI", "Tableau", "Statistics", "Machine Learning", "Generative AI", "RAG", "LLMs"]
+    },
+    {
+      code: "DAS",
+      name: "Data Analytics Specialist",
+      duration: "4-5 Months",
+      tools: ["SQL Server", "Excel AI", "Python", "Power BI", "Tableau", "Business Analytics", "Interactive Dashboards"]
+    },
+    {
+      code: "APCF",
+      name: "AI Integrated Advanced Program in Cybersecurity & Forensics",
+      duration: "6 Months",
+      tools: ["Networking", "Linux", "Ethical Hacking", "SOC", "SIEM", "Splunk", "Digital Forensics", "Cloud Security"]
+    },
+    {
+      code: "FDE",
+      name: "AI Forward Deployment Engineer",
+      duration: "6 Months",
+      tools: ["Python", "APIs", "RAG", "AI Agents", "LangChain", "Cloud Deployment", "Enterprise Integrations"]
+    },
+    {
+      code: "FLP",
+      name: "Flexi Learning Program in Data Science & AI",
+      duration: "Self-Paced with Mentorship",
+      tools: ["Python", "SQL", "Machine Learning", "AI Projects"]
+    }
+  ],
+  placementAssistance: {
+    guarantee: "100% Placement Assistance with 1-on-1 Mentorship",
+    hiringPartnersCount: "100+ Global & Indian Corporate Partners",
+    services: [
+      "1-on-1 Resume Optimization and ATS Formatting",
+      "GitHub Portfolio and Project Demonstration Reviews",
+      "Technical Mock Interviews (SQL, Python, ML, GenAI)",
+      "HR Viva & Salary Negotiation Coaching",
+      "Direct Referrals to Hiring Partners in Bangalore, Bhubaneswar, and Nationwide"
+    ]
+  },
+  industryProjects: [
+    "Banking & Finance: Credit Risk Application Scorecard, ECL, AML, Fraud Detection",
+    "Telecom: Customer Churn Prediction, Network Faults, Lifetime Value",
+    "E-Commerce: Recommendation Engine, Dynamic Pricing, Churn, RAG Shopping Assistant",
+    "Healthcare: Disease Risk Prediction, Medical Image Analysis, Clinical Decision Support",
+    "Manufacturing: Predictive Maintenance, Defect Detection with Computer Vision, Digital Twins",
+    "Pharmaceuticals: Drug Discovery Analytics, Pharmacovigilance AI Automation"
+  ]
+};
+
