@@ -15,10 +15,7 @@ import {
   Minimize2,
   Mic,
   MicOff,
-  RotateCcw,
-  Headphones,
-  Radio,
-  Play
+  Headphones
 } from 'lucide-react';
 import { 
   dvHelplineNumbers, 
@@ -46,19 +43,47 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
   const recognitionRef = useRef(null);
   const synthRef = useRef(null);
   const handleSendMessageRef = useRef(null);
+  const activeTranscriptRef = useRef('');
+  const silenceTimerRef = useRef(null);
 
-  // Synchronize with external triggers (e.g. from Header or other buttons)
+  // Synchronize with external triggers
   useEffect(() => {
     if (isOpenExternal !== undefined && isOpenExternal !== null) {
       setIsOpen(isOpenExternal);
     }
   }, [isOpenExternal]);
 
-  // Initialize Speech Synthesis and Speech Recognition
+  // Pre-load voices for natural synthesis
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      synthRef.current = window.speechSynthesis;
+      // Pre-warm voices
+      window.speechSynthesis.getVoices();
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.getVoices();
+      };
+    }
+  }, []);
+
+  // Submit voice speech safely
+  const submitVoiceSpeech = (transcript) => {
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    const text = (transcript || activeTranscriptRef.current || '').trim();
+    if (!text) return;
+    activeTranscriptRef.current = '';
+    setInterimSpeech('');
+    setIsListening(false);
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (_e) {}
+    }
+    if (handleSendMessageRef.current) {
+      handleSendMessageRef.current(text);
+    }
+  };
+
+  // Initialize Speech Recognition
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      synthRef.current = window.speechSynthesis;
-
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
@@ -69,30 +94,51 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
         recognition.onstart = () => {
           setIsListening(true);
           setInterimSpeech('');
+          activeTranscriptRef.current = '';
         };
 
         recognition.onresult = (event) => {
           let currentTranscript = '';
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            currentTranscript += event.results[i][0].transcript;
+          let isFinalDetected = false;
+
+          for (let i = 0; i < event.results.length; i++) {
+            currentTranscript += event.results[i][0].transcript + ' ';
+            if (event.results[i].isFinal) {
+              isFinalDetected = true;
+            }
           }
+
+          currentTranscript = currentTranscript.trim();
+          activeTranscriptRef.current = currentTranscript;
           setInterimSpeech(currentTranscript);
 
-          // If final result
-          if (event.results[0].isFinal && handleSendMessageRef.current) {
-            handleSendMessageRef.current(currentTranscript);
-            setInterimSpeech('');
-            setIsListening(false);
+          // Clear previous silence timer
+          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+
+          if (isFinalDetected) {
+            submitVoiceSpeech(currentTranscript);
+          } else {
+            // Auto submit if user pauses speaking for 1.3 seconds
+            silenceTimerRef.current = setTimeout(() => {
+              if (activeTranscriptRef.current) {
+                submitVoiceSpeech(activeTranscriptRef.current);
+              }
+            }, 1300);
           }
         };
 
         recognition.onerror = () => {
           setIsListening(false);
-          setInterimSpeech('');
+          if (activeTranscriptRef.current) {
+            submitVoiceSpeech(activeTranscriptRef.current);
+          }
         };
 
         recognition.onend = () => {
           setIsListening(false);
+          if (activeTranscriptRef.current) {
+            submitVoiceSpeech(activeTranscriptRef.current);
+          }
         };
 
         recognitionRef.current = recognition;
@@ -102,6 +148,7 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
     return () => {
       if (synthRef.current) synthRef.current.cancel();
       if (recognitionRef.current) recognitionRef.current.stop();
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     };
   }, []);
 
@@ -121,7 +168,7 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
       id: 'welcome-1',
       sender: 'sanvi',
       timestamp: 'Just now',
-      text: `Hello ${studentProfile.name.split(' ')[0]}! I am Sanvi, your personal AI voice assistant for DV Analytics. I can speak with you via two-way voice, help you solve assignments, debug SQL & Python code, or connect you with academic coordinators. Tap the microphone to talk with me anytime!`
+      text: `Hello ${studentProfile.name.split(' ')[0]}! I am Sanvi, your personal AI voice assistant for DV Analytics. You can say "Hey Sunvi" or "Hey Sanvi" to speak with me, ask for assignment solutions, or connect with your academic coordinator. How can I assist you right now?`
     }
   ]);
   const messagesEndRef = useRef(null);
@@ -141,8 +188,11 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
 
   // Speak text using natural speech synthesis
   const speakSanviResponse = (text, msgId = null) => {
-    if (!synthRef.current) return;
-    synthRef.current.cancel();
+    if (!window.speechSynthesis) return;
+
+    // Crucial for Chrome on Windows: resume synthesis
+    window.speechSynthesis.resume();
+    window.speechSynthesis.cancel();
 
     // Clean markdown symbols for natural speech
     const cleanText = text
@@ -159,9 +209,9 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
     utterance.pitch = 1.05; // natural friendly tone
 
     // Choose preferred natural female voice if available
-    const voices = synthRef.current.getVoices();
+    const voices = window.speechSynthesis.getVoices();
     const preferredVoice = voices.find(v => 
-      (v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Zira') || v.name.includes('Google UK English Female') || v.name.includes('Victoria')) && v.lang.startsWith('en')
+      (v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Zira') || v.name.includes('Google UK English Female') || v.name.includes('Natural') || v.name.includes('Victoria')) && v.lang.startsWith('en')
     ) || voices.find(v => v.lang.startsWith('en'));
 
     if (preferredVoice) {
@@ -183,12 +233,12 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
       setActiveSpeakingMsgId(null);
     };
 
-    synthRef.current.speak(utterance);
+    window.speechSynthesis.speak(utterance);
   };
 
   const stopSpeaking = () => {
-    if (synthRef.current) {
-      synthRef.current.cancel();
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
       setIsSpeaking(false);
       setActiveSpeakingMsgId(null);
     }
@@ -199,18 +249,23 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
     if (isListening) {
       if (recognitionRef.current) recognitionRef.current.stop();
       setIsListening(false);
+      if (activeTranscriptRef.current) {
+        submitVoiceSpeech(activeTranscriptRef.current);
+      }
     } else {
-      if (synthRef.current) synthRef.current.cancel();
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
       setIsSpeaking(false);
       if (recognitionRef.current) {
         try {
           recognitionRef.current.start();
         } catch (_e) {
           recognitionRef.current.stop();
-          setTimeout(() => recognitionRef.current.start(), 200);
+          setTimeout(() => {
+            try { recognitionRef.current.start(); } catch (_err) {}
+          }, 250);
         }
       } else {
-        alert("Speech Recognition is not supported in this browser. Please use Google Chrome, Edge, or Safari, or type your message.");
+        alert("Speech Recognition is not supported in this browser. Please use Google Chrome, Microsoft Edge, or Safari.");
       }
     }
   };
@@ -235,29 +290,53 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
     setTimeout(() => {
       setIsProcessing(false);
       let replyText = "";
-      const lower = query.toLowerCase();
+      const lower = query.toLowerCase().trim();
 
-      if (lower.includes('who are you') || lower.includes('your name') || lower.includes('introduce')) {
-        replyText = "Hello! My name is Sanvi. I am your personal AI assistant at DV Analytics. I'm here to solve your assignments, answer technical doubts in Python, SQL, and Excel, and help coordinate your learning journey!";
+      const hasSunviOrSanvi = lower.includes('sunvi') || 
+                              lower.includes('sanvi') || 
+                              lower.includes('saanvi') || 
+                              lower.includes('shanvi') ||
+                              lower.includes('sunny') ||
+                              lower.includes('sonvi');
+
+      // 1. Direct Greetings & Wake Word ("Hey Sunvi", "Hey Sanvi", "Hello Sunvi", "Hi", etc.)
+      if (
+        lower === 'hey sunvi' || lower === 'hey sanvi' || 
+        lower === 'hi sunvi' || lower === 'hi sanvi' ||
+        lower === 'hello sunvi' || lower === 'hello sanvi' ||
+        lower === 'sunvi' || lower === 'sanvi' ||
+        lower === 'hey' || lower === 'hello' || lower === 'hi' ||
+        lower.startsWith('hey sunvi') || lower.startsWith('hey sanvi') ||
+        lower.startsWith('hi sunvi') || lower.startsWith('hi sanvi') ||
+        lower.startsWith('hello sunvi') || lower.startsWith('hello sanvi') ||
+        (hasSunviOrSanvi && (lower.includes('there') || lower.includes('listen') || lower.includes('hello') || lower.includes('hey') || lower.includes('hi') || lower.split(' ').length <= 3))
+      ) {
+        replyText = "Hello! Yes, I am Sanvi and I am right here listening to you. How can I help you today? Would you like assistance with your assignments, checking your watch time, or connecting with your academic coordinator?";
+      } else if (lower.includes('who are you') || lower.includes('your name') || lower.includes('introduce')) {
+        replyText = "Hello! My name is Sanvi. I am your personal AI voice assistant at DV Analytics. I'm here to solve your assignments, answer technical questions in Python, SQL, and Excel, and help coordinate your learning journey!";
+      } else if (lower.includes('how are you') || lower.includes('how r u')) {
+        replyText = "I am doing wonderful, thank you! Ready to help you with your analytics coursework and assignments. What are you working on right now?";
+      } else if (lower.includes('thank') || lower.includes('thx')) {
+        replyText = "You are most welcome! Let me know if you need help with anything else. Happy learning!";
       } else if (lower.includes('coordinator') || lower.includes('phone') || lower.includes('number') || lower.includes('call') || lower.includes('contact')) {
         replyText = `You can directly reach your Academic Coordinator (${dvHelplineNumbers.academicCoordinator.contactPerson}) at ${dvHelplineNumbers.academicCoordinator.phone}. Timings are ${dvHelplineNumbers.academicCoordinator.timings}. You can also connect via WhatsApp in the Helplines tab!`;
       } else if (lower.includes('watch time') || lower.includes('recording') || lower.includes('attendance') || lower.includes('progress')) {
         replyText = `Great progress! You have watched ${studentProfile.watchedRecordedHours} hours out of ${studentProfile.totalRecordedHours} hours of recorded lectures (${studentProfile.watchedPercent}%). Your live attendance is at ${studentProfile.attendancePercent}%, and you are on a ${studentProfile.streakDays}-day streak.`;
-      } else if (lower.includes('asn-01') || lower.includes('retail') || (lower.includes('assignment') && lower.includes('excel'))) {
+      } else if (lower.includes('asn-01') || lower.includes('retail') || (lower.includes('assignment') && lower.includes('excel')) || lower.includes('assignment 1') || lower.includes('first assignment')) {
         replyText = `For Assignment 1 (Retail Sales Analysis): 
 1. Use XLOOKUP with concatenated criteria to map product SKUs.
 2. Calculate Net Revenue as Gross Revenue multiplied by 1 minus discount percentage.
-3. Build a dynamic pivot table with category slicers. Check the 'Assignments' tab for the formula guide!`;
-      } else if (lower.includes('asn-02') || lower.includes('vba') || lower.includes('macro') || lower.includes('invoice')) {
+3. Build a dynamic pivot table with category slicers. Check the 'Assignments' tab for the full formula guide!`;
+      } else if (lower.includes('asn-02') || lower.includes('vba') || lower.includes('macro') || lower.includes('invoice') || lower.includes('assignment 2') || lower.includes('second assignment')) {
         replyText = `For Assignment 2 (VBA Invoice Generator): Make sure your workbook is saved as .xlsm. Use the ExportAsFixedFormat method with xlTypePDF to generate your branded invoice. Check the Assignments tab for the copyable macro code.`;
-      } else if (lower.includes('asn-03') || lower.includes('sql') || lower.includes('database') || lower.includes('schema')) {
+      } else if (lower.includes('asn-03') || lower.includes('sql') || lower.includes('database') || lower.includes('schema') || lower.includes('assignment 3') || lower.includes('third assignment')) {
         replyText = `For Assignment 3 (SQL Server E-Commerce): Use DENSE_RANK() OVER (ORDER BY total_spent DESC) to rank high-value buyers, and calculate churn with DATEDIFF on customer orders. You scored 94 on this submission!`;
       } else if (lower.includes('tool') || lower.includes('connect') || lower.includes('jupyter') || lower.includes('ssms') || lower.includes('power bi')) {
         replyText = `You can connect to JupyterLab at ${dvToolConnections[0].endpoint}, and SQL Server database ${dvToolConnections[1].database} on port 1433. View full credentials under the Tools tab.`;
       } else if (lower.includes('interview') || lower.includes('kit') || lower.includes('step')) {
         replyText = `Your Interview Prep Kit includes 7 colored step folders covering ATS Resume Building, SQL Mastery, Excel Modeling, Python vectorization, Machine Learning, Case Studies, and HR Salary Negotiation!`;
       } else {
-        replyText = `I understand your question regarding "${query}". I have indexed this in our DV Analytics knowledge base. You can review assignment blueprints in the Solve Assignment tab or connect with faculty through the Helplines tab.`;
+        replyText = `I heard: "${query}". I am right here to help! You can ask me to solve any of your 3 assignments, check your live vs recorded watch time, explain SQL or Excel formulas, or get the phone number for the academic coordinator. What would you like to do?`;
       }
 
       const sanviMsgId = (Date.now() + 1).toString();
@@ -273,7 +352,7 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
       if (voiceEnabled) {
         speakSanviResponse(replyText, sanviMsgId);
       }
-    }, 650);
+    }, 600);
   };
   handleSendMessageRef.current = handleSendMessage;
 
@@ -289,7 +368,7 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
           >
             <span className="w-2 h-2 rounded-full bg-rose-400 animate-ping"></span>
             <span className="text-xs font-semibold tracking-wide">
-              Talk with <span className="text-rose-400 font-bold">Sanvi</span> (Voice AI)
+              Say <span className="text-rose-400 font-bold">"Hey Sunvi"</span> (Voice AI)
             </span>
           </div>
 
@@ -337,7 +416,7 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
                   <h3 className="text-sm font-bold tracking-wide text-white flex items-center gap-1.5">
                     Sanvi
                     <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                      Voice AI 3.0
+                      Two-Way Voice AI
                     </span>
                   </h3>
                 </div>
@@ -348,7 +427,7 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
                       ? "Sanvi is thinking..." 
                       : isSpeaking 
                         ? "Sanvi is speaking..." 
-                        : "Two-Way Voice & Assignment Assistant"}
+                        : "Ready • Tap Mic or say 'Hey Sunvi'"}
                 </p>
               </div>
             </div>
@@ -407,7 +486,7 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
                     </div>
                     <span>
                       {isListening 
-                        ? (interimSpeech ? `"${interimSpeech}"` : "Listening... Speak your question now") 
+                        ? (interimSpeech ? `"${interimSpeech}"` : "Listening... Say 'Hey Sunvi' or your question now") 
                         : isSpeaking 
                           ? "Sanvi is speaking response..." 
                           : "Processing your request..."}
@@ -424,10 +503,10 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
                   )}
                   {isListening && (
                     <button
-                      onClick={toggleListening}
+                      onClick={() => submitVoiceSpeech(activeTranscriptRef.current)}
                       className="px-2 py-0.5 rounded bg-emerald-500 text-white text-[10px] font-bold hover:bg-emerald-600 transition-all cursor-pointer"
                     >
-                      Done Speaking
+                      Send Speech
                     </button>
                   )}
                 </div>
@@ -545,8 +624,14 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
                   {/* Fast Prompt Suggestions */}
                   <div className="px-4 py-2 bg-slate-900/50 border-t border-slate-800/80 flex items-center gap-1.5 overflow-x-auto text-[11px] whitespace-nowrap scrollbar-none">
                     <span className="text-slate-500 font-semibold flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-rose-400" /> Ask Sanvi:
+                      <Sparkles className="w-3 h-3 text-rose-400" /> Instant Prompts:
                     </span>
+                    <button
+                      onClick={() => handleSendMessage("Hey Sunvi")}
+                      className="px-2.5 py-1 rounded-full bg-rose-900/40 text-rose-300 hover:bg-rose-800/50 transition-colors border border-rose-500/40 cursor-pointer font-bold"
+                    >
+                      "Hey Sunvi" 👋
+                    </button>
                     <button
                       onClick={() => handleSendMessage("Sanvi, how do I solve Assignment 1 Retail Sales?")}
                       className="px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 hover:text-rose-300 hover:bg-slate-700 transition-colors border border-slate-700/60 cursor-pointer"
@@ -563,7 +648,7 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
                       onClick={() => handleSendMessage("Sanvi, connect me with Academic Coordinator")}
                       className="px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 hover:text-emerald-300 hover:bg-slate-700 transition-colors border border-slate-700/60 cursor-pointer"
                     >
-                      Coordinator Contact
+                      Coordinator Helpline
                     </button>
                   </div>
 
@@ -579,7 +664,7 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
                     <button
                       type="button"
                       onClick={toggleListening}
-                      title={isListening ? "Stop listening" : "Speak to Sanvi (Voice Mode)"}
+                      title={isListening ? "Stop listening & send" : "Tap to Speak (Say 'Hey Sunvi')"}
                       className={`p-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center relative ${
                         isListening
                           ? 'bg-rose-500 text-white animate-pulse shadow-lg shadow-rose-500/50'
@@ -595,7 +680,7 @@ export default function SanviAssistant({ isOpenExternal, onCloseExternal }) {
 
                     <input
                       type="text"
-                      placeholder={isListening ? "Listening to your voice..." : "Type or speak to Sanvi (e.g. solve assignment, call coordinator)..."}
+                      placeholder={isListening ? "Listening... (Say 'Hey Sunvi' or your question)" : "Speak or type to Sanvi (Say 'Hey Sunvi')..."}
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
                       className="flex-1 bg-slate-950 text-xs text-slate-200 placeholder:text-slate-500 px-3.5 py-2.5 rounded-xl border border-slate-800 focus:border-rose-400 focus:ring-1 focus:ring-rose-400 focus:outline-none transition-all"
