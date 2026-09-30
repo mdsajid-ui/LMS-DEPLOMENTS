@@ -4,6 +4,7 @@ import Header from './components/Header';
 import NotificationModal from './components/NotificationModal';
 import ScheduleModal from './components/ScheduleModal';
 import SupportModal from './components/SupportModal';
+import DvAssistant from './components/DvAssistant';
 
 import WelcomePage from './pages/WelcomePage';
 import DashboardPage from './pages/DashboardPage';
@@ -36,10 +37,11 @@ export default function App() {
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [supportTab, setSupportTab] = useState('hotline');
+  const [dvAssistantOpen, setDvAssistantOpen] = useState(false);
 
   const handleOpenChat = () => {
-    setSupportTab('chat');
-    setSupportOpen(true);
+    // Open Jarvis-powered DV Assistant directly
+    setDvAssistantOpen(true);
   };
 
   const handleOpenSupport = () => {
@@ -98,6 +100,8 @@ export default function App() {
               onNavigateToAssignments={() => setCurrentTab('assignments')}
               onNavigateToAttendance={() => setCurrentTab('attendance')}
               onNavigateToSession={() => setCurrentTab('session')}
+              onNavigateToCat={() => setCurrentTab('application-test')}
+              onOpenDvAssistant={() => setDvAssistantOpen(true)}
             />
           )}
 
@@ -123,7 +127,9 @@ export default function App() {
           )}
 
           {currentTab === 'application-test' && (
-            <ApplicationTestPage />
+            <ApplicationTestPage 
+              student={studentProfile} 
+            />
           )}
 
           {currentTab === 'resume' && (
@@ -198,7 +204,7 @@ export default function App() {
         </footer>
       </div>
 
-      {/* Global Modals */}
+      {/* Global Modals & Jarvis DV Assistant */}
       <NotificationModal
         isOpen={notificationsOpen}
         onClose={() => setNotificationsOpen(false)}
@@ -213,6 +219,12 @@ export default function App() {
         isOpen={supportOpen}
         onClose={() => setSupportOpen(false)}
         initialTab={supportTab}
+      />
+
+      {/* Jarvis DV Assistant (Floats across all screens) */}
+      <DvAssistant
+        isOpenExternal={dvAssistantOpen}
+        onCloseExternal={() => setDvAssistantOpen(false)}
       />
     </div>
   );

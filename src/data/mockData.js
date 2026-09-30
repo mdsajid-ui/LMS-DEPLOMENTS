@@ -7,12 +7,37 @@ export const studentProfile = {
   startDate: "05.06.2026",
   studentId: "DVA-202606-448",
   status: "Active Learner",
-  avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+  avatar: "./student-avatar.jpg",
+  // Live class tracking
   attendancePercent: 60,
-  assignmentsPending: 100,
-  courseProgress: 15,
+  liveAttendedHours: 36,
+  liveTotalHours: 60,
+  liveAttendedCount: 18,
+  liveTotalCount: 30,
+  // Recorded video watch time tracking
+  totalRecordedHours: 68,
+  watchedRecordedHours: 48.5,
+  watchedPercent: 71.3,
+  completedVideosCount: 14,
+  inProgressVideosCount: 4,
+  streakDays: 7,
+  assignmentsPending: 2,
+  assignmentsCompleted: 1,
+  courseProgress: 35,
   unreadNotifications: 250,
+  catScore: "88%",
+  catStatus: "Evaluation Completed"
 };
+
+export const weeklyLearningAnalytics = [
+  { day: "Mon", liveHours: 2.0, recordedHours: 3.5 },
+  { day: "Tue", liveHours: 0.0, recordedHours: 4.2 },
+  { day: "Wed", liveHours: 2.5, recordedHours: 1.8 },
+  { day: "Thu", liveHours: 0.0, recordedHours: 3.0 },
+  { day: "Fri", liveHours: 2.0, recordedHours: 4.0 },
+  { day: "Sat", liveHours: 4.0, recordedHours: 2.5 },
+  { day: "Sun", liveHours: 3.5, recordedHours: 1.5 },
+];
 
 export const courseCategories = [
   {
@@ -26,13 +51,13 @@ export const courseCategories = [
     totalModules: 7,
     completedModules: 1,
     subjects: [
-      { id: 1, name: "EXCEL BASE AND ADVANCED", sessions: 12, hours: 24, status: "In Progress", progress: 35, accessId: 1 },
-      { id: 2, name: "EXCEL VBA", sessions: 8, hours: 16, status: "Not Started", progress: 0, accessId: 2 },
-      { id: 3, name: "SQL SERVER", sessions: 14, hours: 28, status: "Not Started", progress: 0, accessId: 3 },
-      { id: 4, name: "SAS BASE AND ADVANCED", sessions: 10, hours: 20, status: "Not Started", progress: 0, accessId: 4 },
-      { id: 5, name: "PYTHON PROGRAMMING", sessions: 18, hours: 36, status: "Not Started", progress: 0, accessId: 5 },
-      { id: 6, name: "MS ACCESS", sessions: 6, hours: 12, status: "Not Started", progress: 0, accessId: 6 },
-      { id: 7, name: "DSA", sessions: 10, hours: 20, status: "Not Started", progress: 0, accessId: 7 }
+      { id: 1, name: "EXCEL BASE AND ADVANCED", sessions: 12, hours: 24, watchedHours: 24, status: "Completed", progress: 100, accessId: 1 },
+      { id: 2, name: "EXCEL VBA", sessions: 8, hours: 16, watchedHours: 10.5, status: "In Progress", progress: 65, accessId: 2 },
+      { id: 3, name: "SQL SERVER", sessions: 14, hours: 28, watchedHours: 14, status: "In Progress", progress: 50, accessId: 3 },
+      { id: 4, name: "SAS BASE AND ADVANCED", sessions: 10, hours: 20, watchedHours: 0, status: "Not Started", progress: 0, accessId: 4 },
+      { id: 5, name: "PYTHON PROGRAMMING", sessions: 18, hours: 36, watchedHours: 8, status: "In Progress", progress: 22, accessId: 5 },
+      { id: 6, name: "MS ACCESS", sessions: 6, hours: 12, watchedHours: 0, status: "Not Started", progress: 0, accessId: 6 },
+      { id: 7, name: "DSA", sessions: 10, hours: 20, watchedHours: 0, status: "Not Started", progress: 0, accessId: 7 }
     ]
   },
   {
@@ -46,10 +71,10 @@ export const courseCategories = [
     totalModules: 4,
     completedModules: 0,
     subjects: [
-      { id: 8, name: "POWER BI COMPLETE MASTERY", sessions: 14, hours: 28, status: "Not Started", progress: 0, accessId: 8 },
-      { id: 9, name: "TABLEAU DESKTOP SPECIALIST", sessions: 12, hours: 24, status: "Not Started", progress: 0, accessId: 9 },
-      { id: 10, name: "ALTERYX WORKFLOW AUTOMATION", sessions: 8, hours: 16, status: "Not Started", progress: 0, accessId: 10 },
-      { id: 11, name: "EXPLORATORY DATA ANALYSIS (EDA)", sessions: 8, hours: 16, status: "Not Started", progress: 0, accessId: 11 }
+      { id: 8, name: "POWER BI COMPLETE MASTERY", sessions: 14, hours: 28, watchedHours: 2.5, status: "In Progress", progress: 9, accessId: 8 },
+      { id: 9, name: "TABLEAU DESKTOP SPECIALIST", sessions: 12, hours: 24, watchedHours: 0, status: "Not Started", progress: 0, accessId: 9 },
+      { id: 10, name: "ALTERYX WORKFLOW AUTOMATION", sessions: 8, hours: 16, watchedHours: 0, status: "Not Started", progress: 0, accessId: 10 },
+      { id: 11, name: "EXPLORATORY DATA ANALYSIS (EDA)", sessions: 8, hours: 16, watchedHours: 0, status: "Not Started", progress: 0, accessId: 11 }
     ]
   },
   {
@@ -63,11 +88,11 @@ export const courseCategories = [
     totalModules: 5,
     completedModules: 0,
     subjects: [
-      { id: 12, name: "SUPERVISED & UNSUPERVISED LEARNING", sessions: 16, hours: 32, status: "Not Started", progress: 0, accessId: 12 },
-      { id: 13, name: "NATURAL LANGUAGE PROCESSING (NLP)", sessions: 10, hours: 20, status: "Not Started", progress: 0, accessId: 13 },
-      { id: 14, name: "DEEP LEARNING WITH PYTORCH", sessions: 12, hours: 24, status: "Not Started", progress: 0, accessId: 14 },
-      { id: 15, name: "GENERATIVE AI & PROMPT ENGINEERING", sessions: 8, hours: 16, status: "Not Started", progress: 0, accessId: 15 },
-      { id: 16, name: "RAG PIPELINES & LLM AGENTS", sessions: 10, hours: 20, status: "Not Started", progress: 0, accessId: 16 }
+      { id: 12, name: "SUPERVISED & UNSUPERVISED LEARNING", sessions: 16, hours: 32, watchedHours: 0, status: "Not Started", progress: 0, accessId: 12 },
+      { id: 13, name: "NATURAL LANGUAGE PROCESSING (NLP)", sessions: 10, hours: 20, watchedHours: 0, status: "Not Started", progress: 0, accessId: 13 },
+      { id: 14, name: "DEEP LEARNING WITH PYTORCH", sessions: 12, hours: 24, watchedHours: 0, status: "Not Started", progress: 0, accessId: 14 },
+      { id: 15, name: "GENERATIVE AI & PROMPT ENGINEERING", sessions: 8, hours: 16, watchedHours: 0, status: "Not Started", progress: 0, accessId: 15 },
+      { id: 16, name: "RAG PIPELINES & LLM AGENTS", sessions: 10, hours: 20, watchedHours: 0, status: "Not Started", progress: 0, accessId: 16 }
     ]
   },
   {
@@ -81,10 +106,10 @@ export const courseCategories = [
     totalModules: 4,
     completedModules: 0,
     subjects: [
-      { id: 17, name: "AWS CLOUD PRACTITIONER & S3/EC2", sessions: 8, hours: 16, status: "Not Started", progress: 0, accessId: 17 },
-      { id: 18, name: "DOCKER CONTAINERIZATION FOR ML", sessions: 6, hours: 12, status: "Not Started", progress: 0, accessId: 18 },
-      { id: 19, name: "FASTAPI REST API DEVELOPMENT", sessions: 6, hours: 12, status: "Not Started", progress: 0, accessId: 19 },
-      { id: 20, name: "MLOPS PIPELINES & CI/CD", sessions: 8, hours: 16, status: "Not Started", progress: 0, accessId: 20 }
+      { id: 17, name: "AWS CLOUD PRACTITIONER & S3/EC2", sessions: 8, hours: 16, watchedHours: 0, status: "Not Started", progress: 0, accessId: 17 },
+      { id: 18, name: "DOCKER CONTAINERIZATION FOR ML", sessions: 6, hours: 12, watchedHours: 0, status: "Not Started", progress: 0, accessId: 18 },
+      { id: 19, name: "FASTAPI REST API DEVELOPMENT", sessions: 6, hours: 12, watchedHours: 0, status: "Not Started", progress: 0, accessId: 19 },
+      { id: 20, name: "MLOPS PIPELINES & CI/CD", sessions: 8, hours: 16, watchedHours: 0, status: "Not Started", progress: 0, accessId: 20 }
     ]
   }
 ];
@@ -106,6 +131,8 @@ export const excelSessions = [
     isFolder: true,
     videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
     duration: "1h 45m",
+    watchedMinutes: 105,
+    totalMinutes: 105,
     recordingDate: "07.06.2026",
     instructor: "Dr. Sandip Mukherjee",
     summary: "Deep dive into absolute, relative, and mixed references, formula auditing, array formulas, and core best practices for enterprise datasets.",
@@ -122,6 +149,8 @@ export const excelSessions = [
     isFolder: true,
     videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
     duration: "2h 10m",
+    watchedMinutes: 130,
+    totalMinutes: 130,
     recordingDate: "10.06.2026",
     instructor: "Dr. Sandip Mukherjee",
     summary: "Mastering VLOOKUP limitations, dual-directional XLOOKUP, nested INDEX-MATCH, approximate matching for tax brackets and customer segments.",
@@ -137,6 +166,8 @@ export const excelSessions = [
     isFolder: true,
     videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
     duration: "1h 55m",
+    watchedMinutes: 115,
+    totalMinutes: 115,
     recordingDate: "14.06.2026",
     instructor: "Dr. Sandip Mukherjee",
     summary: "REGEX concepts in Excel 365, TEXTSPLIT, TEXTJOIN, TRIM, CLEAN, DATE functions, and dynamic conditional formatting with formula rules.",
@@ -151,6 +182,8 @@ export const excelSessions = [
     isFolder: true,
     videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
     duration: "2h 30m",
+    watchedMinutes: 90,
+    totalMinutes: 150,
     recordingDate: "17.06.2026",
     instructor: "Dr. Sandip Mukherjee",
     summary: "ETL using Power Query, unpivoting tables, calculated fields, slicers, timeline controls, and building an executive KPI dashboard.",
@@ -172,7 +205,9 @@ export const assignmentsList = [
     status: "Pending",
     submissionDate: null,
     score: null,
-    feedback: "Awaiting submission before cutoff date."
+    feedback: "Awaiting submission before cutoff date.",
+    description: "Analyze 25,000 retail sales records. Calculate quarterly revenue growth, identify top 10% customers using PERCENTILE.INC, and build a multi-scenario summary with XLOOKUP and dynamic arrays.",
+    starterFile: "Retail_Sales_Raw_Data.xlsx"
   },
   {
     id: "ASN-02",
@@ -183,7 +218,9 @@ export const assignmentsList = [
     status: "Pending",
     submissionDate: null,
     score: null,
-    feedback: "Upload .xlsm file with documented subroutines."
+    feedback: "Upload .xlsm file with documented subroutines.",
+    description: "Develop a macro-enabled workbook that takes customer purchase items, calculates subtotal, tax, and discount via VBA functions, and exports a branded PDF invoice automatically.",
+    starterFile: "Invoice_Template_Starter.xlsm"
   },
   {
     id: "ASN-03",
@@ -191,10 +228,12 @@ export const assignmentsList = [
     subject: "SQL Server",
     deadline: "29 Oct 2026",
     totalMarks: 100,
-    status: "Pending",
-    submissionDate: null,
-    score: null,
-    feedback: "Submit query scripts and ER diagram export."
+    status: "Submitted",
+    submissionDate: "28 Sep 2026",
+    score: 94,
+    feedback: "Exceptional indexing optimization and use of Common Table Expressions (CTEs). Well done!",
+    description: "Design a 3NF relational schema with Customers, Orders, OrderItems, Products, and Payments. Write window functions for running revenue and 30-day customer churn.",
+    starterFile: "Ecommerce_DDL_Seed.sql"
   }
 ];
 
@@ -293,7 +332,7 @@ export const forumTopics = [
     id: "F-3",
     title: "Virtual environment setup in VSCode for Python Data Science",
     author: "SK Abdul Sajid",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
+    avatar: "./student-avatar.jpg",
     tag: "Python",
     replies: 4,
     upvotes: 8,
@@ -301,3 +340,304 @@ export const forumTopics = [
     answered: false
   }
 ];
+
+// Candidates Application Test (CAT) - Multiple Choice Questions Bank
+export const catMcqQuestionsBank = [
+  {
+    id: 1,
+    subject: "SQL Server",
+    q: "Which SQL clause is used to filter records after aggregation with GROUP BY?",
+    options: ["WHERE", "HAVING", "ORDER BY", "FILTER"],
+    correct: 1,
+    explanation: "HAVING is evaluated after GROUP BY aggregation, whereas WHERE filters individual rows before grouping takes place."
+  },
+  {
+    id: 2,
+    subject: "Excel Advanced",
+    q: "In Excel 365, what does the '#' operator denote when appended to a cell reference like 'B2#'?",
+    options: ["Error in dynamic formula", "Spilled range operator", "Absolute row lock", "External workbook reference"],
+    correct: 1,
+    explanation: "The hash symbol (#) is the Spilled Range Operator in Excel 365, referencing all cells produced by a dynamic array formula starting at B2."
+  },
+  {
+    id: 3,
+    subject: "Python Data Science",
+    q: "In Python Pandas, which method is the most efficient to remove missing or NaN values from a DataFrame?",
+    options: ["df.drop_null()", "df.dropna()", "df.remove_nan()", "df.filter_na()"],
+    correct: 1,
+    explanation: "df.dropna() drops rows or columns with null values based on the 'axis' and 'how' parameters."
+  },
+  {
+    id: 4,
+    subject: "SQL Server",
+    q: "What is the key difference between RANK() and DENSE_RANK() when two rows have equal values?",
+    options: [
+      "RANK() assigns identical ranks and skips subsequent ranks; DENSE_RANK() does not skip",
+      "DENSE_RANK() only works on unique values",
+      "RANK() sorts ascending while DENSE_RANK() sorts descending",
+      "Both produce identical outputs in all SQL standards"
+    ],
+    correct: 0,
+    explanation: "If two rows tie for rank 1, RANK() assigns 1, 1, 3 (skips 2), whereas DENSE_RANK() assigns 1, 1, 2 (no gaps in ranking sequence)."
+  },
+  {
+    id: 5,
+    subject: "Machine Learning",
+    q: "In Supervised Machine Learning, what problem arises when a model performs exceptionally well on training data but poorly on unseen test data?",
+    options: ["High Bias / Underfitting", "High Variance / Overfitting", "Data Drift", "Information Gain Loss"],
+    correct: 1,
+    explanation: "Overfitting (high variance) occurs when a model learns noise and specific details of the training set rather than generalizable underlying patterns."
+  },
+  {
+    id: 6,
+    subject: "Power BI & DAX",
+    q: "Which DAX function in Power BI is used to modify the filter context of a calculation?",
+    options: ["FILTER()", "CALCULATE()", "RELATED()", "SUMMARIZE()"],
+    correct: 1,
+    explanation: "CALCULATE() evaluates an expression in a context modified by given filters, making it the most powerful DAX function."
+  },
+  {
+    id: 7,
+    subject: "Python Programming",
+    q: "What is the time complexity of looking up a key in a standard Python dictionary under average conditions?",
+    options: ["O(n)", "O(log n)", "O(1)", "O(n log n)"],
+    correct: 2,
+    explanation: "Python dictionaries use hash tables under the hood, yielding O(1) constant average time complexity for key lookups."
+  },
+  {
+    id: 8,
+    subject: "Excel Advanced",
+    q: "How does XLOOKUP handle search order when searching from bottom-to-top in a column?",
+    options: [
+      "Set search_mode parameter to -1",
+      "Set match_mode parameter to 2",
+      "Sort the table descending first",
+      "XLOOKUP only supports top-down searches"
+    ],
+    correct: 0,
+    explanation: "XLOOKUP supports reverse searching natively by supplying search_mode = -1 (last-to-first)."
+  }
+];
+
+// Candidates Application Test (CAT) - Practical Problem Scenarios
+export const catPracticalProblems = [
+  {
+    id: "CAT-PRAC-01",
+    title: "Omnichannel Retail Store Sales & Churn Analytics",
+    difficulty: "Advanced",
+    duration: "60 Mins",
+    marks: 100,
+    objective: "Analyze a multi-branch retail transactions dataset (25,000 records). Clean inconsistent customer names, compute month-over-month revenue growth using SQL Window Functions or Pandas, and identify top quartile buyers for loyalty targeting.",
+    starterDataset: [
+      { order_id: "ORD-9011", customer_id: "C-104", branch: "Bengaluru East", product_category: "Electronics", quantity: 2, unit_price: 18500, discount_pct: 0.10, order_date: "2026-05-12" },
+      { order_id: "ORD-9012", customer_id: "C-209", branch: "Mumbai Central", product_category: "Home & Decor", quantity: 4, unit_price: 3200, discount_pct: 0.05, order_date: "2026-05-14" },
+      { order_id: "ORD-9013", customer_id: "C-104", branch: "Bengaluru East", product_category: "Accessories", quantity: 1, unit_price: 1450, discount_pct: 0.00, order_date: "2026-05-19" },
+      { order_id: "ORD-9014", customer_id: "C-338", branch: "Kolkata North", product_category: "Electronics", quantity: 1, unit_price: 45000, discount_pct: 0.15, order_date: "2026-05-22" },
+      { order_id: "ORD-9015", customer_id: "C-512", branch: "Delhi NCR", product_category: "Fitness", quantity: 3, unit_price: 5200, discount_pct: 0.08, order_date: "2026-05-25" },
+      { order_id: "ORD-9016", customer_id: "C-209", branch: "Mumbai Central", product_category: "Electronics", quantity: 1, unit_price: 22000, discount_pct: 0.12, order_date: "2026-05-28" }
+    ],
+    starterSql: `-- Write your SQL solution below:
+-- Objective 1: Calculate Total Net Revenue per Branch
+-- Objective 2: Rank Branches by Net Revenue using DENSE_RANK()
+
+SELECT 
+    branch,
+    SUM(quantity * unit_price * (1 - discount_pct)) AS net_revenue,
+    DENSE_RANK() OVER (ORDER BY SUM(quantity * unit_price * (1 - discount_pct)) DESC) AS revenue_rank
+FROM retail_transactions
+GROUP BY branch
+ORDER BY net_revenue DESC;`,
+    starterPython: `# Write your Python Pandas solution below:
+import pandas as pd
+import numpy as np
+
+# Load transactions
+df = pd.DataFrame(starter_data)
+
+# 1. Compute Net Line Total
+df['net_amount'] = df['quantity'] * df['unit_price'] * (1 - df['discount_pct'])
+
+# 2. Group by branch and aggregate
+branch_summary = df.groupby('branch')['net_amount'].agg(['sum', 'count']).reset_index()
+branch_summary.columns = ['Branch', 'Total_Revenue', 'Orders_Count']
+branch_summary = branch_summary.sort_values(by='Total_Revenue', ascending=False)
+
+print(branch_summary)`
+  }
+];
+
+// Candidates Application Test (CAT) - Personal Interview Dossier
+export const catInterviewDossier = {
+  rubric: [
+    { criterion: "Technical & Conceptual Clarity", weight: 35, desc: "Understanding of SQL querying, Python vectorization, Excel data models, and ML fundamentals." },
+    { criterion: "Problem Structuring & Logic", weight: 30, desc: "Ability to dissect ambiguous business problems into structured analytics steps." },
+    { criterion: "Practical Tool Knowledge", weight: 20, desc: "Hands-on familiarity with SSMS, Power BI, JupyterLab, and Excel 365 formulas." },
+    { criterion: "Communication & Confidence", weight: 15, desc: "Concise explanations, articulation of past projects, and viva confidence." }
+  ],
+  panelists: [
+    { name: "Dr. Sandip Mukherjee", role: "Chief Academic Mentor & Data Architect", exp: "18+ Yrs", slots: "Sat 4:00 PM, Sun 11:30 AM" },
+    { name: "Prof. Priya Sengupta", role: "Senior Data Science & AI Faculty", exp: "12+ Yrs", slots: "Sat 6:00 PM, Sun 3:00 PM" }
+  ],
+  interviewQuestions: [
+    {
+      id: "PI-1",
+      topic: "SQL Server & Optimization",
+      question: "Explain the difference between Clustered Index and Non-Clustered Index. When would you avoid adding an index?",
+      keyPoints: "Clustered index defines physical order of data (only 1 per table); Non-clustered index creates separate pointer leaf pages. Avoid over-indexing columns with frequent INSERT/UPDATE operations or low cardinality (e.g. Boolean flags)."
+    },
+    {
+      id: "PI-2",
+      topic: "Python & Machine Learning",
+      question: "How do you detect and mitigate multicollinearity in a multiple linear regression model?",
+      keyPoints: "Calculate Variance Inflation Factor (VIF > 5 indicates high multicollinearity); inspect correlation heatmaps; drop collinear features or apply dimensionality reduction like PCA or Ridge (L2) Regularization."
+    },
+    {
+      id: "PI-3",
+      topic: "Excel & Data Modeling",
+      question: "How does the Excel Data Model differ from standard worksheet formulas when dealing with 2 million rows of data?",
+      keyPoints: "Excel Data Model uses the xVelocity in-memory columnar database engine (Power Pivot). It bypasses the 1,048,576 row worksheet limit, compresses data significantly, and enables relationships without slow VLOOKUP functions."
+    }
+  ]
+};
+
+// DV Jarvis Assistant Helpline & Coordination Directory
+export const dvHelplineNumbers = {
+  academicCoordinator: {
+    name: "Academic Coordinator Helpline",
+    contactPerson: "Rahul Ghosh",
+    phone: "+91 98300 12345",
+    whatsapp: "+91 98300 12345",
+    whatsappLink: "https://wa.me/919830012345?text=Hello%20DV%20Analytics%20Coordinator,%20I%20need%20help%20with%20my%20APIDS%20cohort",
+    email: "coordinator@dvanalyticsmds.com",
+    timings: "Mon - Sat: 10:00 AM - 7:30 PM IST",
+    purpose: "Batch schedule changes, leave applications, live lecture link access, and attendance reconciliation."
+  },
+  assignmentHelpDesk: {
+    name: "Assignment & Project Evaluation Desk",
+    contactPerson: "Faculty Support Desk",
+    phone: "+91 98300 67890",
+    email: "assignments@dvanalyticsmds.com",
+    timings: "Mon - Fri: 11:00 AM - 8:00 PM IST",
+    purpose: "Doubts in assignment questions, submission errors, workbook rubric clarifications."
+  },
+  labAndServerAdmin: {
+    name: "Lab Infrastructure & Tool Access Admin",
+    contactPerson: "System Administrator (Internal IT)",
+    phone: "+91 98300 45678",
+    email: "labs@dvanalyticsmds.com",
+    timings: "Available 24x7 for cloud VM tickets",
+    purpose: "JupyterHub logins, SQL Server VM ports, Power BI Pro license allocation, and dataset downloads."
+  },
+  placementCell: {
+    name: "Placement & Mock Interview Cell",
+    contactPerson: "Placement Officer",
+    phone: "+91 98300 98765",
+    email: "careers@dvanalyticsmds.com",
+    timings: "Mon - Sat: 10:00 AM - 6:00 PM IST",
+    purpose: "CAT evaluation review, resume ATS scoring, and interview scheduling."
+  }
+};
+
+// DV Tool Connection Guide
+export const dvToolConnections = [
+  {
+    tool: "JupyterLab / Python AI Sandbox",
+    status: "Active & Connected",
+    endpoint: "https://jupyter.dvanalytics.internal:8888",
+    accessType: "Browser Web Client",
+    credentialsGuide: "Use your Student ID (DVA-202606-448) as username. One-time OTP sent to registered WhatsApp."
+  },
+  {
+    tool: "Microsoft SQL Server (SSMS / DBeaver)",
+    status: "Active & Online",
+    endpoint: "sqlserver.dvanalytics.internal,1433",
+    database: "DVA_Retail_Analytics_DB",
+    accessType: "TCP/IP Connection",
+    credentialsGuide: "Authentication: SQL Server Auth. User: student_202606. Pass: DvaStudent@2026#"
+  },
+  {
+    tool: "Power BI Desktop Gateway",
+    status: "Configured",
+    endpoint: "DirectQuery / Import from DVA_Retail_Analytics_DB",
+    accessType: "Desktop Software",
+    credentialsGuide: "Open Power BI -> Get Data -> SQL Server -> Enter Server IP above -> Use SQL credentials."
+  },
+  {
+    tool: "Microsoft Excel 365 Data Modeling",
+    status: "Linked",
+    endpoint: "Power Query / OData feed",
+    accessType: "Desktop Software",
+    credentialsGuide: "Download dataset workbooks directly from LMS Session resources tab. Compatible with Office 2019/2021/365."
+  }
+];
+
+// Pre-loaded solutions & guidance for DV Assistant
+export const dvAssignmentSolutions = {
+  "ASN-01": {
+    title: "Retail Sales Performance Analysis (Excel)",
+    guideSummary: "This assignment requires dynamic arrays and multi-criteria lookup. Don't use legacy nested IFs when IFS or XLOOKUP can accomplish it in one formula.",
+    keyFormulas: [
+      "=XLOOKUP(A2 & B2, Products!A:A & Products!B:B, Products!C:C, \"Not Found\", 0)",
+      "=SUMIFS(Sales[NetRevenue], Sales[Region], @RegionList, Sales[OrderYear], 2026)",
+      "=PERCENTILE.INC(Sales[Margin], 0.90)"
+    ],
+    stepByStep: [
+      "1. Ensure headers in Row 1 have no trailing whitespace (apply TRIM in Power Query if needed).",
+      "2. Calculate Gross Revenue = [Quantity] * [Unit Price].",
+      "3. Apply Discount = Gross * [Discount %]. Net Revenue = Gross - Discount.",
+      "4. Create a dynamic Pivot Table grouping Region by Order Quarter.",
+      "5. Add Slicers for 'Product Category' and 'Payment Mode'."
+    ]
+  },
+  "ASN-02": {
+    title: "Automated Invoice Generator with VBA Macro",
+    guideSummary: "Use a clean subroutine with error handling. Store customer records in a hidden sheet and populate the printable invoice template dynamically.",
+    vbaSnippet: `Sub GenerateInvoicePDF()
+    Dim wsInvoice As Worksheet, pdfPath As String
+    Set wsInvoice = ThisWorkbook.Sheets("Invoice_Template")
+    pdfPath = ThisWorkbook.Path & "\\Invoice_" & wsInvoice.Range("C4").Value & ".pdf"
+    
+    wsInvoice.ExportAsFixedFormat Type:=xlTypePDF, _
+        Filename:=pdfPath, _
+        Quality:=xlQualityStandard, _
+        OpenAfterPublish:=False
+    MsgBox "Invoice generated successfully at: " & pdfPath, vbInformation, "DV Automation"
+End Sub`,
+    stepByStep: [
+      "1. Design template layout in sheet 'Invoice_Template'.",
+      "2. Write `Sub CalculateTotal()` to iterate rows with Do While loop until empty cell.",
+      "3. Hook the button click to `GenerateInvoicePDF` subroutine.",
+      "4. Save workbook strictly as Excel Macro-Enabled Workbook (*.xlsm)."
+    ]
+  },
+  "ASN-03": {
+    title: "E-Commerce Database Schema & Complex Joins",
+    guideSummary: "Leverage Window Functions like SUM(...) OVER (PARTITION BY ... ORDER BY ...) and CTEs for clean maintainable code.",
+    sqlSnippet: `WITH CustomerOrderAgg AS (
+    SELECT 
+        c.customer_id,
+        c.customer_name,
+        COUNT(o.order_id) AS total_orders,
+        SUM(o.order_amount) AS total_spent,
+        MAX(o.order_date) AS last_order_date
+    FROM Customers c
+    JOIN Orders o ON c.customer_id = o.customer_id
+    GROUP BY c.customer_id, c.customer_name
+)
+SELECT 
+    customer_id,
+    customer_name,
+    total_spent,
+    DENSE_RANK() OVER (ORDER BY total_spent DESC) AS spending_rank,
+    CASE 
+        WHEN DATEDIFF(day, last_order_date, GETDATE()) > 90 THEN 'At Risk / Churned'
+        ELSE 'Active'
+    END AS churn_segment
+FROM CustomerOrderAgg;`,
+    stepByStep: [
+      "1. Verify Primary Keys and Foreign Key constraints across Customers, Orders, and OrderItems.",
+      "2. Create non-clustered index on Orders(customer_id, order_date).",
+      "3. Execute the CTE query above in SSMS to generate the churn & ranking summary."
+    ]
+  }
+};

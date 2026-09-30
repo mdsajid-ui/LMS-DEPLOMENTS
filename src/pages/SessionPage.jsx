@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BookOpen, 
   Calendar, 
@@ -7,6 +7,7 @@ import {
   ChevronDown, 
   ChevronUp, 
   PlayCircle, 
+  PauseCircle,
   FileText, 
   FileSpreadsheet, 
   Download, 
@@ -18,12 +19,15 @@ import {
   MessageSquare,
   HelpCircle,
   Share2,
-  Bookmark
+  Bookmark,
+  Sparkles,
+  Eye,
+  CheckCircle2
 } from 'lucide-react';
-import { excelSessions } from '../data/mockData';
+import { excelSessions, studentProfile } from '../data/mockData';
 
 export default function SessionPage({ 
-  student, 
+  student = studentProfile, 
   subjectName = "EXCEL BASE AND ADVANCED",
   onBackToCourses 
 }) {
@@ -50,6 +54,46 @@ export default function SessionPage({
   );
   const [notesSaved, setNotesSaved] = useState(false);
 
+  // Dynamic Video Playback & Watch Time Tracker
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackSeconds, setPlaybackSeconds] = useState(1122); // 18m 42s
+  const [playbackDuration, setPlaybackDuration] = useState(3420); // 57m 00s
+  const [sessionSecondsTracked, setSessionSecondsTracked] = useState(0);
+
+  useEffect(() => {
+    let timer = null;
+    if (isPlaying) {
+      timer = setInterval(() => {
+        setPlaybackSeconds(sec => {
+          if (sec >= playbackDuration) {
+            setIsPlaying(false);
+            return playbackDuration;
+          }
+          return sec + 1;
+        });
+
+        setSessionSecondsTracked(tracked => {
+          const updated = tracked + 1;
+          // Every 10 seconds of playback, add to localStorage to persist to dashboard
+          if (updated % 10 === 0) {
+            try {
+              const currentMinutes = parseFloat(localStorage.getItem('dv_extra_watch_minutes') || '0');
+              localStorage.setItem('dv_extra_watch_minutes', (currentMinutes + 0.166).toFixed(2));
+            } catch (e) {}
+          }
+          return updated;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isPlaying, playbackDuration]);
+
+  const formatVideoTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const toggleSession = (id) => {
     setExpandedSessions(prev => ({
       ...prev,
@@ -62,14 +106,21 @@ export default function SessionPage({
     setTimeout(() => setNotesSaved(false), 2000);
   };
 
+  const handleSeek = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const pct = Math.max(0, Math.min(1, clickX / rect.width));
+    setPlaybackSeconds(Math.floor(pct * playbackDuration));
+  };
+
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Top Breadcrumb (Matching Image 5) */}
+      {/* Top Breadcrumb */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
         <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
           <button 
             onClick={onBackToCourses}
-            className="flex items-center gap-1.5 text-slate-600 hover:text-orange-600 transition-colors"
+            className="flex items-center gap-1.5 text-slate-600 hover:text-orange-600 transition-colors cursor-pointer"
           >
             <BookOpen className="w-4 h-4 text-orange-500" />
             <span>Courses</span>
@@ -77,19 +128,19 @@ export default function SessionPage({
           <span>/</span>
           <span className="text-slate-900 font-semibold truncate">{subjectName}</span>
           <span>/</span>
-          <span className="text-orange-600 font-semibold">Session</span>
+          <span className="text-orange-600 font-semibold">Session Playback</span>
         </div>
 
         <button
           onClick={onBackToCourses}
-          className="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1.5 self-start sm:self-auto"
+          className="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to Courses
         </button>
       </div>
 
-      {/* Header Banner: APIDS & Date (Matching Image 5) */}
+      {/* Header Banner: APIDS & Date */}
       <div className="bg-slate-950 text-white rounded-2xl px-6 py-4 flex items-center justify-between shadow-lg border border-slate-800">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400">
@@ -111,10 +162,37 @@ export default function SessionPage({
         </div>
       </div>
 
+      {/* Watch Time Live Tracker Banner */}
+      <div className="p-3.5 bg-gradient-to-r from-blue-900/60 via-slate-900 to-indigo-950 rounded-2xl border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-white">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center flex-shrink-0">
+            <Eye className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-white">
+                Live Watch Time Tracker: {isPlaying ? "Recording Active" : "Paused"}
+              </span>
+              {isPlaying && (
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              )}
+            </div>
+            <p className="text-[11px] text-slate-300 mt-0.5">
+              Watching lectures automatically credits your attendance & student performance profile.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 text-xs font-mono bg-slate-950/60 px-3.5 py-1.5 rounded-xl border border-white/10 self-start sm:self-auto">
+          <Clock className="w-3.5 h-3.5 text-orange-400" />
+          <span>Session Logged: <strong>{Math.floor(sessionSecondsTracked / 60)}m {sessionSecondsTracked % 60}s</strong></span>
+        </div>
+      </div>
+
       {/* Interactive Main Area: Video Player & Lecture details */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
         {/* Simulated High-Res Video Player */}
-        <div className="relative aspect-video sm:aspect-[21/9] bg-slate-950 flex flex-col justify-between p-4 sm:p-6 text-white group overflow-hidden">
+        <div className="relative aspect-video sm:aspect-[21/9] bg-slate-950 flex flex-col justify-between p-4 sm:p-6 text-white group overflow-hidden select-none">
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 z-10 pointer-events-none"></div>
 
           {/* Background Poster / Graphic */}
@@ -123,7 +201,7 @@ export default function SessionPage({
           {/* Top Bar inside player */}
           <div className="relative z-20 flex items-center justify-between">
             <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-xs font-medium text-slate-200">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+              <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-red-500 animate-ping' : 'bg-slate-400'}`}></span>
               {activeItem.sessionTitle}
             </div>
             <div className="flex items-center gap-2">
@@ -136,26 +214,42 @@ export default function SessionPage({
             </div>
           </div>
 
-          {/* Center Play Button */}
+          {/* Center Play/Pause Button */}
           <div className="relative z-20 self-center flex flex-col items-center">
-            <button className="w-16 h-16 rounded-full bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center shadow-xl shadow-orange-500/30 transform hover:scale-110 active:scale-95 transition-all">
-              <PlayCircle className="w-9 h-9" />
+            <button 
+              onClick={() => setIsPlaying(!isPlaying)}
+              className="w-16 h-16 rounded-full bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center shadow-xl shadow-orange-500/30 transform hover:scale-110 active:scale-95 transition-all cursor-pointer"
+            >
+              {isPlaying ? (
+                <PauseCircle className="w-9 h-9" />
+              ) : (
+                <PlayCircle className="w-9 h-9" />
+              )}
             </button>
             <span className="text-xs font-semibold text-white/90 mt-2 bg-black/50 px-3 py-0.5 rounded-full backdrop-blur-xs">
-              Click to Play High-Definition Recording
+              {isPlaying ? "Playing recording... Click to pause" : "Click to Play High-Definition Recording"}
             </span>
           </div>
 
           {/* Bottom Video Progress & Controls */}
           <div className="relative z-20 space-y-2">
-            <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden cursor-pointer">
-              <div className="w-1/3 bg-orange-500 h-full rounded-full"></div>
+            {/* Interactive Progress Bar */}
+            <div 
+              onClick={handleSeek}
+              className="w-full bg-white/20 hover:bg-white/30 h-2 rounded-full overflow-hidden cursor-pointer transition-all"
+            >
+              <div 
+                style={{ width: `${(playbackSeconds / playbackDuration) * 100}%` }}
+                className="bg-orange-500 h-full rounded-full transition-all duration-200"
+              ></div>
             </div>
             <div className="flex items-center justify-between text-xs text-slate-300">
               <div className="flex items-center gap-3">
-                <span className="font-mono text-[11px]">18:42 / 57:00</span>
+                <span className="font-mono text-[11px]">
+                  {formatVideoTime(playbackSeconds)} / {formatVideoTime(playbackDuration)}
+                </span>
                 <span className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] font-mono">1.0x</span>
-                <span className="px-1.5 py-0.5 rounded bg-white/10 text-[10px]">1080p HD</span>
+                <span className="px-1.5 py-0.5 rounded bg-white/10 text-[10px]">1080p Full HD</span>
               </div>
               <div className="flex items-center gap-3">
                 <Volume2 className="w-4 h-4 cursor-pointer hover:text-white" />
@@ -295,7 +389,7 @@ export default function SessionPage({
         </div>
       </div>
 
-      {/* Accordion List of All Sessions (Matching Image 5) */}
+      {/* Accordion List of All Sessions */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 space-y-4">
         <div>
           <h3 className="text-base font-bold text-slate-900">
@@ -315,10 +409,10 @@ export default function SessionPage({
                 key={session.id}
                 className="border border-slate-200/90 rounded-2xl overflow-hidden transition-all duration-200"
               >
-                {/* Session Folder Header (Matches folder icon + chevron in Image 5) */}
+                {/* Session Folder Header */}
                 <button
                   onClick={() => toggleSession(session.id)}
-                  className={`w-full px-5 py-4 flex items-center justify-between text-left transition-colors ${
+                  className={`w-full px-5 py-4 flex items-center justify-between text-left transition-colors cursor-pointer ${
                     isExpanded ? 'bg-slate-50' : 'bg-white hover:bg-slate-50/70'
                   }`}
                 >
@@ -363,13 +457,18 @@ export default function SessionPage({
                     {session.items.map((item) => (
                       <div 
                         key={item.id}
-                        onClick={() => setActiveItem({
-                          sessionTitle: session.title,
-                          itemTitle: item.title,
-                          type: item.type,
-                          instructor: session.instructor || "Faculty",
-                          date: session.recordingDate || "Available"
-                        })}
+                        onClick={() => {
+                          setActiveItem({
+                            sessionTitle: session.title,
+                            itemTitle: item.title,
+                            type: item.type,
+                            instructor: session.instructor || "Faculty",
+                            date: session.recordingDate || "Available"
+                          });
+                          if (item.type === 'video') {
+                            setIsPlaying(true);
+                          }
+                        }}
                         className="py-3 px-2 flex items-center justify-between gap-3 hover:bg-orange-50/40 rounded-xl transition-colors cursor-pointer group"
                       >
                         <div className="flex items-center gap-3">
