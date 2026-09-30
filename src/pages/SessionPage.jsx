@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   BookOpen, 
   Calendar, 
@@ -7,28 +7,22 @@ import {
   ChevronDown, 
   ChevronUp, 
   PlayCircle, 
-  PauseCircle,
-  FileText, 
-  FileSpreadsheet, 
   Download, 
-  CheckCircle, 
   Clock, 
   ArrowLeft,
-  Volume2,
-  Maximize2,
-  MessageSquare,
-  HelpCircle,
-  Share2,
-  Bookmark,
-  Sparkles,
   Eye,
-  CheckCircle2,
   Play,
-  Link2,
-  ExternalLink
+  ExternalLink,
+  ShieldAlert,
+  Lock,
+  RefreshCw,
+  FileSpreadsheet,
+  FileArchive,
+  FileCode,
+  CheckCircle2
 } from 'lucide-react';
-import { excelSessions, studentProfile } from '../data/mockData';
-import { generateAndDownloadExcel } from '../utils/excelHelper';
+import { getSubjectSessions, studentProfile, excelMasterDriveFolder, sqlMasterDriveFolder, pythonMasterDriveFolder } from '../data/mockData';
+import { downloadFile, generateAndDownloadExcel } from '../utils/excelHelper';
 
 export default function SessionPage({ 
   student = studentProfile, 
@@ -37,543 +31,549 @@ export default function SessionPage({
 }) {
   const defaultEmbedUrl = "https://player.vdocipher.com/v2/?otp=20160313versASE3232Tj8PbBLlQCLHDTQp2I37Tn35428tQ5YVO2eMzx1M59M5y&playbackInfo=eyJ2aWRlb0lkIjoiYjVmYzAwZTcxMWI0NDFjMTg2ZjYwMmI2NmQ4NmQ3YTUifQ==";
 
-  // Active selected session and accordion expansion states
-  const [expandedSessions, setExpandedSessions] = useState({
-    'practical-questions': true,
+  // View mode: 'sessions' (Session.aspx) vs 'videos' (SessionVideo.aspx)
+  const [viewMode, setViewMode] = useState('sessions');
+  
+  // Current subject sessions
+  const sessions = getSubjectSessions(subjectName);
+  
+  // Selected session for SessionVideo.aspx
+  const [selectedSession, setSelectedSession] = useState(() => sessions[1] || sessions[0]);
+  
+  // Active playing video item
+  const [activeVideo, setActiveVideo] = useState({
+    sNo: 1,
+    title: "Class 1",
+    description: "Session 1 Class 1 Video",
+    embedUrl: defaultEmbedUrl
+  });
+
+  // Expandable folder state for Session.aspx
+  const [expandedFolders, setExpandedFolders] = useState({
     'session-1': true,
-    'session-2': false,
-    'session-3': false,
-    'session-4': false
+    'sql-session-1': true,
+    'py-session-1': true
   });
 
-  const [activeItem, setActiveItem] = useState({
-    sessionTitle: "Session 1: Advanced Formulae & Dynamic Cell References",
-    itemTitle: "Excel Session 1 Class 1 Video",
-    type: "video",
-    embedUrl: defaultEmbedUrl,
-    instructor: "Dr. Sandip Mukherjee",
-    date: "05.06.2026"
-  });
+  // Anti-Screenshot & Screen Capture Blackout Guard
+  const [isBlackout, setIsBlackout] = useState(false);
+  const [blackoutReason, setBlackoutReason] = useState("");
+  const [downloadSuccessToast, setDownloadSuccessToast] = useState("");
 
-  const [activeTab, setActiveTab] = useState('resources'); // resources, notes, qa
-  const [personalNotes, setPersonalNotes] = useState(
-    "- Key takeaway: Use $ before column or row for absolute references (e.g. $A$1 vs $A1 vs A$1).\n- Nested IF vs IFS: Prefer IFS in Excel 365 for cleaner readability.\n- Dynamic arrays spill automatically with # operator."
-  );
-  const [notesSaved, setNotesSaved] = useState(false);
+  // Watermark drifting position
+  const [watermarkPos, setWatermarkPos] = useState({ x: 20, y: 30 });
 
-  // Dynamic Video Playback & Watch Time Tracker
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackSeconds, setPlaybackSeconds] = useState(1122); // 18m 42s
-  const [playbackDuration, setPlaybackDuration] = useState(3420); // 57m 00s
-  const [sessionSecondsTracked, setSessionSecondsTracked] = useState(0);
-
+  // Floating watermark drift animation
   useEffect(() => {
-    let timer = null;
-    if (isPlaying) {
-      timer = setInterval(() => {
-        setPlaybackSeconds(sec => {
-          if (sec >= playbackDuration) {
-            setIsPlaying(false);
-            return playbackDuration;
-          }
-          return sec + 1;
-        });
+    const interval = setInterval(() => {
+      setWatermarkPos({
+        x: Math.floor(Math.random() * 65) + 10,
+        y: Math.floor(Math.random() * 65) + 15
+      });
+    }, 4500);
+    return () => clearInterval(interval);
+  }, []);
 
-        setSessionSecondsTracked(tracked => {
-          const updated = tracked + 1;
-          // Every 10 seconds of playback, add to localStorage to persist to dashboard
-          if (updated % 10 === 0) {
-            try {
-              const currentMinutes = parseFloat(localStorage.getItem('dv_extra_watch_minutes') || '0');
-              localStorage.setItem('dv_extra_watch_minutes', (currentMinutes + 0.166).toFixed(2));
-            } catch (e) {}
-          }
-          return updated;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [isPlaying, playbackDuration]);
+  // DRM & Anti-Screen Capture Key & Focus Watcher
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // PrintScreen key
+      if (e.key === 'PrintScreen' || e.keyCode === 44) {
+        e.preventDefault();
+        triggerBlackout("PrintScreen capture detected");
+      }
+      // F12 or Inspect shortcut
+      if (e.key === 'F12' || ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'C' || e.key === 'c'))) {
+        e.preventDefault();
+        triggerBlackout("Developer tools inspection blocked");
+      }
+      // Windows Snipping Tool (Win+Shift+S) / Mac (Cmd+Shift+3/4) / Print (Ctrl+P) / Save (Ctrl+S)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        triggerBlackout("Screen export / Print shortcut blocked");
+      }
+    };
 
-  const formatVideoTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    // When user activates Snipping tool or screen recorder, the window loses focus
+    const handleWindowBlur = () => {
+      if (viewMode === 'videos') {
+        triggerBlackout("Window unfocused / Screen capture tool detected");
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('blur', handleWindowBlur);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('blur', handleWindowBlur);
+    };
+  }, [viewMode]);
+
+  const triggerBlackout = (reason) => {
+    setIsBlackout(true);
+    setBlackoutReason(reason);
   };
 
-  const toggleSession = (id) => {
-    setExpandedSessions(prev => ({
+  const handleDismissBlackout = () => {
+    setIsBlackout(false);
+    setBlackoutReason("");
+  };
+
+  const toggleFolder = (id) => {
+    setExpandedFolders(prev => ({
       ...prev,
       [id]: !prev[id]
     }));
   };
 
-  const handleSaveNotes = () => {
-    setNotesSaved(true);
-    setTimeout(() => setNotesSaved(false), 2000);
+  const handleOpenVideos = (session) => {
+    setSelectedSession(session);
+    // Find class video items or synthesize class 1
+    const classVideos = (session.items || []).filter(item => item.type === 'video');
+    if (classVideos.length > 0) {
+      setActiveVideo({
+        sNo: 1,
+        title: classVideos[0].title || "Class 1",
+        description: classVideos[0].title || "Class 1 Video Stream",
+        embedUrl: session.vdocipherEmbedUrl || defaultEmbedUrl
+      });
+    } else {
+      setActiveVideo({
+        sNo: 1,
+        title: `${session.title} - Class 1`,
+        description: `${session.title} Class 1 Video Lecture`,
+        embedUrl: session.vdocipherEmbedUrl || defaultEmbedUrl
+      });
+    }
+    setViewMode('videos');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSeek = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const pct = Math.max(0, Math.min(1, clickX / rect.width));
-    setPlaybackSeconds(Math.floor(pct * playbackDuration));
+  const handleDownloadMaterials = (session) => {
+    const filename = session.materialFileName || `${session.title.replace(/[^a-zA-Z0-9]/g, '_')}_Materials.zip`;
+    downloadFile(filename);
+    showToast(`Downloading: ${filename}`);
+  };
+
+  const handleDownloadAssignments = (session) => {
+    const filename = session.assignmentFileName || `${session.title.replace(/[^a-zA-Z0-9]/g, '_')}_Assignments.xlsx`;
+    downloadFile(filename);
+    showToast(`Downloading: ${filename}`);
+  };
+
+  const showToast = (msg) => {
+    setDownloadSuccessToast(msg);
+    setTimeout(() => setDownloadSuccessToast(""), 3500);
+  };
+
+  // Get master folder url based on subject
+  const getSubjectDriveUrl = () => {
+    const lower = subjectName.toLowerCase();
+    if (lower.includes('sql')) return sqlMasterDriveFolder;
+    if (lower.includes('python')) return pythonMasterDriveFolder;
+    return excelMasterDriveFolder;
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Top Breadcrumb */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-        <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
+    <div className="space-y-6 max-w-6xl mx-auto select-none">
+      {/* Toast Notification */}
+      {downloadSuccessToast && (
+        <div className="fixed top-20 right-6 z-50 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 border border-slate-700 animate-in fade-in slide-in-from-top-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <span>{downloadSuccessToast}</span>
+        </div>
+      )}
+
+      {/* Breadcrumb Navigation - Strictly matching Screenshot 1-5 */}
+      <div className="flex items-center justify-between bg-white px-5 py-3.5 rounded-xl border border-slate-200/80 shadow-2xs">
+        <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold">
           <button 
             onClick={onBackToCourses}
-            className="flex items-center gap-1.5 text-slate-600 hover:text-orange-600 transition-colors cursor-pointer"
+            className="text-slate-500 hover:text-orange-600 transition-colors cursor-pointer flex items-center gap-1"
           >
-            <BookOpen className="w-4 h-4 text-orange-500" />
-            <span>Courses</span>
+            <span>/ Courses</span>
           </button>
-          <span>/</span>
-          <span className="text-slate-900 font-semibold truncate">{subjectName}</span>
-          <span>/</span>
-          <span className="text-orange-600 font-semibold">Session Playback</span>
-        </div>
+          
+          <span className="text-slate-300">/</span>
 
-        <button
-          onClick={onBackToCourses}
-          className="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Back to Courses
-        </button>
-      </div>
-
-      {/* Header Banner: APIDS & Date */}
-      <div className="bg-slate-950 text-white rounded-2xl px-6 py-4 flex items-center justify-between shadow-lg border border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400">
-            <BookOpen className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">
-              {student.courseCode}
-            </h2>
-            <span className="text-xs text-orange-400 font-medium">
-              {subjectName}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2 rounded-xl text-xs font-mono text-slate-200">
-          <Calendar className="w-4 h-4 text-orange-400" />
-          <span className="font-semibold">{student.startDate}</span>
-        </div>
-      </div>
-
-      {/* Watch Time Live Tracker Banner */}
-      <div className="p-3.5 bg-gradient-to-r from-blue-900/60 via-slate-900 to-indigo-950 rounded-2xl border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-white">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center flex-shrink-0">
-            <Eye className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-white">
-                Live Watch Time Tracker: {isPlaying ? "Recording Active" : "Paused"}
-              </span>
-              {isPlaying && (
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              )}
-            </div>
-            <p className="text-[11px] text-slate-300 mt-0.5">
-              Watching lectures automatically credits your attendance & student performance profile.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 text-xs font-mono bg-slate-950/60 px-3.5 py-1.5 rounded-xl border border-white/10 self-start sm:self-auto">
-          <Clock className="w-3.5 h-3.5 text-orange-400" />
-          <span>Session Logged: <strong>{Math.floor(sessionSecondsTracked / 60)}m {sessionSecondsTracked % 60}s</strong></span>
-        </div>
-      </div>
-
-      {/* Interactive Main Area: Video Player & Lecture details */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-        {/* VdoCipher High-Definition Encrypted Video Player */}
-        <div className="relative bg-black overflow-hidden select-none shadow-inner">
-          <div style={{ paddingTop: '56.25%', position: 'relative' }}>
-            <iframe 
-              src={activeItem.embedUrl || defaultEmbedUrl}
-              style={{ 
-                border: 0, 
-                maxWidth: '100%', 
-                position: 'absolute', 
-                top: 0, 
-                left: 0, 
-                height: '100%', 
-                width: '100%' 
-              }} 
-              allowFullScreen={true} 
-              allow="encrypted-media"
-              title={activeItem.itemTitle}
-            />
-          </div>
-        </div>
-
-        {/* Video Metadata & Tabs */}
-        <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2.5 py-1 rounded-md border border-orange-100">
-                Now Viewing
-              </span>
-              <span className="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                VdoCipher Encrypted HD Stream
-              </span>
-            </div>
-            <h3 className="text-lg font-bold text-slate-900 mt-2">
-              {activeItem.itemTitle}
-            </h3>
-            <p className="text-xs text-slate-500 mt-1">
-              Faculty: <span className="font-medium text-slate-800">{activeItem.instructor}</span> • Recorded on: {activeItem.date} • Batch: {student.courseCode}
-            </p>
-          </div>
-
-          {/* Resource Download Button */}
-          <button 
-            onClick={() => generateAndDownloadExcel("Excel_Session1_Class1_Exercise.xlsx")}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-colors self-start md:self-auto shadow-xs cursor-pointer"
-          >
-            <Download className="w-4 h-4 text-orange-400" />
-            Download Class Workbook (.xlsx)
-          </button>
-        </div>
-
-        {/* Tabs: Practice Files & Notes */}
-        <div id="session-tab-container" className="px-6 pt-2 border-b border-slate-100 flex items-center gap-6 text-xs font-semibold">
-          <button
-            onClick={() => setActiveTab('resources')}
-            className={`pb-3 border-b-2 transition-all ${
-              activeTab === 'resources' 
-                ? 'border-orange-500 text-orange-600' 
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            Session Resources & Files
-          </button>
-          <button
-            onClick={() => setActiveTab('notes')}
-            className={`pb-3 border-b-2 transition-all ${
-              activeTab === 'notes' 
-                ? 'border-orange-500 text-orange-600' 
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            My Private Notes
-          </button>
-          <button
-            onClick={() => setActiveTab('qa')}
-            className={`pb-3 border-b-2 transition-all ${
-              activeTab === 'qa' 
-                ? 'border-orange-500 text-orange-600' 
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            Session Q&A (4 Questions)
-          </button>
-        </div>
-
-        {/* Tab Content */}
-        <div className="p-6 bg-slate-50/50">
-          {activeTab === 'resources' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 flex items-center justify-between gap-3 shadow-2xs">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
-                    <FileSpreadsheet className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-bold text-slate-800">Advanced Formulas Hands-on.xlsx</h5>
-                    <span className="text-[10px] text-slate-400">Microsoft Excel • 2.4 MB</span>
-                  </div>
-                </div>
-                <button className="p-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors">
-                  <Download className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 flex items-center justify-between gap-3 shadow-2xs">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-red-50 text-red-600 flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-bold text-slate-800">Session 1 Slides & CheatSheet.pdf</h5>
-                    <span className="text-[10px] text-slate-400">PDF Document • 4.1 MB</span>
-                  </div>
-                </div>
-                <button className="p-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors">
-                  <Download className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'notes' && (
-            <div className="space-y-3">
-              <textarea
-                value={personalNotes}
-                onChange={(e) => setPersonalNotes(e.target.value)}
-                rows={4}
-                className="w-full text-xs font-mono bg-white p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-800"
-                placeholder="Type your notes for this session..."
-              />
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-400">
-                  {notesSaved ? "✓ Saved to browser storage" : "Auto-saved as you type"}
-                </span>
-                <button
-                  onClick={handleSaveNotes}
-                  className="px-3.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 transition-colors"
-                >
-                  Save Notes
-                </button>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'qa' && (
-            <div className="space-y-3">
-              <div className="p-3 bg-white rounded-xl border border-slate-200/80">
-                <span className="text-[10px] font-bold text-orange-600">Q: From Manish K.</span>
-                <p className="text-xs text-slate-800 font-medium mt-0.5">
-                  When should we choose XLOOKUP over INDEX MATCH in older versions of Excel?
-                </p>
-                <div className="mt-2 pl-3 border-l-2 border-emerald-500 text-[11px] text-slate-600">
-                  <strong className="text-slate-800">Faculty Reply:</strong> XLOOKUP is only supported in Office 365 / Excel 2021+. For backwards compatibility across legacy client versions, INDEX MATCH is still recommended.
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Accordion List of All Sessions */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h3 className="text-base font-bold text-slate-900">
-              Course Curriculum & Recorded Lectures
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              All 6 session recordings, class materials, and assignments synced with Google Drive.
-            </p>
-          </div>
-
-          <a 
-            href="https://drive.google.com/drive/folders/1AYelQA_4SR4NWcKeyWXsx9StEbl4X0fF?usp=sharing"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold border border-blue-200 transition-all self-start sm:self-auto shadow-2xs"
-          >
-            <Folder className="w-4 h-4 text-blue-600" />
-            <span>Google Drive Master Hub</span>
-            <ExternalLink className="w-3.5 h-3.5 text-blue-500" />
-          </a>
-        </div>
-
-        <div className="space-y-3">
-          {excelSessions.map((session) => {
-            const isExpanded = expandedSessions[session.id];
-
-            return (
-              <div 
-                key={session.id}
-                className="border border-slate-200/90 rounded-2xl overflow-hidden transition-all duration-200"
+          {viewMode === 'sessions' ? (
+            <span className="text-slate-800 font-bold">Session</span>
+          ) : (
+            <>
+              <button 
+                onClick={() => setViewMode('sessions')}
+                className="text-slate-500 hover:text-orange-600 transition-colors cursor-pointer"
               >
-                {/* Session Folder Header */}
-                <button
-                  onClick={() => toggleSession(session.id)}
-                  className={`w-full px-5 py-4 flex items-center justify-between text-left transition-colors cursor-pointer ${
-                    isExpanded ? 'bg-slate-50' : 'bg-white hover:bg-slate-50/70'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="text-slate-600">
+                Session
+              </button>
+              <span className="text-slate-300">/</span>
+              <span className="text-slate-800 font-bold">Session Videos</span>
+            </>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {viewMode === 'videos' ? (
+            <button
+              onClick={() => setViewMode('sessions')}
+              className="text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to Sessions</span>
+            </button>
+          ) : (
+            <button
+              onClick={onBackToCourses}
+              className="text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to Courses</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Black Header Card: APIDS & Date (Matching media_1790768119590.png and media_1790768138419.png) */}
+      <div className="bg-[#1f242e] text-white rounded-lg px-6 py-4 flex items-center justify-between shadow-md">
+        <div className="font-bold text-sm sm:text-base tracking-wide text-white">
+          {student.courseCode}
+        </div>
+        <div className="font-medium text-xs sm:text-sm text-slate-200 font-mono">
+          {student.startDate}
+        </div>
+      </div>
+
+      {/* VIEW A: Session.aspx (Tree / List of Folders & 3 Colored Action Pills) */}
+      {viewMode === 'sessions' && (
+        <div className="space-y-4">
+          <div className="bg-white rounded-xl border border-slate-200/80 shadow-2xs divide-y divide-slate-100 overflow-hidden">
+            {sessions.map((session, index) => {
+              const isExpanded = !!expandedFolders[session.id];
+
+              return (
+                <div key={session.id || index} className="transition-colors">
+                  {/* Folder Row Header */}
+                  <div
+                    onClick={() => toggleFolder(session.id)}
+                    className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-slate-50/80 cursor-pointer select-none"
+                  >
+                    <div className="flex items-center gap-3">
                       {isExpanded ? (
-                        <FolderOpen className="w-5 h-5 text-orange-500" />
+                        <FolderOpen className="w-5 h-5 text-amber-500 fill-amber-100" />
                       ) : (
-                        <Folder className="w-5 h-5 text-slate-500" />
+                        <Folder className="w-5 h-5 text-amber-500 fill-amber-100" />
                       )}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-xs sm:text-sm text-slate-800">
+                      <span className="font-medium text-sm text-slate-800">
                         {session.title}
-                      </h4>
-                      {session.duration && (
-                        <span className="text-[11px] text-slate-400 font-medium">
-                          Duration: {session.duration} • {session.items.length} Resources
-                        </span>
+                      </span>
+                    </div>
+
+                    <div className="text-slate-400">
+                      {isExpanded ? (
+                        <ChevronUp className="w-4 h-4 text-slate-600" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-slate-400" />
                       )}
                     </div>
                   </div>
 
-                  <div className="text-slate-400">
-                    {isExpanded ? (
-                      <ChevronUp className="w-4 h-4 text-slate-600" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-slate-400" />
-                    )}
-                  </div>
-                </button>
-
-                {/* Expanded Session Files & Videos */}
-                {isExpanded && (
-                  <div className="px-5 py-4 bg-white border-t border-slate-100 space-y-3">
-                    {/* Real LMS Action Buttons (Matching edu.dvanalyticsmds.com Screenshot) */}
-                    {session.hasActionButtons && (
-                      <div className="space-y-2.5 pb-2">
-                        {/* 1. Green Button: Session Videos */}
-                        <button
-                          onClick={() => {
-                            setActiveItem({
-                              sessionTitle: session.fullTitle || session.title,
-                              itemTitle: session.items[0]?.title || `${session.title} Class Video`,
-                              type: "video",
-                              embedUrl: session.vdocipherEmbedUrl || defaultEmbedUrl,
-                              instructor: session.instructor,
-                              date: session.recordingDate
-                            });
-                            window.scrollTo({ top: 120, behavior: 'smooth' });
-                          }}
-                          className="w-full bg-[#2dbd9f] hover:bg-[#25a98d] text-white font-semibold py-3 px-4 rounded-xl shadow-xs flex items-center justify-between transition-all transform active:scale-[0.99] cursor-pointer group"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                  {/* Expanded Content: 3 Real Colored Action Pills (Matching media_1790768128447.png) */}
+                  {isExpanded && (
+                    <div className="px-6 py-4 bg-slate-50/40 border-t border-slate-100 space-y-3">
+                      {session.hasActionButtons ? (
+                        <div className="space-y-3 pl-2 sm:pl-4 max-w-2xl">
+                          {/* 1. Green Pill: ▶ Session Videos 🔗 */}
+                          <button
+                            onClick={() => handleOpenVideos(session)}
+                            className="w-full bg-[#2dbd9f] hover:bg-[#25a78c] text-white font-medium text-xs sm:text-sm py-2.5 px-4 rounded-full flex items-center justify-between shadow-2xs transition-all transform active:scale-[0.99] cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2">
                               <Play className="w-3.5 h-3.5 fill-white" />
+                              <span>Session Videos</span>
                             </div>
-                            <div className="text-left">
-                              <span className="text-xs sm:text-sm font-bold tracking-wide block">Session Videos</span>
-                              {session.videoFileName && (
-                                <span className="text-[10px] text-teal-100 font-mono block">{session.videoFileName} ({session.videoSize})</span>
-                              )}
-                            </div>
-                          </div>
-                          <ExternalLink className="w-4 h-4 opacity-80 group-hover:opacity-100 transition-opacity" />
-                        </button>
+                            <ExternalLink className="w-3.5 h-3.5 opacity-90" />
+                          </button>
 
-                        {/* 2. Blue Button: Session Materials */}
-                        <button
-                          onClick={() => {
-                            if (session.driveFolderUrl) {
-                              window.open(session.driveFolderUrl, '_blank');
-                            }
-                            setActiveTab('resources');
-                            const el = document.getElementById('session-tab-container');
-                            if (el) el.scrollIntoView({ behavior: 'smooth' });
-                          }}
-                          className="w-full bg-[#3b97e9] hover:bg-[#2a85d6] text-white font-semibold py-3 px-4 rounded-xl shadow-xs flex items-center justify-between transition-all transform active:scale-[0.99] cursor-pointer group"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                          {/* 2. Blue Pill: ▶ Session Materials 🔗 (Downloads .zip) */}
+                          <button
+                            onClick={() => handleDownloadMaterials(session)}
+                            className="w-full bg-[#3b97e9] hover:bg-[#2b86d6] text-white font-medium text-xs sm:text-sm py-2.5 px-4 rounded-full flex items-center justify-between shadow-2xs transition-all transform active:scale-[0.99] cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2">
                               <Play className="w-3.5 h-3.5 fill-white" />
+                              <span>Session Materials</span>
                             </div>
-                            <div className="text-left">
-                              <span className="text-xs sm:text-sm font-bold tracking-wide block">Session Materials</span>
-                              {session.materialFileName && (
-                                <span className="text-[10px] text-sky-100 font-mono block">{session.materialFileName} ({session.materialSize})</span>
-                              )}
-                            </div>
-                          </div>
-                          <ExternalLink className="w-4 h-4 opacity-80 group-hover:opacity-100 transition-opacity" />
-                        </button>
+                            <ExternalLink className="w-3.5 h-3.5 opacity-90" />
+                          </button>
 
-                        {/* 3. Orange Button: Session Assignments */}
-                        <button
-                          onClick={() => {
-                            generateAndDownloadExcel(session.assignmentFileName || "SESSION-1 ASSIGNMENTS.xlsx");
-                          }}
-                          className="w-full bg-[#f39c12] hover:bg-[#e08e0b] text-white font-semibold py-3 px-4 rounded-xl shadow-xs flex items-center justify-between transition-all transform active:scale-[0.99] cursor-pointer group"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                          {/* 3. Orange Pill: ▶ Session Assignments 🔗 (Downloads Assignment) */}
+                          <button
+                            onClick={() => handleDownloadAssignments(session)}
+                            className="w-full bg-[#f39c12] hover:bg-[#de8c0a] text-white font-medium text-xs sm:text-sm py-2.5 px-4 rounded-full flex items-center justify-between shadow-2xs transition-all transform active:scale-[0.99] cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2">
                               <Play className="w-3.5 h-3.5 fill-white" />
+                              <span>Session Assignments</span>
                             </div>
-                            <div className="text-left">
-                              <span className="text-xs sm:text-sm font-bold tracking-wide block">Session Assignments</span>
-                              {session.assignmentFileName && (
-                                <span className="text-[10px] text-amber-100 font-mono block">{session.assignmentFileName} ({session.assignmentSize || 'Excel'})</span>
-                              )}
-                            </div>
-                          </div>
-                          <ExternalLink className="w-4 h-4 opacity-80 group-hover:opacity-100 transition-opacity" />
-                        </button>
-                      </div>
-                    )}
-
-                    {session.summary && (
-                      <div className="py-2.5 text-xs text-slate-500 leading-relaxed italic bg-slate-50/70 p-3 rounded-xl">
-                        {session.summary}
-                      </div>
-                    )}
-
-                    {session.items.map((item) => (
-                      <div 
-                        key={item.id}
-                        onClick={() => {
-                          setActiveItem({
-                            sessionTitle: session.title,
-                            itemTitle: item.title,
-                            type: item.type,
-                            instructor: session.instructor || "Faculty",
-                            date: session.recordingDate || "Available"
-                          });
-                          if (item.type === 'video') {
-                            setIsPlaying(true);
-                          }
-                        }}
-                        className="py-3 px-2 flex items-center justify-between gap-3 hover:bg-orange-50/40 rounded-xl transition-colors cursor-pointer group"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${
-                            item.type === 'video' 
-                              ? 'bg-orange-50 text-orange-600' 
-                              : item.type === 'pdf' 
-                                ? 'bg-red-50 text-red-600' 
-                                : 'bg-emerald-50 text-emerald-600'
-                          }`}>
-                            {item.type === 'video' ? (
-                              <PlayCircle className="w-4 h-4" />
-                            ) : item.type === 'pdf' ? (
-                              <FileText className="w-4 h-4" />
-                            ) : (
-                              <FileSpreadsheet className="w-4 h-4" />
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-xs font-bold text-slate-800 group-hover:text-orange-600 transition-colors">
-                              {item.title}
-                            </p>
-                            <span className="text-[10px] text-slate-400">
-                              {item.duration}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <button className="text-[11px] font-semibold text-orange-600 bg-orange-50 group-hover:bg-orange-500 group-hover:text-white px-3 py-1 rounded-lg transition-all">
-                            {item.type === 'video' ? 'Watch' : 'Open'}
+                            <ExternalLink className="w-3.5 h-3.5 opacity-90" />
                           </button>
                         </div>
-                      </div>
-                    ))}
+                      ) : (
+                        // If it's a practical questions folder
+                        <div className="space-y-2 pl-2 sm:pl-4">
+                          {(session.items || []).map((file, idx) => (
+                            <div 
+                              key={idx}
+                              onClick={() => {
+                                downloadFile(file.title);
+                                showToast(`Downloading: ${file.title}`);
+                              }}
+                              className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-slate-200/80 hover:border-orange-300 transition-colors cursor-pointer group"
+                            >
+                              <div className="flex items-center gap-2 text-xs font-medium text-slate-700 group-hover:text-orange-600">
+                                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                                <span>{file.title}</span>
+                              </div>
+                              <Download className="w-3.5 h-3.5 text-slate-400 group-hover:text-orange-600" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Master Google Drive Hub Link */}
+          <div className="flex justify-end pt-2">
+            <a 
+              href={getSubjectDriveUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-blue-600 transition-colors"
+            >
+              <Folder className="w-3.5 h-3.5 text-blue-500" />
+              <span>Open Master Drive Repository</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW B: SessionVideo.aspx (Matching media_1790768138419.png and media_1790768148277.png) */}
+      {viewMode === 'videos' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left Side: Table (S.No | Link Description | Action [Play]) */}
+            <div className="lg:col-span-5 bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden">
+              <div className="px-5 py-3.5 bg-slate-50 border-b border-slate-200/80 flex items-center justify-between">
+                <h3 className="font-bold text-xs uppercase tracking-wider text-slate-700">
+                  {selectedSession.title} - Video Lectures
+                </h3>
+                <span className="text-[11px] font-semibold text-slate-400">
+                  {selectedSession.recordingDate || "05.06.2026"}
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-100/70 border-b border-slate-200 text-slate-700 font-semibold">
+                      <th className="py-2.5 px-4 w-14">S.No</th>
+                      <th className="py-2.5 px-4">Link Description</th>
+                      <th className="py-2.5 px-4 text-center w-24">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {/* Class 1 Row */}
+                    <tr className={`hover:bg-slate-50 transition-colors ${activeVideo.sNo === 1 ? 'bg-teal-50/40' : ''}`}>
+                      <td className="py-3 px-4 font-mono font-medium text-slate-600">1</td>
+                      <td className="py-3 px-4 font-medium text-slate-800">
+                        Class 1
+                        <span className="block text-[10px] text-slate-400 font-normal">
+                          {selectedSession.videoFileName || "Class Lecture Stream"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          onClick={() => {
+                            setActiveVideo({
+                              sNo: 1,
+                              title: "Class 1",
+                              description: `${selectedSession.title} Class 1 Video`,
+                              embedUrl: selectedSession.vdocipherEmbedUrl || defaultEmbedUrl
+                            });
+                          }}
+                          className="inline-flex items-center justify-center gap-1.5 bg-[#2dbd9f] hover:bg-[#25a78c] text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-2xs transition-all cursor-pointer"
+                        >
+                          <Play className="w-3 h-3 fill-white" />
+                          <span>Play</span>
+                        </button>
+                      </td>
+                    </tr>
+
+                    {/* Class 2 Row (For multi-part lectures) */}
+                    <tr className={`hover:bg-slate-50 transition-colors ${activeVideo.sNo === 2 ? 'bg-teal-50/40' : ''}`}>
+                      <td className="py-3 px-4 font-mono font-medium text-slate-600">2</td>
+                      <td className="py-3 px-4 font-medium text-slate-800">
+                        Class 2
+                        <span className="block text-[10px] text-slate-400 font-normal">
+                          Hands-on Problem Solving & Review
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          onClick={() => {
+                            setActiveVideo({
+                              sNo: 2,
+                              title: "Class 2",
+                              description: `${selectedSession.title} Class 2 Advanced Cases`,
+                              embedUrl: selectedSession.vdocipherEmbedUrl || defaultEmbedUrl
+                            });
+                          }}
+                          className="inline-flex items-center justify-center gap-1.5 bg-[#2dbd9f] hover:bg-[#25a78c] text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-2xs transition-all cursor-pointer"
+                        >
+                          <Play className="w-3 h-3 fill-white" />
+                          <span>Play</span>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Fast Session Switcher inside Video View */}
+              <div className="p-4 bg-slate-50/70 border-t border-slate-200/70 space-y-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
+                  Other Sessions:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {sessions.filter(s => s.hasActionButtons).map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => handleOpenVideos(s)}
+                      className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                        selectedSession.id === s.id
+                          ? 'bg-slate-900 text-white'
+                          : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {s.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Side: Video Player Container with Anti-Screenshot / Blackout Protection */}
+            <div className="lg:col-span-7 space-y-4">
+              <div 
+                className="relative bg-black rounded-2xl overflow-hidden shadow-lg border border-slate-800 select-none group"
+                onContextMenu={(e) => e.preventDefault()}
+              >
+                {/* 1. BLACKOUT SHIELD - Activated on PrintScreen, Snipping tool, recording detection */}
+                {isBlackout && (
+                  <div className="absolute inset-0 z-50 bg-black text-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-100">
+                    <div className="w-16 h-16 rounded-2xl bg-red-600/20 border border-red-500/40 flex items-center justify-center text-red-500 mb-4 animate-bounce">
+                      <Lock className="w-8 h-8" />
+                    </div>
+                    <h4 className="text-base sm:text-lg font-bold text-white tracking-wide">
+                      Security Alert: Screen Capture Prohibited
+                    </h4>
+                    <p className="text-xs text-slate-300 max-w-md mt-2 leading-relaxed">
+                      This lecture stream is protected under DV Analytics DRM anti-piracy protocol. Screenshots, screen recording, and unauthorized replication are strictly prohibited.
+                    </p>
+                    <div className="mt-3 text-[11px] font-mono text-red-400 bg-red-950/60 px-3 py-1 rounded-lg border border-red-800/60">
+                      Reason: {blackoutReason || "Screen Capture Intercept"} • ID: {student.courseCode}-{student.rollNo || "202606"}
+                    </div>
+                    <button
+                      onClick={handleDismissBlackout}
+                      className="mt-5 inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Resume Secure Video Stream</span>
+                    </button>
                   </div>
                 )}
+
+                {/* 2. Floating Dynamic Watermark (Drifts across screen to prevent cam recording) */}
+                <div 
+                  className="absolute z-20 pointer-events-none transition-all duration-1000 ease-in-out text-white/30 text-[10px] sm:text-xs font-mono font-bold tracking-widest uppercase select-none drop-shadow-md"
+                  style={{
+                    top: `${watermarkPos.y}%`,
+                    left: `${watermarkPos.x}%`,
+                    textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+                  }}
+                >
+                  {student.name} • {student.courseCode} • DRM PROTECTED
+                </div>
+
+                {/* 3. Secure Video Stream (VdoCipher Encrypted Iframe) */}
+                <div style={{ paddingTop: '56.25%', position: 'relative' }}>
+                  <iframe 
+                    src={activeVideo.embedUrl || defaultEmbedUrl}
+                    style={{ 
+                      border: 0, 
+                      maxWidth: '100%', 
+                      position: 'absolute', 
+                      top: 0, 
+                      left: 0, 
+                      height: '100%', 
+                      width: '100%' 
+                    }} 
+                    allowFullScreen={true} 
+                    allow="encrypted-media"
+                    title={activeVideo.title}
+                  />
+                </div>
               </div>
-            );
-          })}
+
+              {/* Video Info & Quick Resource Downloads */}
+              <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                      Now Playing
+                    </span>
+                    <span className="text-xs font-bold text-slate-800">
+                      {selectedSession.title} : {activeVideo.title}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Faculty: <strong className="text-slate-700">{selectedSession.instructor || "Dr. Sandip Mukherjee"}</strong> • Anti-Piracy DRM Enabled
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  <button
+                    onClick={() => handleDownloadMaterials(selectedSession)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#3b97e9] hover:bg-[#2b86d6] text-white text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Materials (.zip)</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleDownloadAssignments(selectedSession)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#f39c12] hover:bg-[#de8c0a] text-white text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Assignment</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Footer strictly matching Screenshot (Copyright @ 2024 DV ANALYTICS) */}
+      <footer className="pt-8 pb-4 text-center text-xs text-slate-400 font-medium tracking-wide">
+        Copyright @ 2024 DV ANALYTICS
+      </footer>
     </div>
   );
 }

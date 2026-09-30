@@ -48,3 +48,34 @@ export function generateAndDownloadExcel(filename = "DV_Analytics_Retail_Sales_M
   URL.revokeObjectURL(url);
   return true;
 }
+
+export function downloadFile(filename = "Material_Archive.zip", customContent = null, mimeType = "application/octet-stream") {
+  if (filename.endsWith('.xlsx') || filename.endsWith('.csv')) {
+    return generateAndDownloadExcel(filename);
+  }
+
+  let content = customContent;
+  if (!content) {
+    if (filename.endsWith('.zip')) {
+      // Mock valid zip payload with descriptive metadata
+      content = `DV Analytics Material Archive: ${filename}\r\nPackage contains datasets, solution workbooks, and slide presentations.\r\nSubject Module: DV Analytics APIDS Program\r\nStudent: SK ABDUL SAJID (Batch 202606)\r\nTimestamp: 05.06.2026\r\n`;
+    } else if (filename.endsWith('.sql')) {
+      content = `-- DV Analytics SQL Practice Script: ${filename}\r\n-- Subject: SQL SERVER Data Science\r\n-- Student: SK ABDUL SAJID\r\n\r\nCREATE TABLE Retail_Sales (\r\n  TransactionID VARCHAR(20) PRIMARY KEY,\r\n  OrderDate DATE,\r\n  CustomerName NVARCHAR(100),\r\n  GrossRevenue DECIMAL(10,2),\r\n  NetRevenue DECIMAL(10,2)\r\n);\r\n\r\nSELECT TransactionID, CustomerName, NetRevenue,\r\n  DENSE_RANK() OVER(ORDER BY NetRevenue DESC) as RankByRevenue\r\nFROM Retail_Sales;\r\n`;
+    } else if (filename.endsWith('.py') || filename.endsWith('.ipynb')) {
+      content = `# DV Analytics Python Practice Script: ${filename}\r\n# Subject: Python Programming for Data Science\r\n# Student: SK ABDUL SAJID\r\n\r\nimport numpy as np\r\nimport pandas as pd\r\n\r\ndef calculate_kpis(df):\r\n    df['NetMargin'] = df['NetRevenue'] / df['GrossRevenue']\r\n    return df.groupby('Region')['NetRevenue'].agg(['sum', 'mean'])\r\n\r\nif __name__ == '__main__':\r\n    print("DV Analytics Python Workbench Ready")\r\n`;
+    } else {
+      content = `DV Analytics Educational Resource: ${filename}\r\nDownloaded for SK ABDUL SAJID (Batch 202606)\r\n`;
+    }
+  }
+
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  return true;
+}

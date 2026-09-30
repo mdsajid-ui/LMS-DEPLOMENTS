@@ -293,6 +293,357 @@ export const excelSessions = [
   }
 ];
 
+export const sqlMasterDriveFolder = "https://drive.google.com/drive/folders/1nR8A_kcFYpYPIYuknhllAzfv43wlz9GI?usp=sharing";
+
+export const sqlSessions = [
+  {
+    id: "sql-practical-questions",
+    title: "SQL Practical Questions & DDL Scripts",
+    isFolder: true,
+    driveFolderUrl: sqlMasterDriveFolder,
+    items: [
+      { id: "sp1", title: "E-Commerce Database Schema Setup.sql", duration: "SQL (1.2 MB)", type: "file" },
+      { id: "sp2", title: "Complex Joins & Subqueries Hands-on.sql", duration: "SQL (850 KB)", type: "file" },
+      { id: "sp3", title: "Window Functions & CTE Assessment.pdf", duration: "PDF (2.8 MB)", type: "pdf" }
+    ]
+  },
+  {
+    id: "sql-session-1",
+    title: "SESSION-1",
+    fullTitle: "SESSION-1: SQL Relational Architecture, Data Types & DDL/DML",
+    isFolder: true,
+    hasActionButtons: true,
+    driveFolderUrl: sqlMasterDriveFolder,
+    videoFileName: "SQL_SESSION-1.mp4",
+    videoSize: "540.5 MB",
+    materialFileName: "SQL_Session1_Materials.zip",
+    materialSize: "48.2 MB",
+    assignmentFileName: "SQL_SESSION-1_ASSIGNMENTS.sql",
+    assignmentSize: "45 KB",
+    duration: "2h 00m",
+    recordingDate: "12.06.2026",
+    instructor: "Dr. Sandip Mukherjee",
+    summary: "Relational database concepts, normalization (1NF, 2NF, 3NF), CREATE, ALTER, DROP, INSERT, UPDATE, and primary/foreign keys.",
+    items: [
+      { id: "sql-1-1", title: "SQL Session-1 Class-1 Video (Relational Architecture & Constraints)", duration: "1h 10m", type: "video" },
+      { id: "sql-1-2", title: "SQL Session-1 Class-2 Video (Hands-on DDL & Table Design)", duration: "50 mins", type: "video" },
+      { id: "sql-1-3", title: "SQL_Session1_Materials.zip (Scripts, Datasets & Slides)", duration: "ZIP (48.2 MB)", type: "file", fileName: "SQL_Session1_Materials.zip" },
+      { id: "sql-1-4", title: "SQL_SESSION-1_ASSIGNMENTS.sql (DDL Exercises)", duration: "SQL (45 KB)", type: "file", fileName: "SQL_SESSION-1_ASSIGNMENTS.sql" }
+    ]
+  },
+  {
+    id: "sql-session-2",
+    title: "SESSION-2",
+    fullTitle: "SESSION-2: Filtering, Aggregations, GROUP BY & HAVING Clauses",
+    isFolder: true,
+    hasActionButtons: true,
+    driveFolderUrl: sqlMasterDriveFolder,
+    videoFileName: "SQL_SESSION-2.mp4",
+    videoSize: "510.2 MB",
+    materialFileName: "SQL_Session2_Materials.zip",
+    materialSize: "55.8 MB",
+    assignmentFileName: "SQL_SESSION-2_ASSIGNMENTS.sql",
+    assignmentSize: "52 KB",
+    duration: "2h 15m",
+    recordingDate: "15.06.2026",
+    instructor: "Dr. Sandip Mukherjee",
+    summary: "SELECT queries, WHERE clause filtering, string pattern matching with LIKE, aggregate functions (SUM, AVG, COUNT), and GROUP BY / HAVING.",
+    items: [
+      { id: "sql-2-1", title: "SQL Session-2 Class-1 Video (Filtering & Aggregations)", duration: "1h 15m", type: "video" },
+      { id: "sql-2-2", title: "SQL Session-2 Class-2 Video (GROUP BY & Multi-level Rollups)", duration: "1h 00m", type: "video" },
+      { id: "sql-2-3", title: "SQL_Session2_Materials.zip (Sales Seed Data & Schemas)", duration: "ZIP (55.8 MB)", type: "file", fileName: "SQL_Session2_Materials.zip" },
+      { id: "sql-2-4", title: "SQL_SESSION-2_ASSIGNMENTS.sql (Aggregations Problem Set)", duration: "SQL (52 KB)", type: "file", fileName: "SQL_SESSION-2_ASSIGNMENTS.sql" }
+    ]
+  },
+  {
+    id: "sql-session-3",
+    title: "SESSION-3",
+    fullTitle: "SESSION-3: Multi-Table Joins (INNER, LEFT, RIGHT, FULL OUTER & CROSS)",
+    isFolder: true,
+    hasActionButtons: true,
+    driveFolderUrl: sqlMasterDriveFolder,
+    videoFileName: "SQL_SESSION-3.mp4",
+    videoSize: "620.0 MB",
+    materialFileName: "SQL_Session3_Materials.zip",
+    materialSize: "62.4 MB",
+    assignmentFileName: "SQL_SESSION-3_ASSIGNMENTS.sql",
+    assignmentSize: "60 KB",
+    duration: "2h 30m",
+    recordingDate: "19.06.2026",
+    instructor: "Dr. Sandip Mukherjee",
+    summary: "Mastering complex table joins, handling NULL values in OUTER JOINs, self joins for employee-manager trees, and cross joins for matrix reporting.",
+    items: [
+      { id: "sql-3-1", title: "SQL Session-3 Class-1 Video (Join Theory & Venn Diagrams)", duration: "1h 15m", type: "video" },
+      { id: "sql-3-2", title: "SQL Session-3 Class-2 Video (Enterprise Multi-Join Queries)", duration: "1h 15m", type: "video" },
+      { id: "sql-3-3", title: "SQL_Session3_Materials.zip (Join Datasets & Solutions)", duration: "ZIP (62.4 MB)", type: "file", fileName: "SQL_Session3_Materials.zip" },
+      { id: "sql-3-4", title: "SQL_SESSION-3_ASSIGNMENTS.sql (Complex Joins Exercise)", duration: "SQL (60 KB)", type: "file", fileName: "SQL_SESSION-3_ASSIGNMENTS.sql" }
+    ]
+  },
+  {
+    id: "sql-session-4",
+    title: "SESSION-4",
+    fullTitle: "SESSION-4: Subqueries, Correlated Subqueries & Common Table Expressions (CTEs)",
+    isFolder: true,
+    hasActionButtons: true,
+    driveFolderUrl: sqlMasterDriveFolder,
+    videoFileName: "SQL_SESSION-4.mp4",
+    videoSize: "590.8 MB",
+    materialFileName: "SQL_Session4_Materials.zip",
+    materialSize: "70.1 MB",
+    assignmentFileName: "SQL_SESSION-4_ASSIGNMENTS.sql",
+    assignmentSize: "65 KB",
+    duration: "2h 20m",
+    recordingDate: "23.06.2026",
+    instructor: "Dr. Sandip Mukherjee",
+    summary: "Nested scalar subqueries, EXISTS vs IN, correlated subqueries, non-recursive and recursive CTEs for hierarchical data navigation.",
+    items: [
+      { id: "sql-4-1", title: "SQL Session-4 Class-1 Video (Subqueries & EXISTS)", duration: "1h 10m", type: "video" },
+      { id: "sql-4-2", title: "SQL Session-4 Class-2 Video (CTEs & Recursive Hierarchies)", duration: "1h 10m", type: "video" },
+      { id: "sql-4-3", title: "SQL_Session4_Materials.zip (Recursive CTE Case Studies)", duration: "ZIP (70.1 MB)", type: "file", fileName: "SQL_Session4_Materials.zip" },
+      { id: "sql-4-4", title: "SQL_SESSION-4_ASSIGNMENTS.sql (CTE Problem Set)", duration: "SQL (65 KB)", type: "file", fileName: "SQL_SESSION-4_ASSIGNMENTS.sql" }
+    ]
+  },
+  {
+    id: "sql-session-5",
+    title: "SESSION-5",
+    fullTitle: "SESSION-5: Advanced Window Functions (ROW_NUMBER, RANK, DENSE_RANK & LEAD/LAG)",
+    isFolder: true,
+    hasActionButtons: true,
+    driveFolderUrl: sqlMasterDriveFolder,
+    videoFileName: "SQL_SESSION-5.mp4",
+    videoSize: "660.4 MB",
+    materialFileName: "SQL_Session5_Materials.zip",
+    materialSize: "84.3 MB",
+    assignmentFileName: "SQL_SESSION-5_ASSIGNMENTS.sql",
+    assignmentSize: "78 KB",
+    duration: "2h 45m",
+    recordingDate: "27.06.2026",
+    instructor: "Dr. Sandip Mukherjee",
+    summary: "OVER() clause, PARTITION BY, ORDER BY, running totals, moving averages, top-N per category with DENSE_RANK, and period-over-period difference with LEAD/LAG.",
+    items: [
+      { id: "sql-5-1", title: "SQL Session-5 Class-1 Video (Ranking & Window Framing)", duration: "1h 20m", type: "video" },
+      { id: "sql-5-2", title: "SQL Session-5 Class-2 Video (Running Sums & LEAD/LAG Analytics)", duration: "1h 25m", type: "video" },
+      { id: "sql-5-3", title: "SQL_Session5_Materials.zip (Enterprise Window Function Lab)", duration: "ZIP (84.3 MB)", type: "file", fileName: "SQL_Session5_Materials.zip" },
+      { id: "sql-5-4", title: "SQL_SESSION-5_ASSIGNMENTS.sql (Final SQL Capstone)", duration: "SQL (78 KB)", type: "file", fileName: "SQL_SESSION-5_ASSIGNMENTS.sql" }
+    ]
+  }
+];
+
+export const pythonMasterDriveFolder = "https://drive.google.com/drive/folders/1x86D2j38HxNJWavtVGRZWTmSdHQ6tnpG?usp=sharing";
+
+export const pythonSessions = [
+  {
+    id: "py-practical-questions",
+    title: "Python Data Science Notebooks & Scripts",
+    isFolder: true,
+    driveFolderUrl: pythonMasterDriveFolder,
+    items: [
+      { id: "pyp1", title: "Python Basics & Algorithmic Problem Solving.ipynb", duration: "IPYNB (3.4 MB)", type: "file" },
+      { id: "pyp2", title: "NumPy & Pandas Vectorized Operations.ipynb", duration: "IPYNB (4.1 MB)", type: "file" },
+      { id: "pyp3", title: "Exploratory Data Analysis (EDA) Best Practices.pdf", duration: "PDF (5.2 MB)", type: "pdf" }
+    ]
+  },
+  {
+    id: "py-session-1",
+    title: "SESSION-1",
+    fullTitle: "SESSION-1: Python Fundamentals, Data Structures & Control Flow",
+    isFolder: true,
+    hasActionButtons: true,
+    driveFolderUrl: pythonMasterDriveFolder,
+    videoFileName: "PYTHON_SESSION-1.mp4",
+    videoSize: "580.0 MB",
+    materialFileName: "Python_Session1_Materials.zip",
+    materialSize: "35.2 MB",
+    assignmentFileName: "PYTHON_SESSION-1_ASSIGNMENTS.py",
+    assignmentSize: "32 KB",
+    duration: "2h 00m",
+    recordingDate: "02.07.2026",
+    instructor: "Dr. Sandip Mukherjee",
+    summary: "Variables, primitive data types, lists, dictionaries, tuples, sets, list comprehensions, if-else conditionals, for/while loops, and custom functions.",
+    items: [
+      { id: "py-1-1", title: "Python Session-1 Class-1 Video (Python Syntax & Data Structures)", duration: "1h 10m", type: "video" },
+      { id: "py-1-2", title: "Python Session-1 Class-2 Video (Functions & Comprehensions)", duration: "50 mins", type: "video" },
+      { id: "py-1-3", title: "Python_Session1_Materials.zip (Jupyter Notebooks & Code)", duration: "ZIP (35.2 MB)", type: "file", fileName: "Python_Session1_Materials.zip" },
+      { id: "py-1-4", title: "PYTHON_SESSION-1_ASSIGNMENTS.py (Syntax Problem Set)", duration: "Python (32 KB)", type: "file", fileName: "PYTHON_SESSION-1_ASSIGNMENTS.py" }
+    ]
+  },
+  {
+    id: "py-session-2",
+    title: "SESSION-2",
+    fullTitle: "SESSION-2: Object-Oriented Programming (OOP) & Exception Handling",
+    isFolder: true,
+    hasActionButtons: true,
+    driveFolderUrl: pythonMasterDriveFolder,
+    videoFileName: "PYTHON_SESSION-2.mp4",
+    videoSize: "550.4 MB",
+    materialFileName: "Python_Session2_Materials.zip",
+    materialSize: "40.1 MB",
+    assignmentFileName: "PYTHON_SESSION-2_ASSIGNMENTS.py",
+    assignmentSize: "40 KB",
+    duration: "2h 10m",
+    recordingDate: "05.07.2026",
+    instructor: "Dr. Sandip Mukherjee",
+    summary: "Classes, instances, inheritance, encapsulation, polymorphism, custom dunder methods, try-except-finally error handling, and modular imports.",
+    items: [
+      { id: "py-2-1", title: "Python Session-2 Class-1 Video (Classes & Inheritance)", duration: "1h 05m", type: "video" },
+      { id: "py-2-2", title: "Python Session-2 Class-2 Video (Custom Exceptions & Modules)", duration: "1h 05m", type: "video" },
+      { id: "py-2-3", title: "Python_Session2_Materials.zip (OOP Practice Code)", duration: "ZIP (40.1 MB)", type: "file", fileName: "Python_Session2_Materials.zip" },
+      { id: "py-2-4", title: "PYTHON_SESSION-2_ASSIGNMENTS.py (OOP Design Exercise)", duration: "Python (40 KB)", type: "file", fileName: "PYTHON_SESSION-2_ASSIGNMENTS.py" }
+    ]
+  },
+  {
+    id: "py-session-3",
+    title: "SESSION-3",
+    fullTitle: "SESSION-3: NumPy Numerical Computing & Vectorized Mathematics",
+    isFolder: true,
+    hasActionButtons: true,
+    driveFolderUrl: pythonMasterDriveFolder,
+    videoFileName: "PYTHON_SESSION-3.mp4",
+    videoSize: "590.2 MB",
+    materialFileName: "Python_Session3_Materials.zip",
+    materialSize: "45.0 MB",
+    assignmentFileName: "PYTHON_SESSION-3_ASSIGNMENTS.ipynb",
+    assignmentSize: "68 KB",
+    duration: "2h 15m",
+    recordingDate: "09.07.2026",
+    instructor: "Dr. Sandip Mukherjee",
+    summary: "N-dimensional arrays, matrix multiplications, broadcasting rules, boolean indexing, random sampling, and linear algebra operations.",
+    items: [
+      { id: "py-3-1", title: "Python Session-3 Class-1 Video (NumPy Arrays & Broadcasting)", duration: "1h 10m", type: "video" },
+      { id: "py-3-2", title: "Python Session-3 Class-2 Video (Vectorization & Linear Algebra)", duration: "1h 05m", type: "video" },
+      { id: "py-3-3", title: "Python_Session3_Materials.zip (NumPy Labs & Benchmarks)", duration: "ZIP (45.0 MB)", type: "file", fileName: "Python_Session3_Materials.zip" },
+      { id: "py-3-4", title: "PYTHON_SESSION-3_ASSIGNMENTS.ipynb (Matrix Operations)", duration: "IPYNB (68 KB)", type: "file", fileName: "PYTHON_SESSION-3_ASSIGNMENTS.ipynb" }
+    ]
+  },
+  {
+    id: "py-session-4",
+    title: "SESSION-4",
+    fullTitle: "SESSION-4: Pandas Data Manipulation & Series / DataFrame Mastery",
+    isFolder: true,
+    hasActionButtons: true,
+    driveFolderUrl: pythonMasterDriveFolder,
+    videoFileName: "PYTHON_SESSION-4.mp4",
+    videoSize: "640.8 MB",
+    materialFileName: "Python_Session4_Materials.zip",
+    materialSize: "65.4 MB",
+    assignmentFileName: "PYTHON_SESSION-4_ASSIGNMENTS.ipynb",
+    assignmentSize: "85 KB",
+    duration: "2h 30m",
+    recordingDate: "13.07.2026",
+    instructor: "Dr. Sandip Mukherjee",
+    summary: "Loading CSV/JSON/SQL into DataFrames, loc/iloc indexing, column transformations, filtering, handling missing values, and data type casting.",
+    items: [
+      { id: "py-4-1", title: "Python Session-4 Class-1 Video (DataFrame Ingestion & loc/iloc)", duration: "1h 15m", type: "video" },
+      { id: "py-4-2", title: "Python Session-4 Class-2 Video (Data Cleaning with Pandas)", duration: "1h 15m", type: "video" },
+      { id: "py-4-3", title: "Python_Session4_Materials.zip (Dirty Datasets & Solutions)", duration: "ZIP (65.4 MB)", type: "file", fileName: "Python_Session4_Materials.zip" },
+      { id: "py-4-4", title: "PYTHON_SESSION-4_ASSIGNMENTS.ipynb (Data Wrangling Lab)", duration: "IPYNB (85 KB)", type: "file", fileName: "PYTHON_SESSION-4_ASSIGNMENTS.ipynb" }
+    ]
+  },
+  {
+    id: "py-session-5",
+    title: "SESSION-5",
+    fullTitle: "SESSION-5: GroupBy Aggregations, Merging, Pivoting & Reshaping",
+    isFolder: true,
+    hasActionButtons: true,
+    driveFolderUrl: pythonMasterDriveFolder,
+    videoFileName: "PYTHON_SESSION-5.mp4",
+    videoSize: "610.0 MB",
+    materialFileName: "Python_Session5_Materials.zip",
+    materialSize: "72.0 MB",
+    assignmentFileName: "PYTHON_SESSION-5_ASSIGNMENTS.ipynb",
+    assignmentSize: "92 KB",
+    duration: "2h 25m",
+    recordingDate: "17.07.2026",
+    instructor: "Dr. Sandip Mukherjee",
+    summary: "groupby(), agg(), transform(), merge(), concat(), pivot_table(), melt(), and multi-index hierarchical data manipulation.",
+    items: [
+      { id: "py-5-1", title: "Python Session-5 Class-1 Video (GroupBy & Transform)", duration: "1h 10m", type: "video" },
+      { id: "py-5-2", title: "Python Session-5 Class-2 Video (Merging & Reshaping Data)", duration: "1h 15m", type: "video" },
+      { id: "py-5-3", title: "Python_Session5_Materials.zip (Multi-Table Merges)", duration: "ZIP (72.0 MB)", type: "file", fileName: "Python_Session5_Materials.zip" },
+      { id: "py-5-4", title: "PYTHON_SESSION-5_ASSIGNMENTS.ipynb (Aggregation Benchmarks)", duration: "IPYNB (92 KB)", type: "file", fileName: "PYTHON_SESSION-5_ASSIGNMENTS.ipynb" }
+    ]
+  },
+  {
+    id: "py-session-6",
+    title: "SESSION-6",
+    fullTitle: "SESSION-6: Data Visualization (Matplotlib, Seaborn & Plotly)",
+    isFolder: true,
+    hasActionButtons: true,
+    driveFolderUrl: pythonMasterDriveFolder,
+    videoFileName: "PYTHON_SESSION-6.mp4",
+    videoSize: "630.5 MB",
+    materialFileName: "Python_Session6_Materials.zip",
+    materialSize: "58.0 MB",
+    assignmentFileName: "PYTHON_SESSION-6_ASSIGNMENTS.ipynb",
+    assignmentSize: "78 KB",
+    duration: "2h 30m",
+    recordingDate: "21.07.2026",
+    instructor: "Dr. Sandip Mukherjee",
+    summary: "Line charts, bar plots, distribution histograms, boxplots, heatmaps with correlation matrices, and interactive charts with Plotly.",
+    items: [
+      { id: "py-6-1", title: "Python Session-6 Class-1 Video (Matplotlib & Seaborn Styling)", duration: "1h 15m", type: "video" },
+      { id: "py-6-2", title: "Python Session-6 Class-2 Video (Interactive Plotly Visualizations)", duration: "1h 15m", type: "video" },
+      { id: "py-6-3", title: "Python_Session6_Materials.zip (Visualization Templates)", duration: "ZIP (58.0 MB)", type: "file", fileName: "Python_Session6_Materials.zip" },
+      { id: "py-6-4", title: "PYTHON_SESSION-6_ASSIGNMENTS.ipynb (Executive Charting Lab)", duration: "IPYNB (78 KB)", type: "file", fileName: "PYTHON_SESSION-6_ASSIGNMENTS.ipynb" }
+    ]
+  },
+  {
+    id: "py-session-7",
+    title: "SESSION-7",
+    fullTitle: "SESSION-7: Exploratory Data Analysis (EDA) & Feature Engineering",
+    isFolder: true,
+    hasActionButtons: true,
+    driveFolderUrl: pythonMasterDriveFolder,
+    videoFileName: "PYTHON_SESSION-7.mp4",
+    videoSize: "670.0 MB",
+    materialFileName: "Python_Session7_Materials.zip",
+    materialSize: "80.5 MB",
+    assignmentFileName: "PYTHON_SESSION-7_ASSIGNMENTS.ipynb",
+    assignmentSize: "110 KB",
+    duration: "2h 40m",
+    recordingDate: "25.07.2026",
+    instructor: "Dr. Sandip Mukherjee",
+    summary: "End-to-end real world dataset profiling, outlier detection (IQR, Z-Score), skewness correction, categorical encoding (One-Hot, Ordinal), and feature scaling.",
+    items: [
+      { id: "py-7-1", title: "Python Session-7 Class-1 Video (EDA Pipeline Architecture)", duration: "1h 20m", type: "video" },
+      { id: "py-7-2", title: "Python Session-7 Class-2 Video (Feature Scaling & Encodings)", duration: "1h 20m", type: "video" },
+      { id: "py-7-3", title: "Python_Session7_Materials.zip (Real Estate Raw Dataset)", duration: "ZIP (80.5 MB)", type: "file", fileName: "Python_Session7_Materials.zip" },
+      { id: "py-7-4", title: "PYTHON_SESSION-7_ASSIGNMENTS.ipynb (Full EDA Notebook)", duration: "IPYNB (110 KB)", type: "file", fileName: "PYTHON_SESSION-7_ASSIGNMENTS.ipynb" }
+    ]
+  },
+  {
+    id: "py-session-8",
+    title: "SESSION-8",
+    fullTitle: "SESSION-8: End-to-End Analytics Capstone & Production Scripting",
+    isFolder: true,
+    hasActionButtons: true,
+    driveFolderUrl: pythonMasterDriveFolder,
+    videoFileName: "PYTHON_SESSION-8.mp4",
+    videoSize: "720.0 MB",
+    materialFileName: "Python_Session8_Materials.zip",
+    materialSize: "95.0 MB",
+    assignmentFileName: "PYTHON_SESSION-8_CAPSTONE.ipynb",
+    assignmentSize: "140 KB",
+    duration: "3h 00m",
+    recordingDate: "29.07.2026",
+    instructor: "Dr. Sandip Mukherjee",
+    summary: "Production-grade Python modular scripts, logging, argparse CLI parameters, automated report generation, and final project defense.",
+    items: [
+      { id: "py-8-1", title: "Python Session-8 Class-1 Video (Production Scripting & Logging)", duration: "1h 30m", type: "video" },
+      { id: "py-8-2", title: "Python Session-8 Class-2 Video (Capstone Project Presentation)", duration: "1h 30m", type: "video" },
+      { id: "py-8-3", title: "Python_Session8_Materials.zip (Production Capstone Skeleton)", duration: "ZIP (95.0 MB)", type: "file", fileName: "Python_Session8_Materials.zip" },
+      { id: "py-8-4", title: "PYTHON_SESSION-8_CAPSTONE.ipynb (Final Python Capstone)", duration: "IPYNB (140 KB)", type: "file", fileName: "PYTHON_SESSION-8_CAPSTONE.ipynb" }
+    ]
+  }
+];
+
+export function getSubjectSessions(subjectName) {
+  const lower = (subjectName || '').toLowerCase();
+  if (lower.includes('sql')) return sqlSessions;
+  if (lower.includes('python')) return pythonSessions;
+  return excelSessions;
+}
+
 export const assignmentsList = [
   {
     id: "ASN-EX-01",
