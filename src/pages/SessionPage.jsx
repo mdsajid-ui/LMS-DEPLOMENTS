@@ -360,13 +360,26 @@ export default function SessionPage({
 
       {/* Accordion List of All Sessions */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 space-y-4">
-        <div>
-          <h3 className="text-base font-bold text-slate-900">
-            Course Curriculum & Recorded Lectures
-          </h3>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Click on any folder to expand the session recordings, practice assignments, and dataset files.
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">
+              Course Curriculum & Recorded Lectures
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              All 6 session recordings, class materials, and assignments synced with Google Drive.
+            </p>
+          </div>
+
+          <a 
+            href="https://drive.google.com/drive/folders/1AYelQA_4SR4NWcKeyWXsx9StEbl4X0fF?usp=sharing"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold border border-blue-200 transition-all self-start sm:self-auto shadow-2xs"
+          >
+            <Folder className="w-4 h-4 text-blue-600" />
+            <span>Google Drive Master Hub</span>
+            <ExternalLink className="w-3.5 h-3.5 text-blue-500" />
+          </a>
         </div>
 
         <div className="space-y-3">
@@ -417,7 +430,7 @@ export default function SessionPage({
                 {/* Expanded Session Files & Videos */}
                 {isExpanded && (
                   <div className="px-5 py-4 bg-white border-t border-slate-100 space-y-3">
-                    {/* Real LMS Action Buttons for Session 1 (Matching edu.dvanalyticsmds.com Screenshot) */}
+                    {/* Real LMS Action Buttons (Matching edu.dvanalyticsmds.com Screenshot) */}
                     {session.hasActionButtons && (
                       <div className="space-y-2.5 pb-2">
                         {/* 1. Green Button: Session Videos */}
@@ -425,7 +438,7 @@ export default function SessionPage({
                           onClick={() => {
                             setActiveItem({
                               sessionTitle: session.fullTitle || session.title,
-                              itemTitle: "Excel Session 1 Class 1 Video",
+                              itemTitle: session.items[0]?.title || `${session.title} Class Video`,
                               type: "video",
                               embedUrl: session.vdocipherEmbedUrl || defaultEmbedUrl,
                               instructor: session.instructor,
@@ -439,7 +452,12 @@ export default function SessionPage({
                             <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
                               <Play className="w-3.5 h-3.5 fill-white" />
                             </div>
-                            <span className="text-xs sm:text-sm font-bold tracking-wide">Session Videos</span>
+                            <div className="text-left">
+                              <span className="text-xs sm:text-sm font-bold tracking-wide block">Session Videos</span>
+                              {session.videoFileName && (
+                                <span className="text-[10px] text-teal-100 font-mono block">{session.videoFileName} ({session.videoSize})</span>
+                              )}
+                            </div>
                           </div>
                           <ExternalLink className="w-4 h-4 opacity-80 group-hover:opacity-100 transition-opacity" />
                         </button>
@@ -447,6 +465,9 @@ export default function SessionPage({
                         {/* 2. Blue Button: Session Materials */}
                         <button
                           onClick={() => {
+                            if (session.driveFolderUrl) {
+                              window.open(session.driveFolderUrl, '_blank');
+                            }
                             setActiveTab('resources');
                             const el = document.getElementById('session-tab-container');
                             if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -457,7 +478,12 @@ export default function SessionPage({
                             <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
                               <Play className="w-3.5 h-3.5 fill-white" />
                             </div>
-                            <span className="text-xs sm:text-sm font-bold tracking-wide">Session Materials</span>
+                            <div className="text-left">
+                              <span className="text-xs sm:text-sm font-bold tracking-wide block">Session Materials</span>
+                              {session.materialFileName && (
+                                <span className="text-[10px] text-sky-100 font-mono block">{session.materialFileName} ({session.materialSize})</span>
+                              )}
+                            </div>
                           </div>
                           <ExternalLink className="w-4 h-4 opacity-80 group-hover:opacity-100 transition-opacity" />
                         </button>
@@ -465,7 +491,7 @@ export default function SessionPage({
                         {/* 3. Orange Button: Session Assignments */}
                         <button
                           onClick={() => {
-                            generateAndDownloadExcel("Excel_Session1_Class1_Exercise.xlsx");
+                            generateAndDownloadExcel(session.assignmentFileName || "SESSION-1 ASSIGNMENTS.xlsx");
                           }}
                           className="w-full bg-[#f39c12] hover:bg-[#e08e0b] text-white font-semibold py-3 px-4 rounded-xl shadow-xs flex items-center justify-between transition-all transform active:scale-[0.99] cursor-pointer group"
                         >
@@ -473,7 +499,12 @@ export default function SessionPage({
                             <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
                               <Play className="w-3.5 h-3.5 fill-white" />
                             </div>
-                            <span className="text-xs sm:text-sm font-bold tracking-wide">Session Assignments</span>
+                            <div className="text-left">
+                              <span className="text-xs sm:text-sm font-bold tracking-wide block">Session Assignments</span>
+                              {session.assignmentFileName && (
+                                <span className="text-[10px] text-amber-100 font-mono block">{session.assignmentFileName} ({session.assignmentSize || 'Excel'})</span>
+                              )}
+                            </div>
                           </div>
                           <ExternalLink className="w-4 h-4 opacity-80 group-hover:opacity-100 transition-opacity" />
                         </button>

@@ -114,11 +114,14 @@ export const courseCategories = [
   }
 ];
 
+export const excelMasterDriveFolder = "https://drive.google.com/drive/folders/1AYelQA_4SR4NWcKeyWXsx9StEbl4X0fF?usp=sharing";
+
 export const excelSessions = [
   {
     id: "practical-questions",
     title: "Excel Practical Questions",
     isFolder: true,
+    driveFolderUrl: "https://drive.google.com/drive/folders/1AYelQA_4SR4NWcKeyWXsx9StEbl4X0fF?usp=sharing",
     items: [
       { id: "p1", title: "Practice Sheet 1: Financial Modeling Scenarios", duration: "File (1.4 MB)", type: "file" },
       { id: "p2", title: "Practice Sheet 2: Multi-Criteria Lookup Cases", duration: "File (890 KB)", type: "file" },
@@ -127,35 +130,51 @@ export const excelSessions = [
   },
   {
     id: "session-1",
-    title: "Session 1",
-    fullTitle: "Session 1: Advanced Formulae & Dynamic Cell References",
+    title: "B1.SESSION-1",
+    fullTitle: "B1.SESSION-1: Advanced Formulae, Dynamic Cell References & Raw Data",
     isFolder: true,
     hasActionButtons: true,
+    driveFolderUrl: "https://drive.google.com/drive/folders/1s2bketdfisU7l0tOW3Zglpw5P5tuCeHU",
     vdocipherEmbedUrl: "https://player.vdocipher.com/v2/?otp=20160313versASE3232Tj8PbBLlQCLHDTQp2I37Tn35428tQ5YVO2eMzx1M59M5y&playbackInfo=eyJ2aWRlb0lkIjoiYjVmYzAwZTcxMWI0NDFjMTg2ZjYwMmI2NmQ4NmQ3YTUifQ==",
     videoUrl: "https://player.vdocipher.com/v2/?otp=20160313versASE3232Tj8PbBLlQCLHDTQp2I37Tn35428tQ5YVO2eMzx1M59M5y&playbackInfo=eyJ2aWRlb0lkIjoiYjVmYzAwZTcxMWI0NDFjMTg2ZjYwMmI2NmQ4NmQ3YTUifQ==",
+    videoFileName: "SESSION-1.mp4",
+    videoSize: "610.1 MB",
+    materialFileName: "A2.RAW DATA.zip",
+    materialSize: "59.4 MB",
+    assignmentFileName: "SESSION-1 ASSIGNMENTS.xlsx",
+    assignmentSize: "55 KB",
     duration: "1h 45m",
     watchedMinutes: 105,
     totalMinutes: 105,
     recordingDate: "05.06.2026",
     instructor: "Dr. Sandip Mukherjee",
-    summary: "Deep dive into absolute, relative, and mixed references, formula auditing, array formulas, and core best practices for enterprise datasets.",
+    summary: "Deep dive into absolute, relative, and mixed references, formula auditing, array formulas, and enterprise retail datasets.",
     items: [
       { 
         id: "s1-1", 
-        title: "Excel Session 1 Class 1 Video (Live VdoCipher Stream)", 
-        duration: "1h 45m", 
+        title: "Excel Session 1 Class 1 Video (Live VdoCipher Stream & SESSION-1.mp4)", 
+        duration: "610.1 MB", 
         type: "video",
         embedUrl: "https://player.vdocipher.com/v2/?otp=20160313versASE3232Tj8PbBLlQCLHDTQp2I37Tn35428tQ5YVO2eMzx1M59M5y&playbackInfo=eyJ2aWRlb0lkIjoiYjVmYzAwZTcxMWI0NDFjMTg2ZjYwMmI2NmQ4NmQ3YTUifQ==" 
       },
-      { id: "s1-2", title: "Class Slide Deck (Formulas.pptx)", duration: "PDF (4.8 MB)", type: "pdf" },
-      { id: "s1-3", title: "Class Exercise Workbook - Raw Data", duration: "XLSX (2.1 MB)", type: "file" }
+      { id: "s1-2", title: "A2.RAW DATA.zip (Session Materials & Datasets)", duration: "ZIP (59.4 MB)", type: "file", fileName: "A2.RAW DATA.zip" },
+      { id: "s1-3", title: "SESSION-1 ASSIGNMENTS.xlsx (Class Assignment Workbook)", duration: "XLSX (55 KB)", type: "file", fileName: "SESSION-1 ASSIGNMENTS.xlsx" }
     ]
   },
   {
     id: "session-2",
-    title: "Session 2: Advanced Lookup Functions (XLOOKUP, INDEX & MATCH)",
+    title: "B2.SESSION-2",
+    fullTitle: "B2.SESSION-2: Advanced Lookup Functions (XLOOKUP, INDEX & MATCH) & Outputs",
     isFolder: true,
-    videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+    hasActionButtons: true,
+    driveFolderUrl: "https://drive.google.com/drive/folders/1I3WYsu458O6QP3F0dtYi7pEsIRK7y2iz",
+    videoUrl: "https://player.vdocipher.com/v2/?otp=20160313versASE3232Tj8PbBLlQCLHDTQp2I37Tn35428tQ5YVO2eMzx1M59M5y&playbackInfo=eyJ2aWRlb0lkIjoiYjVmYzAwZTcxMWI0NDFjMTg2ZjYwMmI2NmQ4NmQ3YTUifQ==",
+    videoFileName: "SESSION-2.mp4",
+    videoSize: "580.4 MB",
+    materialFileName: "A4.OUTPUT.zip",
+    materialSize: "264.4 MB",
+    assignmentFileName: "SESSION-2 ASSIGNMENTS.xlsx",
+    assignmentSize: "68 KB",
     duration: "2h 10m",
     watchedMinutes: 130,
     totalMinutes: 130,
@@ -163,16 +182,25 @@ export const excelSessions = [
     instructor: "Dr. Sandip Mukherjee",
     summary: "Mastering VLOOKUP limitations, dual-directional XLOOKUP, nested INDEX-MATCH, approximate matching for tax brackets and customer segments.",
     items: [
-      { id: "s2-1", title: "Session Recording: Deep Dive XLOOKUP", duration: "1h 15m", type: "video" },
-      { id: "s2-2", title: "Two-way Matrix Lookup Workshop", duration: "55 mins", type: "video" },
-      { id: "s2-3", title: "Exercise Solutions & Edge Cases", duration: "XLSX (1.8 MB)", type: "file" }
+      { id: "s2-1", title: "SESSION-2.mp4 (Class Video Stream)", duration: "580.4 MB", type: "video" },
+      { id: "s2-2", title: "A4.OUTPUT.zip (Session Materials & Calculated Outputs)", duration: "ZIP (264.4 MB)", type: "file", fileName: "A4.OUTPUT.zip" },
+      { id: "s2-3", title: "SESSION-2 ASSIGNMENTS.xlsx (Lookup Case Studies)", duration: "XLSX (68 KB)", type: "file", fileName: "SESSION-2 ASSIGNMENTS.xlsx" }
     ]
   },
   {
     id: "session-3",
-    title: "Session 3: Data Cleaning, Text Manipulations & Formatting",
+    title: "B3.SESSION-3",
+    fullTitle: "B3.SESSION-3: Data Cleaning, Text Functions & Dataset Architecture",
     isFolder: true,
-    videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+    hasActionButtons: true,
+    driveFolderUrl: "https://drive.google.com/drive/folders/13a8ppBbbiswGwsM1-nUOw_esvSadZGSl",
+    videoUrl: "https://player.vdocipher.com/v2/?otp=20160313versASE3232Tj8PbBLlQCLHDTQp2I37Tn35428tQ5YVO2eMzx1M59M5y&playbackInfo=eyJ2aWRlb0lkIjoiYjVmYzAwZTcxMWI0NDFjMTg2ZjYwMmI2NmQ4NmQ3YTUifQ==",
+    videoFileName: "SESSION-3.mp4",
+    videoSize: "540.2 MB",
+    materialFileName: "A1.CONTENTS.zip",
+    materialSize: "3.9 MB",
+    assignmentFileName: "SESSION-3 ASSIGNMENTS.xlsx",
+    assignmentSize: "50 KB",
     duration: "1h 55m",
     watchedMinutes: 115,
     totalMinutes: 115,
@@ -180,55 +208,175 @@ export const excelSessions = [
     instructor: "Dr. Sandip Mukherjee",
     summary: "REGEX concepts in Excel 365, TEXTSPLIT, TEXTJOIN, TRIM, CLEAN, DATE functions, and dynamic conditional formatting with formula rules.",
     items: [
-      { id: "s3-1", title: "Full Session Recording", duration: "1h 55m", type: "video" },
-      { id: "s3-2", title: "Dirty Retail Dataset Practice File", duration: "CSV (5.4 MB)", type: "file" }
+      { id: "s3-1", title: "SESSION-3.mp4 (Class Video Stream)", duration: "540.2 MB", type: "video" },
+      { id: "s3-2", title: "A1.CONTENTS.zip (Session Materials & Clean Datasets)", duration: "ZIP (3.9 MB)", type: "file", fileName: "A1.CONTENTS.zip" },
+      { id: "s3-3", title: "SESSION-3 ASSIGNMENTS.xlsx (Data Cleansing Exercises)", duration: "XLSX (50 KB)", type: "file", fileName: "SESSION-3 ASSIGNMENTS.xlsx" }
     ]
   },
   {
     id: "session-4",
-    title: "Session 4: Pivot Tables, Power Query & Business Dashboards",
+    title: "B4.SESSION-4",
+    fullTitle: "B4.SESSION-4: Pivot Tables, Slicers & Calculated KPI Fields",
     isFolder: true,
-    videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+    hasActionButtons: true,
+    driveFolderUrl: "https://drive.google.com/drive/folders/1-PH7ApRxSEYKglz96vhPubbLrieEupcb",
+    videoUrl: "https://player.vdocipher.com/v2/?otp=20160313versASE3232Tj8PbBLlQCLHDTQp2I37Tn35428tQ5YVO2eMzx1M59M5y&playbackInfo=eyJ2aWRlb0lkIjoiYjVmYzAwZTcxMWI0NDFjMTg2ZjYwMmI2NmQ4NmQ3YTUifQ==",
+    videoFileName: "SESSION-4.mp4",
+    videoSize: "620.8 MB",
+    materialFileName: "A1.CONTENTS.zip",
+    materialSize: "24.5 MB",
+    assignmentFileName: "SESSION-4 ASSIGNMENTS.xlsx",
+    assignmentSize: "75 KB",
     duration: "2h 30m",
     watchedMinutes: 90,
     totalMinutes: 150,
     recordingDate: "17.06.2026",
     instructor: "Dr. Sandip Mukherjee",
-    summary: "ETL using Power Query, unpivoting tables, calculated fields, slicers, timeline controls, and building an executive KPI dashboard.",
+    summary: "Pivot tables, custom group groupings, calculated fields, slicers, timeline controls, and building an executive KPI dashboard.",
     items: [
-      { id: "s4-1", title: "Power Query ETL Walkthrough", duration: "1h 10m", type: "video" },
-      { id: "s4-2", title: "Dashboard Architecture & KPI Cards", duration: "1h 20m", type: "video" },
-      { id: "s4-3", title: "Completed Executive Dashboard Template", duration: "XLSX (8.2 MB)", type: "file" }
+      { id: "s4-1", title: "SESSION-4.mp4 (Class Video Stream)", duration: "620.8 MB", type: "video" },
+      { id: "s4-2", title: "A1.CONTENTS.zip (Session Materials & Pivot Templates)", duration: "ZIP (24.5 MB)", type: "file", fileName: "A1.CONTENTS.zip" },
+      { id: "s4-3", title: "SESSION-4 ASSIGNMENTS.xlsx (Executive KPI Drilldown)", duration: "XLSX (75 KB)", type: "file", fileName: "SESSION-4 ASSIGNMENTS.xlsx" }
+    ]
+  },
+  {
+    id: "session-5",
+    title: "B5.SESSION-5",
+    fullTitle: "B5.SESSION-5: Power Query ETL, Data Modeling & Transformation",
+    isFolder: true,
+    hasActionButtons: true,
+    driveFolderUrl: "https://drive.google.com/drive/folders/1Hxfml57Jt0uEAidyuhwy3AeLx3fYeRCS",
+    videoUrl: "https://player.vdocipher.com/v2/?otp=20160313versASE3232Tj8PbBLlQCLHDTQp2I37Tn35428tQ5YVO2eMzx1M59M5y&playbackInfo=eyJ2aWRlb0lkIjoiYjVmYzAwZTcxMWI0NDFjMTg2ZjYwMmI2NmQ4NmQ3YTUifQ==",
+    videoFileName: "SESSION-5.mp4",
+    videoSize: "590.5 MB",
+    materialFileName: "A1.CONTENTS.zip",
+    materialSize: "19.5 MB",
+    assignmentFileName: "SESSION-5 ASSIGNMENTS.xlsx",
+    assignmentSize: "62 KB",
+    duration: "2h 15m",
+    watchedMinutes: 135,
+    totalMinutes: 135,
+    recordingDate: "21.06.2026",
+    instructor: "Dr. Sandip Mukherjee",
+    summary: "ETL using Power Query, unpivoting tables, multi-file merges, conditional columns, and data modeling best practices.",
+    items: [
+      { id: "s5-1", title: "SESSION-5.mp4 (Class Video Stream)", duration: "590.5 MB", type: "video" },
+      { id: "s5-2", title: "A1.CONTENTS.zip (ETL Queries & Data Models)", duration: "ZIP (19.5 MB)", type: "file", fileName: "A1.CONTENTS.zip" },
+      { id: "s5-3", title: "SESSION-5 ASSIGNMENTS.xlsx (Automated Transformation Pipelines)", duration: "XLSX (62 KB)", type: "file", fileName: "SESSION-5 ASSIGNMENTS.xlsx" }
+    ]
+  },
+  {
+    id: "session-6",
+    title: "B6.SESSION-6",
+    fullTitle: "B6.SESSION-6: Executive Dashboards, Macro Intro & Capstone Projects",
+    isFolder: true,
+    hasActionButtons: true,
+    driveFolderUrl: "https://drive.google.com/drive/folders/1hlUEBJH-4CE1l-6jiHGWT32VXAlemT83",
+    videoUrl: "https://player.vdocipher.com/v2/?otp=20160313versASE3232Tj8PbBLlQCLHDTQp2I37Tn35428tQ5YVO2eMzx1M59M5y&playbackInfo=eyJ2aWRlb0lkIjoiYjVmYzAwZTcxMWI0NDFjMTg2ZjYwMmI2NmQ4NmQ3YTUifQ==",
+    videoFileName: "SESSION-6.mp4",
+    videoSize: "680.2 MB",
+    materialFileName: "A1.CONTENTS.zip",
+    materialSize: "70.6 MB",
+    assignmentFileName: "SESSION-6 ASSIGNMENTS.xlsx",
+    assignmentSize: "95 KB",
+    duration: "2h 45m",
+    watchedMinutes: 165,
+    totalMinutes: 165,
+    recordingDate: "25.06.2026",
+    instructor: "Dr. Sandip Mukherjee",
+    summary: "Executive interactive dashboards, form controls, dynamic chart ranges, macro introduction, and full capstone project submission.",
+    items: [
+      { id: "s6-1", title: "SESSION-6.mp4 (Class Video Stream)", duration: "680.2 MB", type: "video" },
+      { id: "s6-2", title: "A1.CONTENTS.zip (Capstone Datasets & Macro Workbooks)", duration: "ZIP (70.6 MB)", type: "file", fileName: "A1.CONTENTS.zip" },
+      { id: "s6-3", title: "SESSION-6 ASSIGNMENTS.xlsx (Final Excel Capstone Project)", duration: "XLSX (95 KB)", type: "file", fileName: "SESSION-6 ASSIGNMENTS.xlsx" }
     ]
   }
 ];
 
 export const assignmentsList = [
   {
-    id: "ASN-01",
-    title: "Retail Sales Performance Analysis (Excel)",
+    id: "ASN-EX-01",
+    title: "SESSION-1 ASSIGNMENTS: Dynamic Cell References & Absolute Formulas",
     subject: "Excel Base and Advanced",
-    deadline: "15 Oct 2026",
+    deadline: "10 Oct 2026",
     totalMarks: 100,
     status: "Pending",
     submissionDate: null,
     score: null,
-    feedback: "Awaiting submission before cutoff date.",
-    description: "Analyze 25,000 retail sales records. Calculate quarterly revenue growth, identify top 10% customers using PERCENTILE.INC, and build a multi-scenario summary with XLOOKUP and dynamic arrays.",
-    starterFile: "Retail_Sales_Raw_Data.xlsx"
+    feedback: "Downloaded directly from Google Drive repository (B1.SESSION-1).",
+    description: "Practice absolute, relative, and mixed references with enterprise retail scenarios. Complete formulas for gross revenue, net margin, and lookup values.",
+    starterFile: "SESSION-1 ASSIGNMENTS.xlsx",
+    driveUrl: "https://drive.google.com/drive/folders/1s2bketdfisU7l0tOW3Zglpw5P5tuCeHU"
   },
   {
-    id: "ASN-02",
-    title: "Automated Invoice Generator with VBA Macro",
-    subject: "Excel VBA",
+    id: "ASN-EX-02",
+    title: "SESSION-2 ASSIGNMENTS: Advanced XLOOKUP & Multi-Criteria Matching",
+    subject: "Excel Base and Advanced",
+    deadline: "14 Oct 2026",
+    totalMarks: 100,
+    status: "Pending",
+    submissionDate: null,
+    score: null,
+    feedback: "Downloaded from Google Drive B2.SESSION-2 folder.",
+    description: "Implement nested INDEX-MATCH, approximate matching for commission bands, and multi-directional XLOOKUP queries.",
+    starterFile: "SESSION-2 ASSIGNMENTS.xlsx",
+    driveUrl: "https://drive.google.com/drive/folders/1I3WYsu458O6QP3F0dtYi7pEsIRK7y2iz"
+  },
+  {
+    id: "ASN-EX-03",
+    title: "SESSION-3 ASSIGNMENTS: Data Cleansing, Text Functions & Formatting",
+    subject: "Excel Base and Advanced",
+    deadline: "18 Oct 2026",
+    totalMarks: 100,
+    status: "Pending",
+    submissionDate: null,
+    score: null,
+    feedback: "Downloaded from Google Drive B3.SESSION-3 folder.",
+    description: "Clean dirty unstructured customer logs using TEXTSPLIT, TEXTJOIN, TRIM, CLEAN, and custom conditional formatting rules.",
+    starterFile: "SESSION-3 ASSIGNMENTS.xlsx",
+    driveUrl: "https://drive.google.com/drive/folders/13a8ppBbbiswGwsM1-nUOw_esvSadZGSl"
+  },
+  {
+    id: "ASN-EX-04",
+    title: "SESSION-4 ASSIGNMENTS: Pivot Tables, Calculated Fields & Slicers",
+    subject: "Excel Base and Advanced",
     deadline: "22 Oct 2026",
     totalMarks: 100,
     status: "Pending",
     submissionDate: null,
     score: null,
-    feedback: "Upload .xlsm file with documented subroutines.",
-    description: "Develop a macro-enabled workbook that takes customer purchase items, calculates subtotal, tax, and discount via VBA functions, and exports a branded PDF invoice automatically.",
-    starterFile: "Invoice_Template_Starter.xlsm"
+    feedback: "Downloaded from Google Drive B4.SESSION-4 folder.",
+    description: "Construct interactive summary pivot tables with timeline slicers, calculated items, and drill-down product hierarchies.",
+    starterFile: "SESSION-4 ASSIGNMENTS.xlsx",
+    driveUrl: "https://drive.google.com/drive/folders/1-PH7ApRxSEYKglz96vhPubbLrieEupcb"
+  },
+  {
+    id: "ASN-EX-05",
+    title: "SESSION-5 ASSIGNMENTS: Power Query Automated ETL Pipelines",
+    subject: "Excel Base and Advanced",
+    deadline: "26 Oct 2026",
+    totalMarks: 100,
+    status: "Pending",
+    submissionDate: null,
+    score: null,
+    feedback: "Downloaded from Google Drive B5.SESSION-5 folder.",
+    description: "Ingest and merge multi-sheet CSV datasets, unpivot financial tables, and automate monthly recurring pipeline transformations.",
+    starterFile: "SESSION-5 ASSIGNMENTS.xlsx",
+    driveUrl: "https://drive.google.com/drive/folders/1Hxfml57Jt0uEAidyuhwy3AeLx3fYeRCS"
+  },
+  {
+    id: "ASN-EX-06",
+    title: "SESSION-6 ASSIGNMENTS: Capstone Executive Dashboard & Macro Automation",
+    subject: "Excel Base and Advanced",
+    deadline: "30 Oct 2026",
+    totalMarks: 100,
+    status: "Pending",
+    submissionDate: null,
+    score: null,
+    feedback: "Downloaded from Google Drive B6.SESSION-6 folder.",
+    description: "Build an executive C-suite KPI dashboard with interactive dynamic charting, form buttons, and introductory VBA macro scripts.",
+    starterFile: "SESSION-6 ASSIGNMENTS.xlsx",
+    driveUrl: "https://drive.google.com/drive/folders/1hlUEBJH-4CE1l-6jiHGWT32VXAlemT83"
   },
   {
     id: "ASN-03",

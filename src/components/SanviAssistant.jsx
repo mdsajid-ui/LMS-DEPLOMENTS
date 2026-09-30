@@ -379,7 +379,7 @@ We can speak and converse naturally just like ChatGPT or Gemini Live:
     setTimeout(() => setCopiedText(null), 2000);
   };
 
-  // Speak text using natural speech synthesis (Chrome / Edge / Safari optimized)
+  // Speak text using natural speech synthesis (Chrome / Edge / Safari Windows optimized)
   const speakSanviResponse = (text, msgId = null, speechOverride = null) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
@@ -406,8 +406,9 @@ We can speak and converse naturally just like ChatGPT or Gemini Live:
       try { recognitionRef.current.abort(); } catch (_e) {}
     }
 
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.resume();
+    try {
+      window.speechSynthesis.cancel();
+    } catch (_e) {}
 
     // Use concise speech text if available so Sanvi doesn't speak long code or table text
     const textToSpeak = speechOverride || getConciseSpeechText(text);
@@ -448,12 +449,18 @@ We can speak and converse naturally just like ChatGPT or Gemini Live:
     }
 
     currentUtteranceRef.current = utterance;
+    window.__activeSanviUtterance = utterance; // Prevent Chrome garbage collection bug
+
+    let hasEnded = false;
 
     const handleSpeechEnded = () => {
+      if (hasEnded) return;
+      hasEnded = true;
       setIsSpeaking(false);
       isSpeakingRef.current = false;
       setActiveSpeakingMsgId(null);
       currentUtteranceRef.current = null;
+      window.__activeSanviUtterance = null;
       lastSpokenTimeRef.current = Date.now();
 
       // Hold a 1200ms acoustic cool-down buffer so room echo/reverb doesn't trigger the microphone
@@ -464,7 +471,7 @@ We can speak and converse naturally just like ChatGPT or Gemini Live:
         setInterimSpeech('');
         // Maintain active conversation window so Sajid can reply naturally without repeating wake word
         if (isWakeActiveRef.current) {
-          refreshWakeSession(20000);
+          refreshWakeSession(25000);
         }
         if (alwaysListeningRef.current) {
           restartRecognitionSafely();
@@ -480,9 +487,31 @@ We can speak and converse naturally just like ChatGPT or Gemini Live:
     };
 
     utterance.onend = handleSpeechEnded;
-    utterance.onerror = handleSpeechEnded;
+    utterance.onerror = (e) => {
+      console.warn("Speech error or cancelled, recovering:", e);
+      handleSpeechEnded();
+    };
 
-    window.speechSynthesis.speak(utterance);
+    // Chrome Windows bug fix: Wait 50ms after cancel() before calling speak(), and resume audio context
+    setTimeout(() => {
+      try {
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
+        window.speechSynthesis.speak(utterance);
+      } catch (err) {
+        console.error("speechSynthesis.speak error:", err);
+        handleSpeechEnded();
+      }
+    }, 50);
+
+    // Watchdog timer: If speech doesn't complete within allocated time, forcefully recover
+    const watchdogMs = Math.max(6000, cleanText.length * 120);
+    setTimeout(() => {
+      if (isSpeakingRef.current && !hasEnded) {
+        handleSpeechEnded();
+      }
+    }, watchdogMs);
   };
 
   const stopSpeaking = () => {
@@ -564,15 +593,18 @@ We can speak and converse naturally just like ChatGPT or Gemini Live:
     let actionType = null;
     let spokenVoiceText = null;
     const lower = query.toLowerCase().trim();
+    // Strip trailing speech recognition punctuation (. ! ? ,) so voice matching is 100% reliable
+    const cleanLower = lower.replace(/[.,/#!$%^&*;:{}=\-_`~()?]/g, "").trim();
 
     const hasSunviOrSanvi = 
       lower.includes('sunvi') || 
       lower.includes('sanvi') || 
       lower.includes('saanvi') || 
-      lower.includes('shanvi') ||
-      lower.includes('sunny') ||
-      lower.includes('sonvi') ||
-      lower.includes('jarvis');
+      lower.includes('shanvi') || 
+      lower.includes('sunny') || 
+      lower.includes('sonvi') || 
+      cleanLower.includes('sanvi') ||
+      cleanLower.includes('sunvi');
 
     // ==========================================
     // REQUIREMENT 1: FOUNDER & DIRECTOR OF DV ANALYTICS
@@ -790,15 +822,17 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
 
     // Direct Greetings & Wake Word ("Hey Sanvi", "Hey Sunvi", "Hello", "Hi", "Hey ChatGPT", etc.)
     else if (
-      lower === 'hey sunvi' || lower === 'hey sanvi' || 
-      lower === 'hi sunvi' || lower === 'hi sanvi' ||
-      lower === 'hello sunvi' || lower === 'hello sanvi' ||
-      lower === 'sunvi' || lower === 'sanvi' ||
-      lower === 'hey' || lower === 'hello' || lower === 'hi' ||
-      lower === 'hey sanvi!' || lower === 'hey sunvi!' ||
-      lower === 'hey chatgpt' || lower === 'hey gemini' ||
-      lower === 'hey sajid' ||
-      (hasSunviOrSanvi && (lower.includes('there') || lower.includes('listen') || lower.split(' ').length <= 2))
+      cleanLower === 'hey sunvi' || cleanLower === 'hey sanvi' || 
+      cleanLower === 'hi sunvi' || cleanLower === 'hi sanvi' ||
+      cleanLower === 'hello sunvi' || cleanLower === 'hello sanvi' ||
+      cleanLower === 'sunvi' || cleanLower === 'sanvi' ||
+      cleanLower === 'hey' || cleanLower === 'hello' || cleanLower === 'hi' ||
+      cleanLower === 'hey chatgpt' || cleanLower === 'hey gemini' ||
+      cleanLower === 'hey sajid' ||
+      cleanLower.startsWith('hey sanvi') || cleanLower.startsWith('hey sunvi') ||
+      cleanLower.startsWith('hi sanvi') || cleanLower.startsWith('hi sunvi') ||
+      cleanLower.startsWith('hello sanvi') || cleanLower.startsWith('hello sunvi') ||
+      (hasSunviOrSanvi && (cleanLower.includes('there') || cleanLower.includes('listen') || cleanLower.split(' ').length <= 2))
     ) {
       replyText = "Hey Sajid! How are you doing today?";
       spokenVoiceText = "Hey Sajid! How are you doing today?";
@@ -917,7 +951,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
           >
             <span className="w-2 h-2 rounded-full bg-rose-400 animate-ping"></span>
             <span className="text-xs font-semibold tracking-wide">
-              Say <span className="text-rose-400 font-bold">"Hey Sanvi"</span> (Jarvis Voice AI)
+              Say <span className="text-rose-400 font-bold">"Hey Sanvi"</span>
             </span>
           </div>
 
@@ -966,9 +1000,6 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-bold tracking-wide text-white flex items-center gap-1.5">
                     Sanvi
-                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                      Jarvis Voice AI
-                    </span>
                   </h3>
                 </div>
                 <p className="text-[11px] text-slate-400">
@@ -990,7 +1021,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
               {/* Always-Listening Mic Toggle */}
               <button
                 onClick={toggleListening}
-                title={alwaysListening ? "Always-On Mic Active (Jarvis Mode)" : "Mic Paused - Click to Enable"}
+                title={alwaysListening ? "Always-On Mic Active" : "Mic Paused - Click to Enable"}
                 className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                   alwaysListening 
                     ? 'text-emerald-400 bg-emerald-950/60 border border-emerald-500/40' 
@@ -1052,7 +1083,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                   </div>
                   <span className="truncate max-w-[280px] sm:max-w-md">
                     {isListening 
-                      ? (interimSpeech ? `"${interimSpeech}"` : "Jarvis Mode Active: Say 'Hey Sanvi' or ask to open Excel sheet") 
+                      ? (interimSpeech ? `"${interimSpeech}"` : "Voice Assistant Active: Say 'Hey Sanvi' or ask a question") 
                       : isSpeaking 
                         ? "Sanvi is speaking response..." 
                         : "Mic Idle • Tap mic icon to start"}
@@ -1311,7 +1342,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                     <button
                       type="button"
                       onClick={toggleListening}
-                      title={alwaysListening ? "Always-On Mic Active (Say 'Hey Sanvi')" : "Click to enable Jarvis Voice Listening"}
+                      title={alwaysListening ? "Always-On Mic Active (Say 'Hey Sanvi')" : "Click to enable Voice Listening"}
                       className={`p-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center relative ${
                         isListening
                           ? 'bg-emerald-600 text-white animate-pulse shadow-lg shadow-emerald-500/50'
