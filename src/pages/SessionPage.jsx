@@ -63,6 +63,9 @@ export default function SessionPage({
   });
 
   // Anti-Screenshot & Screen Capture Blackout Guard
+  const [isBlackout, setIsBlackout] = useState(false);
+  const [blackoutReason, setBlackoutReason] = useState("");
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [downloadSuccessToast, setDownloadSuccessToast] = useState("");
 
   // Interactive Upload State inside Session & Materials
@@ -174,6 +177,7 @@ export default function SessionPage({
 
   const handleOpenVideos = (session) => {
     setSelectedSession(session);
+    setPlayerEngine('direct');
     // Find class video items or synthesize class 1
     const classVideos = (session.items || []).filter(item => item.type === 'video');
     if (classVideos.length > 0) {
@@ -193,6 +197,23 @@ export default function SessionPage({
     }
     setViewMode('videos');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePlayClass = (sNo, title, description) => {
+    setActiveVideo({
+      sNo,
+      title,
+      description: description || `${selectedSession.title} ${title} Video`,
+      embedUrl: selectedSession.vdocipherEmbedUrl || defaultEmbedUrl
+    });
+    setPlayerEngine('direct');
+    setIsVideoPlaying(true);
+    setTimeout(() => {
+      if (videoRef.current) {
+        videoRef.current.currentTime = 0;
+        videoRef.current.play().catch(e => console.log('Autoplay request handled:', e));
+      }
+    }, 150);
   };
 
   const handleDownloadMaterials = (session) => {
@@ -456,15 +477,8 @@ export default function SessionPage({
                       </td>
                       <td className="py-3 px-4 text-center">
                         <button
-                          onClick={() => {
-                            setActiveVideo({
-                              sNo: 1,
-                              title: "Class 1",
-                              description: `${selectedSession.title} Class 1 Video`,
-                              embedUrl: selectedSession.vdocipherEmbedUrl || defaultEmbedUrl
-                            });
-                          }}
-                          className="inline-flex items-center justify-center gap-1.5 bg-[#2dbd9f] hover:bg-[#25a78c] text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-2xs transition-all cursor-pointer"
+                          onClick={() => handlePlayClass(1, "Class 1", `${selectedSession.title} Class 1 Video`)}
+                          className="inline-flex items-center justify-center gap-1.5 bg-[#2dbd9f] hover:bg-[#25a78c] text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-2xs transition-all cursor-pointer active:scale-95"
                         >
                           <Play className="w-3 h-3 fill-white" />
                           <span>Play</span>
@@ -483,15 +497,8 @@ export default function SessionPage({
                       </td>
                       <td className="py-3 px-4 text-center">
                         <button
-                          onClick={() => {
-                            setActiveVideo({
-                              sNo: 2,
-                              title: "Class 2",
-                              description: `${selectedSession.title} Class 2 Advanced Cases`,
-                              embedUrl: selectedSession.vdocipherEmbedUrl || defaultEmbedUrl
-                            });
-                          }}
-                          className="inline-flex items-center justify-center gap-1.5 bg-[#2dbd9f] hover:bg-[#25a78c] text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-2xs transition-all cursor-pointer"
+                          onClick={() => handlePlayClass(2, "Class 2", `${selectedSession.title} Class 2 Advanced Cases`)}
+                          className="inline-flex items-center justify-center gap-1.5 bg-[#2dbd9f] hover:bg-[#25a78c] text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-2xs transition-all cursor-pointer active:scale-95"
                         >
                           <Play className="w-3 h-3 fill-white" />
                           <span>Play</span>
@@ -617,26 +624,53 @@ export default function SessionPage({
                 {/* 3. Secure Video Stream Player */}
                 <div style={{ paddingTop: '56.25%', position: 'relative' }}>
                   {playerEngine === 'direct' && (
-                    <video
-                      ref={videoRef}
-                      key={activeVideo.sNo}
-                      controls
-                      playsInline
-                      controlsList="nodownload noplaybackrate"
-                      disablePictureInPicture
-                      style={{ 
-                        border: 0, 
-                        maxWidth: '100%', 
-                        position: 'absolute', 
-                        top: 0, 
-                        left: 0, 
-                        height: '100%', 
-                        width: '100%' 
-                      }}
-                      className="bg-black w-full h-full object-contain"
-                      poster="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80"
-                      src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-                    />
+                    <div className="absolute inset-0 w-full h-full bg-black">
+                      <video
+                        ref={videoRef}
+                        key={`${activeVideo.sNo}-${activeVideo.title}`}
+                        controls
+                        playsInline
+                        controlsList="nodownload noplaybackrate"
+                        disablePictureInPicture
+                        onPlay={() => setIsVideoPlaying(true)}
+                        onPause={() => setIsVideoPlaying(false)}
+                        onEnded={() => setIsVideoPlaying(false)}
+                        style={{ 
+                          border: 0, 
+                          maxWidth: '100%', 
+                          position: 'absolute', 
+                          top: 0, 
+                          left: 0, 
+                          height: '100%', 
+                          width: '100%' 
+                        }}
+                        className="bg-black w-full h-full object-contain"
+                        poster="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80"
+                      >
+                        <source src="./sample-lecture.mp4" type="video/mp4" />
+                        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
+                        Your browser does not support HTML5 video playback.
+                      </video>
+
+                      {/* Click-to-Play Overlay when video is not playing */}
+                      {!isVideoPlaying && (
+                        <div 
+                          onClick={() => {
+                            if (videoRef.current) {
+                              videoRef.current.play().catch(e => console.log('Overlay play error:', e));
+                            }
+                          }}
+                          className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/40 hover:bg-black/25 transition-all cursor-pointer group/overlay"
+                        >
+                          <div className="w-16 h-16 rounded-full bg-emerald-500 group-hover/overlay:bg-emerald-400 text-white flex items-center justify-center shadow-2xl transform group-hover/overlay:scale-110 transition-all">
+                            <Play className="w-8 h-8 fill-white ml-1" />
+                          </div>
+                          <span className="mt-3 text-xs font-bold text-white tracking-wide bg-slate-900/90 px-4 py-1.5 rounded-full border border-slate-700 shadow-md">
+                            Click to Play {activeVideo.title}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   )}
 
                   {playerEngine === 'vdocipher' && (

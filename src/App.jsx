@@ -5,6 +5,7 @@ import NotificationModal from './components/NotificationModal';
 import ScheduleModal from './components/ScheduleModal';
 import SupportModal from './components/SupportModal';
 import SanviAssistant from './components/SanviAssistant';
+import ErrorBoundary from './components/ErrorBoundary';
 
 import WelcomePage from './pages/WelcomePage';
 import DashboardPage from './pages/DashboardPage';
@@ -86,7 +87,8 @@ export default function App() {
 
         {/* Page Content View */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-          {currentTab === 'welcome' && (
+          <ErrorBoundary onReset={() => setCurrentTab('courses')}>
+            {currentTab === 'welcome' && (
             <WelcomePage
               onNavigateToCourse={() => setCurrentTab('courses')}
               onNavigateToDashboard={() => setCurrentTab('dashboard')}
@@ -191,6 +193,7 @@ export default function App() {
               student={studentProfile}
             />
           )}
+          </ErrorBoundary>
         </main>
 
         {/* Modern Minimal Footer */}
