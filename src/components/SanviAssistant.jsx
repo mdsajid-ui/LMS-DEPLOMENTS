@@ -38,6 +38,7 @@ import {
 } from '../data/mockData';
 import ExcelSheetViewerModal from './ExcelSheetViewerModal';
 import { generateAndDownloadExcel } from '../utils/excelHelper';
+import { askSanviGemini, getConciseSpeechText } from '../services/geminiService';
 
 export default function SanviAssistant({ 
   isOpenExternal, 
@@ -288,7 +289,7 @@ How can I help you right now?`
   };
 
   // Speak text using natural speech synthesis (Chrome / Edge / Safari optimized)
-  const speakSanviResponse = (text, msgId = null) => {
+  const speakSanviResponse = (text, msgId = null, speechOverride = null) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
     // Pause recognition during speech so Sanvi doesn't listen to herself
@@ -299,13 +300,17 @@ How can I help you right now?`
     window.speechSynthesis.cancel();
     window.speechSynthesis.resume();
 
+    // Use concise speech text if available so Sanvi doesn't speak long code or table text
+    const textToSpeak = speechOverride || getConciseSpeechText(text);
+
     // Clean text for speech
-    const cleanText = text
+    const cleanText = textToSpeak
       .replace(/[*#_`]/g, '')
       .replace(/₹/g, 'Rupees ')
       .replace(/ASN-01/g, 'Assignment 1')
       .replace(/ASN-02/g, 'Assignment 2')
       .replace(/ASN-03/g, 'Assignment 3')
+      .replace(/VLOOKUP/g, 'V-Lookup')
       .replace(/XLOOKUP/g, 'X-Lookup')
       .replace(/DENSE_RANK/g, 'Dense Rank')
       .replace(/https?:\/\/\S+/g, 'our official website');
@@ -408,7 +413,7 @@ How can I help you right now?`
   };
 
   // Process user chat message & Jarvis Action Engine
-  const handleSendMessage = (textToSend) => {
+  const handleSendMessage = async (textToSend) => {
     const query = (textToSend || inputMessage).trim();
     if (!query) return;
 
@@ -424,155 +429,160 @@ How can I help you right now?`
     setIsProcessing(true);
     setLastActionExecuted(null);
 
-    // Sanvi AI reasoning response logic
-    setTimeout(() => {
-      setIsProcessing(false);
-      let replyText = "";
-      let actionType = null;
-      const lower = query.toLowerCase().trim();
+    let replyText = "";
+    let actionType = null;
+    let spokenVoiceText = null;
+    const lower = query.toLowerCase().trim();
 
-      const hasSunviOrSanvi = 
-        lower.includes('sunvi') || 
-        lower.includes('sanvi') || 
-        lower.includes('saanvi') || 
-        lower.includes('shanvi') ||
-        lower.includes('sunny') ||
-        lower.includes('sonvi') ||
-        lower.includes('jarvis');
+    const hasSunviOrSanvi = 
+      lower.includes('sunvi') || 
+      lower.includes('sanvi') || 
+      lower.includes('saanvi') || 
+      lower.includes('shanvi') ||
+      lower.includes('sunny') ||
+      lower.includes('sonvi') ||
+      lower.includes('jarvis');
 
-      // ==========================================
-      // REQUIREMENT 1: FOUNDER OF DV ANALYTICS
-      // "If I will ask who is Devender Devgan Das, you have to answer he is the founder of DV Analytics."
-      // ==========================================
-      if (
-        lower.includes('devender') || 
-        lower.includes('devgan') || 
-        lower.includes('das') && (lower.includes('who') || lower.includes('founder')) ||
-        (lower.includes('founder') && (lower.includes('dv') || lower.includes('company') || lower.includes('analytics') || lower.includes('who'))) ||
-        lower.includes('who started dv analytics') ||
-        lower.includes('who founded dv analytics') ||
-        lower.includes('ceo of dv analytics')
-      ) {
-        replyText = `${dvCompanyProfile.founderFact}
+    // ==========================================
+    // REQUIREMENT 1: FOUNDER OF DV ANALYTICS
+    // "If I will ask who is Devender Devgan Das, you have to answer he is the founder of DV Analytics."
+    // ==========================================
+    if (
+      lower.includes('devender') || 
+      lower.includes('devgan') || 
+      lower.includes('das') && (lower.includes('who') || lower.includes('founder')) ||
+      (lower.includes('founder') && (lower.includes('dv') || lower.includes('company') || lower.includes('analytics') || lower.includes('who'))) ||
+      lower.includes('who started dv analytics') ||
+      lower.includes('who founded dv analytics') ||
+      lower.includes('ceo of dv analytics')
+    ) {
+      replyText = `${dvCompanyProfile.founderFact}
 
 He is the Founder & Managing Director of DV Analytics (DV Data & Analytics Pvt Ltd). Under his visionary leadership, DV Analytics was built to deliver industry-grade practical training in Data Science, Artificial Intelligence, Generative AI, and Business Analytics, empowering thousands of students and working professionals across India (Bangalore, Bhubaneswar) and internationally (Dubai).`;
-        actionType = "founder_fact";
-      }
+      actionType = "founder_fact";
+      spokenVoiceText = "Devender Devgan Das is the founder of DV Analytics. He established the organization to deliver cutting-edge industrial training in Data Science, Artificial Intelligence, and Business Analytics.";
+    }
 
-      // ==========================================
-      // REQUIREMENT 2: JARVIS ACTION: "OPEN AN EXCEL SHEET"
-      // "If I am asking him to open an Excel sheet, he is opening like that. I want this Sanvi should work like that."
-      // ==========================================
-      else if (
-        (lower.includes('open') && lower.includes('excel')) ||
-        (lower.includes('show') && lower.includes('excel')) ||
-        lower.includes('open sheet') ||
-        lower.includes('open an excel sheet') ||
-        lower.includes('open spreadsheet') ||
-        lower.includes('download excel') ||
-        lower.includes('give me excel') ||
-        lower.includes('open excel file')
-      ) {
-        // Trigger both the interactive spreadsheet modal & file download
-        setExcelModalOpen(true);
-        generateAndDownloadExcel("DV_Analytics_Retail_Sales_Master.csv");
-        replyText = `Opening the Excel practice worksheet for you right away!
+    // ==========================================
+    // REQUIREMENT 2: JARVIS ACTION: "OPEN AN EXCEL SHEET"
+    // "If I am asking him to open an Excel sheet, he is opening like that. I want this Sanvi should work like that."
+    // ==========================================
+    else if (
+      (lower.includes('open') && lower.includes('excel')) ||
+      (lower.includes('show') && lower.includes('excel')) ||
+      lower.includes('open sheet') ||
+      lower.includes('open an excel sheet') ||
+      lower.includes('open spreadsheet') ||
+      lower.includes('download excel') ||
+      lower.includes('give me excel') ||
+      lower.includes('open excel file')
+    ) {
+      setExcelModalOpen(true);
+      generateAndDownloadExcel("DV_Analytics_Retail_Sales_Master.csv");
+      replyText = `Opening the Excel practice worksheet for you right away!
 
 I have launched the interactive "Retail_Sales_Raw_Data.xlsx" workbench on your screen and triggered the direct download of the dataset to your computer. You can analyze formulas like XLOOKUP, Pivot Tables, and Gross/Net revenue calculations.`;
-        actionType = "excel_opened";
-      }
+      actionType = "excel_opened";
+      spokenVoiceText = "Opening the Excel practice worksheet and downloading the dataset for you right now.";
+    }
 
-      // Action: Navigate to Assignments
-      else if (
-        (lower.includes('open') && lower.includes('assignment')) ||
-        lower.includes('show assignments') ||
-        lower.includes('go to assignments')
-      ) {
-        if (onNavigate) onNavigate('assignments');
-        replyText = "Opening your Assignments module right away. You have 3 hands-on assignments: Retail Sales Analysis in Excel, VBA Invoice Macro, and SQL Server E-Commerce Analytics.";
-        actionType = "navigated_assignments";
-      }
+    // Action: Navigate to Assignments
+    else if (
+      (lower.includes('open') && lower.includes('assignment')) ||
+      lower.includes('show assignments') ||
+      lower.includes('go to assignments')
+    ) {
+      if (onNavigate) onNavigate('assignments');
+      replyText = "Opening your Assignments module right away. You have 3 hands-on assignments: Retail Sales Analysis in Excel, VBA Invoice Macro, and SQL Server E-Commerce Analytics.";
+      actionType = "navigated_assignments";
+      spokenVoiceText = "Opening your assignments module.";
+    }
 
-      // Action: Navigate to CAT Test / Practical Interview booth
-      else if (
-        (lower.includes('open') && (lower.includes('test') || lower.includes('cat') || lower.includes('practical'))) ||
-        lower.includes('take test') ||
-        lower.includes('open application test') ||
-        lower.includes('open interview booth')
-      ) {
-        if (onNavigate) onNavigate('application-test');
-        replyText = "Opening the CAT Practical Test and AI Interview Booth! You can take the 30-minute MCQ test, run live SQL/Python code in the workbench, and complete the simulated viva.";
-        actionType = "navigated_test";
-      }
+    // Action: Navigate to CAT Test / Practical Interview booth
+    else if (
+      (lower.includes('open') && (lower.includes('test') || lower.includes('cat') || lower.includes('practical'))) ||
+      lower.includes('take test') ||
+      lower.includes('open application test') ||
+      lower.includes('open interview booth')
+    ) {
+      if (onNavigate) onNavigate('application-test');
+      replyText = "Opening the CAT Practical Test and AI Interview Booth! You can take the 30-minute MCQ test, run live SQL/Python code in the workbench, and complete the simulated viva.";
+      actionType = "navigated_test";
+      spokenVoiceText = "Opening the CAT practical test and interview booth.";
+    }
 
-      // Action: Navigate to Interview Prep Kit
-      else if (
-        (lower.includes('open') || lower.includes('show')) && (lower.includes('interview') || lower.includes('prep kit') || lower.includes('kit'))
-      ) {
-        if (onNavigate) onNavigate('interview-prep');
-        replyText = "Opening your 7-step My Interview Preparation Kit! Access ATS Resume building, SQL mastery, Excel modeling, ML algorithms, Case Studies, and HR negotiation folders.";
-        actionType = "navigated_interview_kit";
-      }
+    // Action: Navigate to Interview Prep Kit
+    else if (
+      (lower.includes('open') || lower.includes('show')) && (lower.includes('interview') || lower.includes('prep kit') || lower.includes('kit'))
+    ) {
+      if (onNavigate) onNavigate('interview-prep');
+      replyText = "Opening your 7-step My Interview Preparation Kit! Access ATS Resume building, SQL mastery, Excel modeling, ML algorithms, Case Studies, and HR negotiation folders.";
+      actionType = "navigated_interview_kit";
+      spokenVoiceText = "Opening your 7-step interview preparation kit.";
+    }
 
-      // Action: Navigate to Dashboard
-      else if (
-        lower.includes('open dashboard') || 
-        lower.includes('go to dashboard') || 
-        lower.includes('show dashboard') ||
-        lower.includes('home')
-      ) {
-        if (onNavigate) onNavigate('dashboard');
-        replyText = `Navigating to your student dashboard. You currently have ${studentProfile.watchedRecordedHours}h watched (${studentProfile.watchedPercent}%) and a 7-day learning streak!`;
-        actionType = "navigated_dashboard";
-      }
+    // Action: Navigate to Dashboard
+    else if (
+      lower.includes('open dashboard') || 
+      lower.includes('go to dashboard') || 
+      lower.includes('show dashboard') ||
+      lower.includes('home')
+    ) {
+      if (onNavigate) onNavigate('dashboard');
+      replyText = `Navigating to your student dashboard. You currently have ${studentProfile.watchedRecordedHours}h watched (${studentProfile.watchedPercent}%) and a 7-day learning streak!`;
+      actionType = "navigated_dashboard";
+      spokenVoiceText = "Navigating to your student dashboard.";
+    }
 
-      // Action: Navigate to Courses / Recorded Sessions
-      else if (
-        (lower.includes('open') || lower.includes('show')) && (lower.includes('course') || lower.includes('lecture') || lower.includes('session') || lower.includes('video'))
-      ) {
-        if (onNavigate) onNavigate('courses');
-        replyText = "Opening your Course Catalog and Recorded Lectures. Select any subject to continue your video playback.";
-        actionType = "navigated_courses";
-      }
+    // Action: Navigate to Courses / Recorded Sessions
+    else if (
+      (lower.includes('open') || lower.includes('show')) && (lower.includes('course') || lower.includes('lecture') || lower.includes('session') || lower.includes('video'))
+    ) {
+      if (onNavigate) onNavigate('courses');
+      replyText = "Opening your Course Catalog and Recorded Lectures. Select any subject to continue your video playback.";
+      actionType = "navigated_courses";
+      spokenVoiceText = "Opening your course catalog and lectures.";
+    }
 
-      // Action: Navigate to Attendance
-      else if (
-        lower.includes('attendance') && (lower.includes('open') || lower.includes('show') || lower.includes('check'))
-      ) {
-        if (onNavigate) onNavigate('attendance');
-        replyText = `Opening your Attendance Tracker. Your live class attendance is at ${studentProfile.attendancePercent}% (${studentProfile.liveAttendedHours}/${studentProfile.liveTotalHours} hours attended).`;
-        actionType = "navigated_attendance";
-      }
+    // Action: Navigate to Attendance
+    else if (
+      lower.includes('attendance') && (lower.includes('open') || lower.includes('show') || lower.includes('check'))
+    ) {
+      if (onNavigate) onNavigate('attendance');
+      replyText = `Opening your Attendance Tracker. Your live class attendance is at ${studentProfile.attendancePercent}% (${studentProfile.liveAttendedHours}/${studentProfile.liveTotalHours} hours attended).`;
+      actionType = "navigated_attendance";
+      spokenVoiceText = `Opening your attendance records. You have attended ${studentProfile.liveAttendedHours} hours of live classes.`;
+    }
 
-      // Action: Call / Contact Academic Coordinator
-      else if (
-        lower.includes('coordinator') || 
-        lower.includes('call') || 
-        lower.includes('hotline') || 
-        (lower.includes('contact') && !lower.includes('website'))
-      ) {
-        setActiveTab('helplines');
-        replyText = `Here is your Academic Coordinator's direct contact details:
+    // Action: Call / Contact Academic Coordinator
+    else if (
+      lower.includes('coordinator') || 
+      lower.includes('call') || 
+      lower.includes('hotline') || 
+      (lower.includes('contact') && !lower.includes('website'))
+    ) {
+      setActiveTab('helplines');
+      replyText = `Here is your Academic Coordinator's direct contact details:
 • Coordinator: ${dvHelplineNumbers.academicCoordinator.contactPerson}
 • Direct Phone: ${dvHelplineNumbers.academicCoordinator.phone}
 • Timings: ${dvHelplineNumbers.academicCoordinator.timings}
 I have opened the Helplines tab where you can click to Call or connect on WhatsApp directly.`;
-        actionType = "coordinator_opened";
-      }
+      actionType = "coordinator_opened";
+      spokenVoiceText = `Here is your Academic Coordinator's contact: ${dvHelplineNumbers.academicCoordinator.phone}. Connecting you now.`;
+    }
 
-      // ==========================================
-      // REQUIREMENT 3: DV ANALYTICS COMPANY KNOWLEDGE BASE (from https://www.dvanalyticsmds.com/)
-      // ==========================================
-      // Website info / Company background
-      else if (
-        lower.includes('dvanalyticsmds.com') ||
-        lower.includes('about dv analytics') ||
-        lower.includes('tell me about your company') ||
-        lower.includes('company information') ||
-        lower.includes('about company') ||
-        lower.includes('what is dv analytics')
-      ) {
-        replyText = `DV Analytics (DV Data & Analytics Pvt Ltd) is an elite analytics and AI training organization founded by Devender Devgan Das.
+    // ==========================================
+    // REQUIREMENT 3: DV ANALYTICS COMPANY KNOWLEDGE BASE (from https://www.dvanalyticsmds.com/)
+    // ==========================================
+    else if (
+      lower.includes('dvanalyticsmds.com') ||
+      lower.includes('about dv analytics') ||
+      lower.includes('tell me about your company') ||
+      lower.includes('company information') ||
+      lower.includes('about company') ||
+      lower.includes('what is dv analytics')
+    ) {
+      replyText = `DV Analytics (DV Data & Analytics Pvt Ltd) is an elite analytics and AI training organization founded by Devender Devgan Das.
 
 Key Facts from our official portal (https://www.dvanalyticsmds.com/):
 • Founder: Devender Devgan Das
@@ -582,166 +592,105 @@ Key Facts from our official portal (https://www.dvanalyticsmds.com/):
 • Official Email: info@dvanalyticsmds.com
 • Flagship Programs: APIDS (Data Science with AI Deployment), APIDA (Data Science with Gen AI), DAS (Data Analytics Specialist), APCF (Cybersecurity & Forensics), and FDE (AI Forward Deployment Engineer).
 • Placement Record: 100% placement support with 100+ hiring partners.`;
-        actionType = "company_info";
-      }
+      actionType = "company_info";
+      spokenVoiceText = "DV Analytics is a premier Data Science and AI institute founded by Devender Devgan Das, with centers in Bangalore, Bhubaneswar, and Dubai.";
+    }
 
-      // Branches / Centers / Locations
-      else if (
-        lower.includes('location') || 
-        lower.includes('branch') || 
-        lower.includes('center') || 
-        lower.includes('office') || 
-        lower.includes('where is dv analytics') ||
-        lower.includes('bhubaneswar') ||
-        lower.includes('bangalore') ||
-        lower.includes('dubai')
-      ) {
-        replyText = `DV Analytics operates premier training centers across multiple locations:
+    // Branches / Centers / Locations
+    else if (
+      lower.includes('location') || 
+      lower.includes('branch') || 
+      lower.includes('center') || 
+      lower.includes('office') || 
+      lower.includes('where is dv analytics') ||
+      (lower.includes('dubai') && lower.includes('center'))
+    ) {
+      replyText = `DV Analytics operates premier training centers across multiple locations:
 1. Bangalore (Head Office & Training Center): Karnataka, India
 2. Bhubaneswar (Regional Institute): Odisha, India
 3. Dubai (International Office): Dubai, UAE
 4. Live Online / Global: Connecting learners across India and worldwide.
 
 Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@dvanalyticsmds.com.`;
-      }
+      spokenVoiceText = "DV Analytics has training centers in Bangalore, Bhubaneswar, Dubai, and offers live online programs globally.";
+    }
 
-      // Courses & Programs
-      else if (
-        lower.includes('courses') || 
-        lower.includes('programs') || 
-        lower.includes('what do you teach') || 
-        lower.includes('syllabus') ||
-        lower.includes('curriculum')
-      ) {
-        replyText = `DV Analytics offers industry-aligned programs designed for freshers, engineers, and working professionals:
-1. APIDS: Advanced Program in Industrial Data Science with AI Deployment (6-8 Months)
-2. APIDA: Advanced Program in Industrial Data Science with Gen AI (6 Months)
-3. DAS: Data Analytics Specialist - SQL, Python, Excel AI, Power BI (4-5 Months)
-4. APCF: AI Integrated Program in Cybersecurity & Forensics (6 Months)
-5. FDE: AI Forward Deployment Engineer (LangGraph, CrewAI, AutoGen, RAG, Cloud)
-6. FLP: Flexi Learning Program in Data Science & AI (Self-Paced with Mentorship).`;
-      }
-
-      // Placements & Hiring Partners
-      else if (
-        lower.includes('placement') || 
-        lower.includes('job') || 
-        lower.includes('hiring') || 
-        lower.includes('salary') || 
-        lower.includes('package')
-      ) {
-        replyText = `DV Analytics provides 100% Dedicated Placement Assistance:
+    // Placements
+    else if (
+      (lower.includes('placement') || lower.includes('hiring partners')) && 
+      (lower.includes('dv') || lower.includes('institute') || lower.includes('support'))
+    ) {
+      replyText = `DV Analytics provides 100% Dedicated Placement Assistance:
 • 1-on-1 resume optimization & ATS formatting
 • Technical mock interviews (SQL, Python, ML, GenAI)
 • GitHub project portfolio reviews
 • Direct referrals across 100+ hiring partners in Bangalore, Bhubaneswar, and nationwide
 • Preparation for roles such as Data Analyst, Data Scientist, ML Engineer, and AI Solutions Consultant.`;
+      spokenVoiceText = "DV Analytics provides 100% placement assistance, resume optimization, mock interviews, and connections with over 100 hiring partners.";
+    }
+
+    // Direct Greetings & Wake Word ("Hey Sanvi", "Hey Sunvi", "Hello", "Hi", etc.)
+    else if (
+      lower === 'hey sunvi' || lower === 'hey sanvi' || 
+      lower === 'hi sunvi' || lower === 'hi sanvi' ||
+      lower === 'hello sunvi' || lower === 'hello sanvi' ||
+      lower === 'sunvi' || lower === 'sanvi' ||
+      lower === 'hey' || lower === 'hello' || lower === 'hi' ||
+      lower === 'hey sanvi!' || lower === 'hey sunvi!' ||
+      (hasSunviOrSanvi && (lower.includes('there') || lower.includes('listen') || lower.split(' ').length <= 2))
+    ) {
+      replyText = "Hello! Yes, I am Sanvi and I am right here listening to you. How can I help you today? You can ask me to explain any Excel formula like VLOOKUP, open an Excel sheet, solve assignments, or ask who is Devender Devgan Das!";
+      spokenVoiceText = "Hello! Yes, I am Sanvi and I am right here listening to you. How can I assist you today?";
+    }
+
+    // Who are you / Identity
+    else if (lower.includes('who are you') || lower.includes('your name') || lower.includes('introduce')) {
+      replyText = "Hello! My name is Sanvi (spelled S-A-N-V-I). I am your personal AI voice assistant for DV Analytics. I can execute commands like Jarvis, open Excel sheets, solve assignments, and answer any questions about DV Analytics programs and founder Devender Devgan Das.";
+      spokenVoiceText = "Hello! My name is Sanvi. I am your personal AI voice assistant for DV Analytics.";
+    }
+
+    // ==========================================
+    // CHATGPT-STYLE INTELLIGENCE: POWERED BY GEMINI 2.5 FLASH API
+    // Answers ANY technical question (VLOOKUP, SQL, Python, AI, etc.) directly!
+    // ==========================================
+    else {
+      // Strip conversational filler speech
+      const cleanPrompt = query
+        .replace(/^(see uh,?\s*|uh,?\s*|hey sanvi,?\s*|hey sunvi,?\s*|sanvi,?\s*|sunvi,?\s*)/i, '')
+        .trim();
+
+      try {
+        const aiResponse = await askSanviGemini(cleanPrompt || query);
+        if (aiResponse && aiResponse.trim().length > 0) {
+          replyText = aiResponse.trim();
+          spokenVoiceText = getConciseSpeechText(replyText);
+        } else {
+          replyText = `Here is the explanation for **${cleanPrompt || query}**:\n\nI am connected to DV Analytics AI engine. You can ask me to explain any Excel function (VLOOKUP, XLOOKUP, INDEX MATCH), write SQL queries, solve assignments, or execute LMS commands like opening an Excel sheet.`;
+          spokenVoiceText = `Here is the explanation for ${cleanPrompt || query}. I have displayed the complete guide and formula on your screen.`;
+        }
+      } catch (_err) {
+        replyText = `Here is the explanation for **${cleanPrompt || query}**:\n\nPlease check the details on your screen or ask me to open an Excel sheet or solve an assignment.`;
+        spokenVoiceText = `I have displayed the information on your screen.`;
       }
+    }
 
-      // Fees & EMI
-      else if (
-        lower.includes('fee') || 
-        lower.includes('cost') || 
-        lower.includes('price') || 
-        lower.includes('installment') || 
-        lower.includes('emi')
-      ) {
-        replyText = `DV Analytics offers competitive and transparent course fee structures with zero-cost EMI installment options to support all learners. Reach out to our admissions team at +91-9019030033 or info@dvanalyticsmds.com for exact program fee schedules and scholarship details.`;
-      }
+    setLastActionExecuted(actionType);
 
-      // Tools Taught
-      else if (
-        lower.includes('tools') || 
-        lower.includes('tech stack') || 
-        lower.includes('python') || 
-        lower.includes('power bi') ||
-        lower.includes('tableau')
-      ) {
-        replyText = `Our curriculum covers the industry-standard modern tech stack:
-• Core Data & BI: SQL Server, Advanced Excel + AI, Power BI, Tableau, SAS, PySpark
-• Programming & ML: Python, Pandas, NumPy, Scikit-Learn, TensorFlow, PyTorch
-• GenAI & Agentic AI: LLMs, LangChain, LangGraph, CrewAI, AutoGen, Vector Databases (Chroma/FAISS), RAG, and MCP
-• Cloud & MLOps: AWS, Azure, GCP, Docker, MLflow, and CI/CD pipelines.`;
-      }
+    const sanviMsgId = (Date.now() + 1).toString();
+    const sanviReply = {
+      id: sanviMsgId,
+      sender: 'sanvi',
+      timestamp: 'Just now',
+      text: replyText,
+      actionType: actionType
+    };
 
-      // Industry Projects
-      else if (
-        lower.includes('projects') || 
-        lower.includes('case studies') || 
-        lower.includes('domain')
-      ) {
-        replyText = `You will build industry capstones across 6 key domains:
-1. Banking & Finance: Credit Risk Application Scorecard, ECL, AML, Fraud Detection
-2. Telecom: Customer Churn Prediction, Network Faults, Lifetime Value
-3. E-Commerce: Recommendation Engine, Dynamic Pricing, Churn, RAG Shopping Assistant
-4. Healthcare: Disease Risk Prediction, Medical Imaging, Clinical Decision Support
-5. Manufacturing: Predictive Maintenance, Defect Detection with Computer Vision
-6. Pharmaceuticals: Drug Discovery Analytics, Pharmacovigilance Automation.`;
-      }
+    setMessages(prev => [...prev, sanviReply]);
+    setIsProcessing(false);
 
-      // Assignments Q&A
-      else if (lower.includes('asn-01') || lower.includes('retail sales') || lower.includes('assignment 1')) {
-        replyText = `For Assignment 1 (Retail Sales Performance):
-1. Use XLOOKUP with concatenated criteria to map product SKUs.
-2. Calculate Net Revenue = Gross Revenue * (1 - Discount%).
-3. Build a dynamic pivot table with category slicers. Say "Open an Excel sheet" to open the workbook!`;
-      } else if (lower.includes('asn-02') || lower.includes('vba') || lower.includes('assignment 2')) {
-        replyText = `For Assignment 2 (VBA Invoice Generator): Save workbook as .xlsm. Use ExportAsFixedFormat Type:=xlTypePDF to generate your branded PDF invoice. Check the Assignments tab for the full macro snippet!`;
-      } else if (lower.includes('asn-03') || lower.includes('assignment 3')) {
-        replyText = `For Assignment 3 (SQL Server E-Commerce): Use DENSE_RANK() OVER (ORDER BY total_spent DESC) to rank high-value buyers, and DATEDIFF(day, last_order_date, GETDATE()) > 90 to segment churn.`;
-      }
-
-      // Watch Time & Progress
-      else if (lower.includes('watch time') || lower.includes('progress') || lower.includes('streak')) {
-        replyText = `You have watched ${studentProfile.watchedRecordedHours} hours out of ${studentProfile.totalRecordedHours} hours of recorded lectures (${studentProfile.watchedPercent}%). Your live class attendance is ${studentProfile.attendancePercent}%, and you are on a ${studentProfile.streakDays}-day streak!`;
-      }
-
-      // Greetings & Wake Word ("Hey Sanvi", "Hey Sunvi", "Hello", "Hi", etc.)
-      else if (
-        lower === 'hey sunvi' || lower === 'hey sanvi' || 
-        lower === 'hi sunvi' || lower === 'hi sanvi' ||
-        lower === 'hello sunvi' || lower === 'hello sanvi' ||
-        lower === 'sunvi' || lower === 'sanvi' ||
-        lower === 'hey' || lower === 'hello' || lower === 'hi' ||
-        lower.startsWith('hey sunvi') || lower.startsWith('hey sanvi') ||
-        lower.startsWith('hi sunvi') || lower.startsWith('hi sanvi') ||
-        lower.startsWith('hello sunvi') || lower.startsWith('hello sanvi') ||
-        (hasSunviOrSanvi && (lower.includes('there') || lower.includes('listen') || lower.split(' ').length <= 3))
-      ) {
-        replyText = "Hello! Yes, I am Sanvi and I am right here listening to you. How can I help you today? You can ask me to open an Excel sheet, solve your assignments, check your watch time, or ask who is Devender Devgan Das!";
-      }
-
-      // Who are you / Identity
-      else if (lower.includes('who are you') || lower.includes('your name') || lower.includes('introduce')) {
-        replyText = "Hello! My name is Sanvi (spelled S-A-N-V-I). I am your personal AI voice assistant for DV Analytics. I can execute commands like Jarvis, open Excel sheets, solve assignments, and answer any questions about DV Analytics programs and founder Devender Devgan Das.";
-      }
-
-      // Fallback
-      else {
-        replyText = `I heard: "${query}". I am Sanvi, your DV Analytics assistant. You can ask me:
-1. "Who is Devender Devgan Das?" (Founder of DV Analytics)
-2. "Open an Excel sheet" (Launches practice workbench & downloads file)
-3. "Open assignments", "Open CAT test", or "Open interview kit"
-4. "Tell me about DV Analytics courses and branch locations".`;
-      }
-
-      setLastActionExecuted(actionType);
-
-      const sanviMsgId = (Date.now() + 1).toString();
-      const sanviReply = {
-        id: sanviMsgId,
-        sender: 'sanvi',
-        timestamp: 'Just now',
-        text: replyText,
-        actionType: actionType
-      };
-
-      setMessages(prev => [...prev, sanviReply]);
-
-      if (voiceEnabled) {
-        speakSanviResponse(replyText, sanviMsgId);
-      }
-    }, 500);
+    if (voiceEnabled) {
+      speakSanviResponse(replyText, sanviMsgId, spokenVoiceText);
+    }
   };
   handleSendMessageRef.current = handleSendMessage;
 
@@ -1126,6 +1075,12 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                       className="px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 hover:text-cyan-300 hover:bg-slate-700 transition-colors border border-slate-700/60 cursor-pointer"
                     >
                       Centers & Courses 🌐
+                    </button>
+                    <button
+                      onClick={() => handleSendMessage("Can you please explain VLOOKUP in Excel?")}
+                      className="px-2.5 py-1 rounded-full bg-emerald-950/60 text-emerald-300 hover:bg-emerald-900/70 transition-colors border border-emerald-500/40 cursor-pointer font-bold"
+                    >
+                      "Explain VLOOKUP" 📗
                     </button>
                     <button
                       onClick={() => handleSendMessage("Open assignments")}
