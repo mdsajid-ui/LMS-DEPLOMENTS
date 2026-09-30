@@ -139,7 +139,9 @@ export default function App() {
           )}
 
           {currentTab === 'interview-prep' && (
-            <InterviewPrepPage />
+            <InterviewPrepPage 
+              student={studentProfile}
+            />
           )}
 
           {currentTab === 'mock-interviews' && (

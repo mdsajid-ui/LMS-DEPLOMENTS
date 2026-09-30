@@ -6,6 +6,7 @@ import {
   FileCheck2, 
   FileText, 
   Briefcase, 
+  Mail,
   ShieldCheck, 
   MessagesSquare, 
   Clock, 
@@ -38,7 +39,7 @@ export default function Sidebar({
     { id: 'assignments', label: 'ASSIGNMENTS', icon: ClipboardList, badge: '3' },
     { id: 'application-test', label: 'APPLICATION TEST', icon: FileCheck2 },
     { id: 'resume', label: 'RESUME', icon: FileText },
-    { id: 'interview-prep', label: 'INTERVIEW PREP KIT', icon: Briefcase },
+    { id: 'interview-prep', label: 'INTERVIEW PREP KIT', icon: Mail },
     { id: 'mock-interviews', label: 'MOCK INTERVIEWS', icon: ShieldCheck },
     { id: 'discussion-forum', label: 'DISCUSSION FORUM', icon: MessagesSquare },
     { id: 'attendance', label: 'ATTENDANCE', icon: Clock, badge: `${student.attendancePercent}%` },
@@ -110,14 +111,14 @@ export default function Sidebar({
               key={item.id}
               onClick={() => setCurrentTab(item.id)}
               title={collapsed ? item.label : undefined}
-              className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl font-medium text-xs tracking-wider transition-all group relative ${
+              className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl font-bold text-xs tracking-wider transition-all group relative ${
                 isActive 
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white font-semibold shadow-md shadow-orange-950/40' 
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900/90'
+                  ? 'bg-white text-slate-950 shadow-md font-bold' 
+                  : 'text-slate-300 hover:text-white hover:bg-slate-900/90 font-medium'
               } ${collapsed ? 'justify-center px-0' : ''}`}
             >
               <Icon className={`w-4 h-4 flex-shrink-0 transition-transform group-hover:scale-110 ${
-                isActive ? 'text-white' : 'text-slate-400 group-hover:text-orange-400'
+                isActive ? 'text-slate-950' : 'text-slate-400 group-hover:text-orange-400'
               }`} />
               
               {!collapsed && (
@@ -126,7 +127,7 @@ export default function Sidebar({
                   {item.badge && (
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
                       isActive 
-                        ? 'bg-white/20 text-white' 
+                        ? 'bg-slate-200 text-slate-900 font-bold' 
                         : 'bg-slate-800 text-orange-400 border border-slate-700'
                     }`}>
                       {item.badge}
