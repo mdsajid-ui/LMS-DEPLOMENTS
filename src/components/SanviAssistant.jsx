@@ -71,6 +71,12 @@ export default function SanviAssistant({
   const alwaysListeningRef = useRef(alwaysListening);
   const isSpeakingRef = useRef(isSpeaking);
   const currentUtteranceRef = useRef(null);
+  
+  // Acoustic Feedback & Echo Cancellation Refs
+  const isAudioOutputActiveRef = useRef(false);
+  const cooldownTimerRef = useRef(null);
+  const lastSpokenUtteranceRef = useRef('');
+  const lastSpokenTimeRef = useRef(0);
 
   alwaysListeningRef.current = alwaysListening;
   isSpeakingRef.current = isSpeaking;
@@ -134,7 +140,12 @@ export default function SanviAssistant({
 
   // Safe restart helper for continuous recognition
   const restartRecognitionSafely = () => {
-    if (!recognitionRef.current || !alwaysListeningRef.current || isSpeakingRef.current) return;
+    if (
+      !recognitionRef.current || 
+      !alwaysListeningRef.current || 
+      isSpeakingRef.current || 
+      isAudioOutputActiveRef.current
+    ) return;
     try {
       recognitionRef.current.start();
     } catch (_err) {
@@ -157,8 +168,12 @@ export default function SanviAssistant({
         };
 
         recognition.onresult = (event) => {
-          // If Sanvi is actively speaking, ignore microphone to prevent feedback loop
-          if (isSpeakingRef.current) return;
+          // If Sanvi is actively speaking or in acoustic cool-down, completely ignore microphone
+          if (isSpeakingRef.current || isAudioOutputActiveRef.current) {
+            activeTranscriptRef.current = '';
+            setInterimSpeech('');
+            return;
+          }
 
           let fullTranscript = '';
           let isFinal = false;
@@ -174,15 +189,32 @@ export default function SanviAssistant({
           const rawText = fullTranscript.trim();
           if (!rawText) return;
 
+          // Acoustic Echo Guard: If microphone heard what Sanvi just spoke within 3 seconds, drop it
+          const lower = rawText.toLowerCase();
+          const timeSinceLastSpoken = Date.now() - lastSpokenTimeRef.current;
+          if (timeSinceLastSpoken < 3000 && lastSpokenUtteranceRef.current) {
+            const lastWords = lastSpokenUtteranceRef.current.split(/\s+/).filter(w => w.length > 3);
+            const recognizedWords = lower.split(/\s+/).filter(w => w.length > 3);
+            const matchingCount = recognizedWords.filter(w => lastWords.includes(w)).length;
+            if (matchingCount >= 2 || (recognizedWords.length <= 3 && matchingCount >= 1)) {
+              activeTranscriptRef.current = '';
+              setInterimSpeech('');
+              return;
+            }
+          }
+
+          // Ignore single-character noise or microphone static
+          if (rawText.length < 2) return;
+
           setInterimSpeech(rawText);
           activeTranscriptRef.current = rawText;
-
-          const lower = rawText.toLowerCase();
 
           // Check for wake words
           const wakeDetected = 
             lower.includes('hey sanvi') || 
             lower.includes('hey sunvi') || 
+            lower.includes('hey sajid') ||
+            lower.includes('hey chatgpt') ||
             lower.includes('sanvi') || 
             lower.includes('sunvi') || 
             lower.includes('saanvi') || 
@@ -204,7 +236,7 @@ export default function SanviAssistant({
           } else {
             // Auto-submit after 1.2s pause in speaking
             silenceTimerRef.current = setTimeout(() => {
-              if (activeTranscriptRef.current && !isSpeakingRef.current) {
+              if (activeTranscriptRef.current && !isSpeakingRef.current && !isAudioOutputActiveRef.current) {
                 submitVoiceSpeech(activeTranscriptRef.current);
               }
             }, 1200);
@@ -221,8 +253,8 @@ export default function SanviAssistant({
 
         recognition.onend = () => {
           setIsListening(false);
-          // Auto restart continuous listening if enabled and Sanvi isn't speaking
-          if (alwaysListeningRef.current && !isSpeakingRef.current) {
+          // Auto restart continuous listening ONLY if audio is not active and not cooling down
+          if (alwaysListeningRef.current && !isSpeakingRef.current && !isAudioOutputActiveRef.current) {
             setTimeout(() => {
               restartRecognitionSafely();
             }, 200);
@@ -243,9 +275,10 @@ export default function SanviAssistant({
     return () => {
       if (synthRef.current) synthRef.current.cancel();
       if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch (_e) {}
+        try { recognitionRef.current.abort(); } catch (_e) {}
       }
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
     };
   }, []);
 
@@ -263,14 +296,14 @@ export default function SanviAssistant({
       id: 'welcome-1',
       sender: 'sanvi',
       timestamp: 'Just now',
-      text: `Hello ${studentProfile.name.split(' ')[0]}! I am Sanvi, your personal AI voice assistant for DV Analytics.
+      text: `Hello Sajid! I am Sanvi, your personal AI voice assistant for DV Analytics.
 
-I can speak, listen, and control your LMS like Jarvis:
-• Say "Hey Sanvi, open an Excel sheet" to open the live Excel practice worksheet.
-• Ask "Who is Devender Devgan Das?" to learn about the founder of DV Analytics.
-• Ask about courses, branches (Bangalore, Bhubaneswar, Dubai), or assignment solutions.
-
-How can I help you right now?`
+We can speak and converse naturally just like ChatGPT or Gemini Live:
+• Say "Hey Sanvi" to start talking.
+• Ask "What are you doing?" or chat casually.
+• Ask technical questions like "Can you please explain VLOOKUP?".
+• Say "Open an Excel sheet" to launch and download your practice workbook.
+• Ask "Who is Devender Devgan Das?" to learn about the founder of DV Analytics.`
     }
   ]);
   const messagesEndRef = useRef(null);
@@ -292,9 +325,27 @@ How can I help you right now?`
   const speakSanviResponse = (text, msgId = null, speechOverride = null) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
-    // Pause recognition during speech so Sanvi doesn't listen to herself
+    // 1. Immediately block microphone and speech recognition
+    isAudioOutputActiveRef.current = true;
+    isSpeakingRef.current = true;
+    setIsSpeaking(true);
+    if (msgId) setActiveSpeakingMsgId(msgId);
+
+    // Cancel pending timers & clear transcript buffer
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    if (cooldownTimerRef.current) {
+      clearTimeout(cooldownTimerRef.current);
+      cooldownTimerRef.current = null;
+    }
+    activeTranscriptRef.current = '';
+    setInterimSpeech('');
+
+    // Abort recognition synchronously so mic does not pick up Sanvi's initial audio
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch (_e) {}
+      try { recognitionRef.current.abort(); } catch (_e) {}
     }
 
     window.speechSynthesis.cancel();
@@ -314,6 +365,10 @@ How can I help you right now?`
       .replace(/XLOOKUP/g, 'X-Lookup')
       .replace(/DENSE_RANK/g, 'Dense Rank')
       .replace(/https?:\/\/\S+/g, 'our official website');
+
+    // Record what Sanvi is speaking for acoustic echo filtering
+    lastSpokenUtteranceRef.current = cleanText.toLowerCase();
+    lastSpokenTimeRef.current = Date.now();
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.rate = 1.0;
@@ -336,33 +391,34 @@ How can I help you right now?`
 
     currentUtteranceRef.current = utterance;
 
+    const handleSpeechEnded = () => {
+      setIsSpeaking(false);
+      isSpeakingRef.current = false;
+      setActiveSpeakingMsgId(null);
+      currentUtteranceRef.current = null;
+      lastSpokenTimeRef.current = Date.now();
+
+      // Hold a 1200ms acoustic cool-down buffer so room echo/reverb doesn't trigger the microphone
+      if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+      cooldownTimerRef.current = setTimeout(() => {
+        isAudioOutputActiveRef.current = false;
+        activeTranscriptRef.current = '';
+        setInterimSpeech('');
+        if (alwaysListeningRef.current) {
+          restartRecognitionSafely();
+        }
+      }, 1200);
+    };
+
     utterance.onstart = () => {
       setIsSpeaking(true);
+      isSpeakingRef.current = true;
+      isAudioOutputActiveRef.current = true;
       if (msgId) setActiveSpeakingMsgId(msgId);
     };
 
-    utterance.onend = () => {
-      setIsSpeaking(false);
-      setActiveSpeakingMsgId(null);
-      currentUtteranceRef.current = null;
-      // Resume continuous recognition
-      if (alwaysListeningRef.current) {
-        setTimeout(() => {
-          restartRecognitionSafely();
-        }, 250);
-      }
-    };
-
-    utterance.onerror = () => {
-      setIsSpeaking(false);
-      setActiveSpeakingMsgId(null);
-      currentUtteranceRef.current = null;
-      if (alwaysListeningRef.current) {
-        setTimeout(() => {
-          restartRecognitionSafely();
-        }, 250);
-      }
-    };
+    utterance.onend = handleSpeechEnded;
+    utterance.onerror = handleSpeechEnded;
 
     window.speechSynthesis.speak(utterance);
   };
@@ -371,12 +427,18 @@ How can I help you right now?`
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
+      isSpeakingRef.current = false;
       setActiveSpeakingMsgId(null);
-      if (alwaysListeningRef.current) {
-        setTimeout(() => {
+      currentUtteranceRef.current = null;
+      if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+      cooldownTimerRef.current = setTimeout(() => {
+        isAudioOutputActiveRef.current = false;
+        activeTranscriptRef.current = '';
+        setInterimSpeech('');
+        if (alwaysListeningRef.current) {
           restartRecognitionSafely();
-        }, 200);
-      }
+        }
+      }, 400);
     }
   };
 
@@ -629,7 +691,11 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
       spokenVoiceText = "DV Analytics provides 100% placement assistance, resume optimization, mock interviews, and connections with over 100 hiring partners.";
     }
 
-    // Direct Greetings & Wake Word ("Hey Sanvi", "Hey Sunvi", "Hello", "Hi", etc.)
+    // ==========================================
+    // CHATGPT / GEMINI LIVE CASUAL CONVERSATION FLOW (ADDRESSED TO SAJID)
+    // ==========================================
+
+    // Direct Greetings & Wake Word ("Hey Sanvi", "Hey Sunvi", "Hello", "Hi", "Hey ChatGPT", etc.)
     else if (
       lower === 'hey sunvi' || lower === 'hey sanvi' || 
       lower === 'hi sunvi' || lower === 'hi sanvi' ||
@@ -637,20 +703,68 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
       lower === 'sunvi' || lower === 'sanvi' ||
       lower === 'hey' || lower === 'hello' || lower === 'hi' ||
       lower === 'hey sanvi!' || lower === 'hey sunvi!' ||
+      lower === 'hey chatgpt' || lower === 'hey gemini' ||
+      lower === 'hey sajid' ||
       (hasSunviOrSanvi && (lower.includes('there') || lower.includes('listen') || lower.split(' ').length <= 2))
     ) {
-      replyText = "Hello! Yes, I am Sanvi and I am right here listening to you. How can I help you today? You can ask me to explain any Excel formula like VLOOKUP, open an Excel sheet, solve assignments, or ask who is Devender Devgan Das!";
-      spokenVoiceText = "Hello! Yes, I am Sanvi and I am right here listening to you. How can I assist you today?";
+      replyText = "Hey Sajid! How are you doing today?";
+      spokenVoiceText = "Hey Sajid! How are you doing today?";
+    }
+
+    // Casual chat: "What are you doing?" / "What are you up to?" / "What's up?"
+    else if (
+      lower.includes('what are you doing') || 
+      lower.includes('what r u doing') || 
+      lower.includes('what you doing') ||
+      lower.includes('what are you up to') ||
+      lower.includes('whats up') ||
+      lower.includes("what's up")
+    ) {
+      replyText = "I'm good, Sajid! What about you?";
+      spokenVoiceText = "I'm good, Sajid! What about you?";
+    }
+
+    // Casual chat: "How are you?" / "How are you doing?"
+    else if (
+      lower.includes('how are you') || 
+      lower.includes('how r u') || 
+      lower.includes('how are you doing') ||
+      lower.includes('how is it going') ||
+      lower.includes("how's it going")
+    ) {
+      replyText = "I'm doing great, Sajid! How is your day going?";
+      spokenVoiceText = "I'm doing great, Sajid! How is your day going?";
+    }
+
+    // Casual response: "I am good", "Doing good", "I'm fine", etc.
+    else if (
+      lower === 'i am good' || lower === "i'm good" || lower === 'im good' ||
+      lower === 'i am fine' || lower === "i'm fine" || lower === 'im fine' ||
+      lower === 'doing good' || lower === 'doing well' || lower === 'all good' ||
+      lower === 'good' || lower === 'great' || lower === 'fine' ||
+      lower.includes('i am also good') || lower.includes("i'm also good")
+    ) {
+      replyText = "Glad to hear that, Sajid! What would you like to work on today?";
+      spokenVoiceText = "Glad to hear that, Sajid! What would you like to work on today?";
+    }
+
+    // Casual chat: "Thank you" / "Thanks"
+    else if (
+      lower === 'thank you' || lower === 'thanks' || lower === 'thank you sanvi' ||
+      lower === 'thanks sanvi' || lower.startsWith('thank you') || lower.startsWith('thanks')
+    ) {
+      replyText = "You're welcome, Sajid! Let me know whenever you need anything.";
+      spokenVoiceText = "You're welcome, Sajid! Let me know whenever you need anything.";
     }
 
     // Who are you / Identity
     else if (lower.includes('who are you') || lower.includes('your name') || lower.includes('introduce')) {
-      replyText = "Hello! My name is Sanvi (spelled S-A-N-V-I). I am your personal AI voice assistant for DV Analytics. I can execute commands like Jarvis, open Excel sheets, solve assignments, and answer any questions about DV Analytics programs and founder Devender Devgan Das.";
-      spokenVoiceText = "Hello! My name is Sanvi. I am your personal AI voice assistant for DV Analytics.";
+      replyText = "Hello Sajid! I am Sanvi, your personal AI voice assistant for DV Analytics. I can chat with you, explain concepts like VLOOKUP, and open your LMS tools like Excel sheets!";
+      spokenVoiceText = "Hello Sajid! I am Sanvi, your personal AI voice assistant for DV Analytics. How can I help you today?";
     }
 
     // ==========================================
-    // CHATGPT-STYLE INTELLIGENCE: POWERED BY GEMINI 2.5 FLASH API
+    // CHATGPT-STYLE TECHNICAL INTELLIGENCE: POWERED BY GEMINI 2.5 FLASH API
     // Answers ANY technical question (VLOOKUP, SQL, Python, AI, etc.) directly!
     // ==========================================
     else {
@@ -660,7 +774,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
         .trim();
 
       try {
-        const aiResponse = await askSanviGemini(cleanPrompt || query);
+        const aiResponse = await askSanviGemini(cleanPrompt || query, messages);
         if (aiResponse && aiResponse.trim().length > 0) {
           replyText = aiResponse.trim();
           spokenVoiceText = getConciseSpeechText(replyText);
