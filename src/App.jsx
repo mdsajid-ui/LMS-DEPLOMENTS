@@ -24,10 +24,12 @@ import AccountProfilePage from './pages/AccountProfilePage';
 import NotificationPage from './pages/NotificationPage';
 import ProgressReportPage from './pages/ProgressReportPage';
 import ChangeProgramPage from './pages/ChangeProgramPage';
+import AdminPortalPage from './pages/AdminPortalPage';
 
 import { studentProfile } from './data/mockData';
 
 export default function App() {
+  const [isAdminPortal, setIsAdminPortal] = useState(false);
   const [currentTab, setCurrentTab] = useState('welcome');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState('BATCH 202606');
@@ -55,6 +57,14 @@ export default function App() {
     setCurrentTab('session');
   };
 
+  if (isAdminPortal) {
+    return (
+      <ErrorBoundary onReset={() => setIsAdminPortal(false)}>
+        <AdminPortalPage onBackToStudentLms={() => setIsAdminPortal(false)} />
+      </ErrorBoundary>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex font-sans antialiased">
       {/* Left Navigation Sidebar */}
@@ -81,6 +91,7 @@ export default function App() {
           onOpenSchedule={() => setScheduleOpen(true)}
           onOpenSupport={handleOpenSupport}
           onOpenChat={handleOpenChat}
+          onOpenAdmin={() => setIsAdminPortal(true)}
           selectedBatch={selectedBatch}
           setSelectedBatch={setSelectedBatch}
         />
