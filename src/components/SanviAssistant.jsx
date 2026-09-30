@@ -303,7 +303,7 @@ We can speak and converse naturally just like ChatGPT or Gemini Live:
 • Ask "What are you doing?" or chat casually.
 • Ask technical questions like "Can you please explain VLOOKUP?".
 • Say "Open an Excel sheet" to launch and download your practice workbook.
-• Ask "Who is Devender Devgan Das?" to learn about the founder of DV Analytics.`
+• Ask "Who is the Director of DV Analytics?" to learn about founder Debendra Das Debadutta.`
     }
   ]);
   const messagesEndRef = useRef(null);
@@ -506,23 +506,27 @@ We can speak and converse naturally just like ChatGPT or Gemini Live:
       lower.includes('jarvis');
 
     // ==========================================
-    // REQUIREMENT 1: FOUNDER OF DV ANALYTICS
-    // "If I will ask who is Devender Devgan Das, you have to answer he is the founder of DV Analytics."
+    // REQUIREMENT 1: FOUNDER & DIRECTOR OF DV ANALYTICS
     // ==========================================
     if (
+      lower.includes('director') || 
+      lower.includes('debendra') || 
+      lower.includes('debadutta') || 
       lower.includes('devender') || 
       lower.includes('devgan') || 
-      lower.includes('das') && (lower.includes('who') || lower.includes('founder')) ||
+      (lower.includes('das') && (lower.includes('who') || lower.includes('founder') || lower.includes('director'))) ||
       (lower.includes('founder') && (lower.includes('dv') || lower.includes('company') || lower.includes('analytics') || lower.includes('who'))) ||
       lower.includes('who started dv analytics') ||
       lower.includes('who founded dv analytics') ||
+      lower.includes('who is the director') ||
+      lower.includes('who is director') ||
       lower.includes('ceo of dv analytics')
     ) {
-      replyText = `${dvCompanyProfile.founderFact}
+      replyText = `**${dvCompanyProfile.founder} is the Founder & Managing Director of DV Analytics (DV Data & Analytics Pvt Ltd).**
 
-He is the Founder & Managing Director of DV Analytics (DV Data & Analytics Pvt Ltd). Under his visionary leadership, DV Analytics was built to deliver industry-grade practical training in Data Science, Artificial Intelligence, Generative AI, and Business Analytics, empowering thousands of students and working professionals across India (Bangalore, Bhubaneswar) and internationally (Dubai).`;
+Under his visionary leadership, DV Analytics was built to deliver industry-grade practical training in Data Science, Artificial Intelligence, Generative AI, and Business Analytics, empowering thousands of students and working professionals across India (Bangalore, Bhubaneswar) and internationally (Dubai).`;
       actionType = "founder_fact";
-      spokenVoiceText = "Devender Devgan Das is the founder of DV Analytics. He established the organization to deliver cutting-edge industrial training in Data Science, Artificial Intelligence, and Business Analytics.";
+      spokenVoiceText = "Debendra Das Debadutta is the founder and Managing Director of DV Analytics.";
     }
 
     // ==========================================
@@ -644,10 +648,10 @@ I have opened the Helplines tab where you can click to Call or connect on WhatsA
       lower.includes('about company') ||
       lower.includes('what is dv analytics')
     ) {
-      replyText = `DV Analytics (DV Data & Analytics Pvt Ltd) is an elite analytics and AI training organization founded by Devender Devgan Das.
+      replyText = `DV Analytics (DV Data & Analytics Pvt Ltd) is an elite analytics and AI training organization founded and directed by ${dvCompanyProfile.founder}.
 
 Key Facts from our official portal (https://www.dvanalyticsmds.com/):
-• Founder: Devender Devgan Das
+• Founder & Director: ${dvCompanyProfile.founder}
 • Head Office: Bangalore, Karnataka
 • Centers: Bangalore, Bhubaneswar (Odisha), Dubai (UAE), and Online Global
 • Phone Numbers: +91-9019030033 / +91-9830012345
@@ -655,7 +659,7 @@ Key Facts from our official portal (https://www.dvanalyticsmds.com/):
 • Flagship Programs: APIDS (Data Science with AI Deployment), APIDA (Data Science with Gen AI), DAS (Data Analytics Specialist), APCF (Cybersecurity & Forensics), and FDE (AI Forward Deployment Engineer).
 • Placement Record: 100% placement support with 100+ hiring partners.`;
       actionType = "company_info";
-      spokenVoiceText = "DV Analytics is a premier Data Science and AI institute founded by Devender Devgan Das, with centers in Bangalore, Bhubaneswar, and Dubai.";
+      spokenVoiceText = "DV Analytics is a premier Data Science and AI institute founded and directed by Debendra Das Debadutta, with centers in Bangalore, Bhubaneswar, and Dubai.";
     }
 
     // Branches / Centers / Locations
@@ -1103,16 +1107,16 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                               </div>
                             )}
 
-                            {/* Special Founder Badge if asked about Devender Devgan Das */}
+                            {/* Special Founder Badge if asked about Director / Founder */}
                             {m.actionType === 'founder_fact' && (
                               <div className="mt-3 p-3 bg-gradient-to-r from-slate-950 to-blue-950/60 rounded-xl border border-blue-500/40 flex items-center justify-between gap-3">
                                 <div>
                                   <div className="flex items-center gap-1.5 font-bold text-blue-300">
                                     <Award className="w-4 h-4 text-blue-400" />
-                                    <span>Devender Devgan Das</span>
+                                    <span>Debendra Das Debadutta</span>
                                   </div>
                                   <span className="text-[11px] text-slate-300">
-                                    Founder & MD of DV Analytics
+                                    Founder & Managing Director of DV Analytics
                                   </span>
                                 </div>
                                 <a
@@ -1179,10 +1183,10 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                       "Open Excel Sheet" 📊
                     </button>
                     <button
-                      onClick={() => handleSendMessage("Who is Devender Devgan Das?")}
+                      onClick={() => handleSendMessage("Who is the Director of DV Analytics?")}
                       className="px-2.5 py-1 rounded-full bg-blue-950/60 text-blue-300 hover:bg-blue-900/70 transition-colors border border-blue-500/40 cursor-pointer font-bold"
                     >
-                      "Who is Devender Devgan Das?" 👤
+                      "Who is the Director?" 👤
                     </button>
                     <button
                       onClick={() => handleSendMessage("What courses and locations does DV Analytics have?")}
@@ -1259,7 +1263,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                         Official Founder Profile
                       </span>
                       <button
-                        onClick={() => speakSanviResponse(`Devender Devgan Das is the founder of DV Analytics. He established DV Analytics to provide cutting-edge industrial training in Data Science, Artificial Intelligence, Generative AI, and Business Analytics.`)}
+                        onClick={() => speakSanviResponse(`Debendra Das Debadutta is the founder and Managing Director of DV Analytics. He established DV Analytics to provide cutting-edge industrial training in Data Science, Artificial Intelligence, Generative AI, and Business Analytics.`)}
                         className="text-xs text-blue-400 hover:text-white flex items-center gap-1 cursor-pointer"
                       >
                         <Volume2 className="w-3.5 h-3.5" /> Read Aloud

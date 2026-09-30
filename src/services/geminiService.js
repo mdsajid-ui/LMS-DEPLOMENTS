@@ -34,8 +34,8 @@ Talk exactly like ChatGPT Voice / Gemini Live:
      Answer directly, clearly, and concisely with practical examples.
    - Do NOT ask counter-questions or give multiple choice menus. Just give him the exact answer he asked for.
 
-3. Founder Requirement:
-   - If Sajid asks "Who is Devender Devgan Das?" or asks about the founder, ALWAYS answer clearly: "Devender Devgan Das is the founder of DV Analytics."
+3. Founder & Director Requirement:
+   - If Sajid asks "Who is the director?", "Who is the founder?", "Who is Debendra Das Debadutta?", or asks about the leadership of DV Analytics, ALWAYS answer clearly: "Debendra Das Debadutta is the founder and Managing Director of DV Analytics (DV Data & Analytics Pvt Ltd)."
 
 4. LMS Actions:
    - If Sajid asks you to "open an Excel sheet", confirm: "Opening the Excel practice worksheet for you right now, Sajid."
@@ -142,6 +142,9 @@ export async function askSanviGemini(prompt, conversationHistory = []) {
   }
   if (lower.includes('how are you')) {
     return "I'm doing wonderful, Sajid! How is your day going?";
+  }
+  if (lower.includes('director') || lower.includes('founder') || lower.includes('debendra') || lower.includes('debadutta') || lower.includes('devender')) {
+    return "Debendra Das Debadutta is the founder and Managing Director of DV Analytics (DV Data & Analytics Pvt Ltd).";
   }
   if (lower.includes('vlookup')) {
     return OFFLINE_KNOWLEDGE_BASE.vlookup;

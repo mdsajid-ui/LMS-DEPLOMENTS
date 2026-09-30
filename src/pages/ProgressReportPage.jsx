@@ -61,7 +61,7 @@ export default function ProgressReportPage({ student }) {
 
   // Industry Capstone Projects
   const projectsList = [
-    { title: "Credit Risk Application Scorecard", domain: "Banking & Finance", status: "Completed", grade: "A+", mentor: "Devender Devgan Das", feedback: "Demonstrated thorough weight-of-evidence (WoE) transformation and achieved 0.89 AUC-ROC on validation data.", completionDate: "18 Aug 2026" },
+    { title: "Credit Risk Application Scorecard", domain: "Banking & Finance", status: "Completed", grade: "A+", mentor: "Debendra Das Debadutta", feedback: "Demonstrated thorough weight-of-evidence (WoE) transformation and achieved 0.89 AUC-ROC on validation data.", completionDate: "18 Aug 2026" },
     { title: "E-Commerce Recommendation & Dynamic Pricing", domain: "Retail & E-Commerce", status: "Completed", grade: "A", mentor: "Senior AI Faculty", feedback: "Collaborative filtering matrix factorization and real-time market basket analysis well executed.", completionDate: "02 Sep 2026" },
     { title: "Hospital Readmission Clinical Prediction", domain: "Healthcare & Life Sciences", status: "Completed", grade: "A", mentor: "Clinical Data Lead", feedback: "Handled severe class imbalance using SMOTE and provided clinically interpretable feature importances.", completionDate: "20 Sep 2026" },
     { title: "Agentic AI Customer Support Desk", domain: "Telecom & Service Ops", status: "In Progress", grade: "Pending", mentor: "AI Architect", feedback: "Multi-agent supervisor routing pipeline configured with LangGraph. Evaluation in progress.", completionDate: "Due 25 Oct 2026" },
@@ -172,7 +172,7 @@ export default function ProgressReportPage({ student }) {
         </div>
         <div>
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Chief Mentor</span>
-          <span className="font-semibold text-slate-800 block">Devender Devgan Das</span>
+          <span className="font-semibold text-slate-800 block">Debendra Das Debadutta</span>
         </div>
         <div>
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Cumulative CGPA</span>
@@ -814,7 +814,7 @@ export default function ProgressReportPage({ student }) {
                   <div>
                     <div className="w-32 border-b border-slate-400 mb-1"></div>
                     <span className="font-bold text-slate-700 text-[11px] block">Chief Mentor</span>
-                    <span className="text-[10px] text-slate-400">Devender Devgan Das</span>
+                    <span className="text-[10px] text-slate-400">Debendra Das Debadutta</span>
                   </div>
 
                   <div>
