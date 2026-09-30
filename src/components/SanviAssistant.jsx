@@ -78,6 +78,41 @@ export default function SanviAssistant({
   const lastSpokenUtteranceRef = useRef('');
   const lastSpokenTimeRef = useRef(0);
 
+  // Wake-Word Session State ("untill unless i say Hey sanvi you no need to speak anything")
+  const [isWakeActive, setIsWakeActive] = useState(false);
+  const isWakeActiveRef = useRef(false);
+  const wakeSessionTimerRef = useRef(null);
+
+  const checkWakeWord = (text) => {
+    if (!text) return false;
+    const l = text.toLowerCase();
+    return (
+      l.includes('hey sanvi') || 
+      l.includes('hey sunvi') || 
+      l.includes('hey saanvi') || 
+      l.includes('hey shanvi') || 
+      l.includes('hey chatgpt') || 
+      l.includes('hey gemini') || 
+      l.includes('hey sajid') || 
+      l.includes('sanvi') || 
+      l.includes('sunvi') || 
+      l.includes('saanvi') || 
+      l.includes('shanvi') || 
+      l.includes('sonvi') || 
+      l.includes('jarvis')
+    );
+  };
+
+  const refreshWakeSession = (durationMs = 25000) => {
+    isWakeActiveRef.current = true;
+    setIsWakeActive(true);
+    if (wakeSessionTimerRef.current) clearTimeout(wakeSessionTimerRef.current);
+    wakeSessionTimerRef.current = setTimeout(() => {
+      isWakeActiveRef.current = false;
+      setIsWakeActive(false);
+    }, durationMs);
+  };
+
   alwaysListeningRef.current = alwaysListening;
   isSpeakingRef.current = isSpeaking;
 
@@ -126,15 +161,31 @@ export default function SanviAssistant({
     }
   }, []);
 
-  // Submit voice speech safely
+  // Submit voice speech safely - STRICTLY GATED:
+  // "untill unless i say Hey sanvi you no need to speak anything"
   const submitVoiceSpeech = (transcript) => {
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     const text = (transcript || activeTranscriptRef.current || '').trim();
     if (!text) return;
+
+    const wakeDetected = checkWakeWord(text);
+
+    // CRITICAL USER CONDITION:
+    // If user has NOT said "Hey Sanvi" AND Sanvi is not currently in an active wake conversation session:
+    // DROP IT! Do not process, do not execute, do not speak!
+    if (!wakeDetected && !isWakeActiveRef.current) {
+      activeTranscriptRef.current = '';
+      setInterimSpeech('');
+      return;
+    }
+
+    // Refresh active wake session for follow-up turns
+    refreshWakeSession(25000);
+
     activeTranscriptRef.current = '';
     setInterimSpeech('');
     if (handleSendMessageRef.current) {
-      handleSendMessageRef.current(text);
+      handleSendMessageRef.current(text, true); // true = fromVoice
     }
   };
 
@@ -206,27 +257,30 @@ export default function SanviAssistant({
           // Ignore single-character noise or microphone static
           if (rawText.length < 2) return;
 
-          setInterimSpeech(rawText);
-          activeTranscriptRef.current = rawText;
-
           // Check for wake words
-          const wakeDetected = 
-            lower.includes('hey sanvi') || 
-            lower.includes('hey sunvi') || 
-            lower.includes('hey sajid') ||
-            lower.includes('hey chatgpt') ||
-            lower.includes('sanvi') || 
-            lower.includes('sunvi') || 
-            lower.includes('saanvi') || 
-            lower.includes('shanvi') || 
-            lower.includes('sonvi') ||
-            lower.includes('jarvis');
+          const wakeDetected = checkWakeWord(rawText);
+
+          // STRICT USER CONDITION:
+          // "untill unless i say Hey sanvi you no need to speak anything"
+          // If wake word is NOT present AND we are NOT in an active conversation session:
+          // Ignore completely! Do not show interim speech, do not buffer, do not submit, DO NOT SPEAK!
+          if (!wakeDetected && !isWakeActiveRef.current) {
+            activeTranscriptRef.current = '';
+            setInterimSpeech('');
+            return;
+          }
 
           if (wakeDetected && !isOpen) {
             playWakeChime();
             setIsOpen(true);
             setIsMinimized(false);
+            refreshWakeSession(25000);
+          } else if (wakeDetected) {
+            refreshWakeSession(25000);
           }
+
+          setInterimSpeech(rawText);
+          activeTranscriptRef.current = rawText;
 
           // Clear previous silence timer
           if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
@@ -287,6 +341,10 @@ export default function SanviAssistant({
     if (onCloseExternal) onCloseExternal();
     if (synthRef.current) synthRef.current.cancel();
     setIsSpeaking(false);
+    isSpeakingRef.current = false;
+    isWakeActiveRef.current = false;
+    setIsWakeActive(false);
+    if (wakeSessionTimerRef.current) clearTimeout(wakeSessionTimerRef.current);
   };
 
   // Chat conversation state
@@ -404,6 +462,10 @@ We can speak and converse naturally just like ChatGPT or Gemini Live:
         isAudioOutputActiveRef.current = false;
         activeTranscriptRef.current = '';
         setInterimSpeech('');
+        // Maintain active conversation window so Sajid can reply naturally without repeating wake word
+        if (isWakeActiveRef.current) {
+          refreshWakeSession(20000);
+        }
         if (alwaysListeningRef.current) {
           restartRecognitionSafely();
         }
@@ -446,15 +508,16 @@ We can speak and converse naturally just like ChatGPT or Gemini Live:
   const toggleListening = () => {
     if (isListening) {
       setAlwaysListening(false);
+      isWakeActiveRef.current = false;
+      setIsWakeActive(false);
+      if (wakeSessionTimerRef.current) clearTimeout(wakeSessionTimerRef.current);
       if (recognitionRef.current) {
         try { recognitionRef.current.stop(); } catch (_e) {}
       }
       setIsListening(false);
-      if (activeTranscriptRef.current) {
-        submitVoiceSpeech(activeTranscriptRef.current);
-      }
     } else {
       setAlwaysListening(true);
+      refreshWakeSession(25000); // Clicking mic manually opens a 25s speaking session
       if (synthRef.current) synthRef.current.cancel();
       setIsSpeaking(false);
       if (recognitionRef.current) {
@@ -475,9 +538,15 @@ We can speak and converse naturally just like ChatGPT or Gemini Live:
   };
 
   // Process user chat message & Jarvis Action Engine
-  const handleSendMessage = async (textToSend) => {
+  const handleSendMessage = async (textToSend, fromVoice = false) => {
     const query = (textToSend || inputMessage).trim();
     if (!query) return;
+
+    // Strict voice gating:
+    // "untill unless i say Hey sanvi you no need to speak anything"
+    if (fromVoice && !checkWakeWord(query) && !isWakeActiveRef.current) {
+      return;
+    }
 
     const userMsg = {
       id: Date.now().toString(),
@@ -869,9 +938,9 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
             <div className="flex items-center gap-3">
               {/* Sanvi Avatar & Live State Indicator */}
               <div className="relative w-9 h-9 rounded-xl bg-slate-900 border border-rose-400/50 flex items-center justify-center shadow-inner shadow-rose-500/20">
-                <span className={`absolute inset-0 rounded-xl ${isSpeaking ? 'bg-rose-500/30 animate-ping' : isListening ? 'bg-emerald-500/30 animate-pulse' : 'bg-rose-400/10'}`}></span>
+                <span className={`absolute inset-0 rounded-xl ${isSpeaking ? 'bg-rose-500/30 animate-ping' : isWakeActive ? 'bg-emerald-500/30 animate-pulse' : 'bg-rose-400/10'}`}></span>
                 <Headphones className="w-5 h-5 text-rose-400" />
-                <span className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-slate-950 ${isListening ? 'bg-emerald-400 animate-ping' : isSpeaking ? 'bg-cyan-400 animate-ping' : 'bg-emerald-500'}`}></span>
+                <span className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-slate-950 ${isSpeaking ? 'bg-cyan-400 animate-ping' : isWakeActive ? 'bg-emerald-400 animate-ping' : isListening ? 'bg-amber-400' : 'bg-slate-500'}`}></span>
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -883,13 +952,15 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                   </h3>
                 </div>
                 <p className="text-[11px] text-slate-400">
-                  {isListening 
-                    ? "Continuous Voice Mode • Listening..." 
+                  {isSpeaking 
+                    ? "Sanvi is speaking..." 
                     : isProcessing 
                       ? "Sanvi is thinking..." 
-                      : isSpeaking 
-                        ? "Sanvi is speaking..." 
-                        : "Ready • Say 'Hey Sanvi'"}
+                      : isWakeActive 
+                        ? "🟢 Active • Listening to Sajid..." 
+                        : isListening 
+                          ? "🎙️ Standby • Say 'Hey Sanvi' to speak" 
+                          : "Mic Paused • Click mic to enable"}
                 </p>
               </div>
             </div>
