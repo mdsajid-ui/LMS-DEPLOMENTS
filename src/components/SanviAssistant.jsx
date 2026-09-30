@@ -347,6 +347,27 @@ export default function SanviAssistant({
     if (wakeSessionTimerRef.current) clearTimeout(wakeSessionTimerRef.current);
   };
 
+  // Document-wide Audio Unlock for Chrome/Windows autoplay policies
+  useEffect(() => {
+    const unlockAudio = () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        try {
+          if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+          }
+        } catch (_e) {}
+      }
+    };
+    window.addEventListener('click', unlockAudio, { passive: true });
+    window.addEventListener('keydown', unlockAudio, { passive: true });
+    window.addEventListener('touchstart', unlockAudio, { passive: true });
+    return () => {
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+    };
+  }, []);
+
   // Chat conversation state
   const [inputMessage, setInputMessage] = useState('');
   const [messages, setMessages] = useState([
@@ -354,14 +375,7 @@ export default function SanviAssistant({
       id: 'welcome-1',
       sender: 'sanvi',
       timestamp: 'Just now',
-      text: `Hello Sajid! I am Sanvi, your personal AI voice assistant for DV Analytics.
-
-We can speak and converse naturally just like ChatGPT or Gemini Live:
-• Say "Hey Sanvi" to start talking.
-• Ask "What are you doing?" or chat casually.
-• Ask technical questions like "Can you please explain VLOOKUP?".
-• Say "Open an Excel sheet" to launch and download your practice workbook.
-• Ask "Who is the Director of DV Analytics?" to learn about founder Debendra Das Debadutta.`
+      text: 'Hey Sajid! Say "Hey Sanvi" to talk.'
     }
   ]);
   const messagesEndRef = useRef(null);
@@ -406,10 +420,6 @@ We can speak and converse naturally just like ChatGPT or Gemini Live:
       try { recognitionRef.current.abort(); } catch (_e) {}
     }
 
-    try {
-      window.speechSynthesis.cancel();
-    } catch (_e) {}
-
     // Use concise speech text if available so Sanvi doesn't speak long code or table text
     const textToSpeak = speechOverride || getConciseSpeechText(text);
 
@@ -452,10 +462,12 @@ We can speak and converse naturally just like ChatGPT or Gemini Live:
     window.__activeSanviUtterance = utterance; // Prevent Chrome garbage collection bug
 
     let hasEnded = false;
+    let keepAliveTimer = null;
 
     const handleSpeechEnded = () => {
       if (hasEnded) return;
       hasEnded = true;
+      if (keepAliveTimer) clearInterval(keepAliveTimer);
       setIsSpeaking(false);
       isSpeakingRef.current = false;
       setActiveSpeakingMsgId(null);
@@ -484,16 +496,29 @@ We can speak and converse naturally just like ChatGPT or Gemini Live:
       isSpeakingRef.current = true;
       isAudioOutputActiveRef.current = true;
       if (msgId) setActiveSpeakingMsgId(msgId);
+
+      // Keep speech alive in Chrome
+      keepAliveTimer = setInterval(() => {
+        if (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.speaking) {
+          window.speechSynthesis.resume();
+        } else {
+          clearInterval(keepAliveTimer);
+        }
+      }, 2000);
     };
 
     utterance.onend = handleSpeechEnded;
     utterance.onerror = (e) => {
       console.warn("Speech error or cancelled, recovering:", e);
+      if (keepAliveTimer) clearInterval(keepAliveTimer);
       handleSpeechEnded();
     };
 
-    // Chrome Windows bug fix: Wait 50ms after cancel() before calling speak(), and resume audio context
-    setTimeout(() => {
+    // Play subtle wake chime for instant audio confirmation
+    playWakeChime();
+
+    // Robust speak trigger handling Chrome's cancel() latency
+    const executeSpeak = () => {
       try {
         if (window.speechSynthesis.paused) {
           window.speechSynthesis.resume();
@@ -503,7 +528,14 @@ We can speak and converse naturally just like ChatGPT or Gemini Live:
         console.error("speechSynthesis.speak error:", err);
         handleSpeechEnded();
       }
-    }, 50);
+    };
+
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      setTimeout(executeSpeak, 180);
+    } else {
+      executeSpeak();
+    }
 
     // Watchdog timer: If speech doesn't complete within allocated time, forcefully recover
     const watchdogMs = Math.max(6000, cleanText.length * 120);
@@ -1083,9 +1115,9 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                   </div>
                   <span className="truncate max-w-[280px] sm:max-w-md">
                     {isListening 
-                      ? (interimSpeech ? `"${interimSpeech}"` : "Voice Assistant Active: Say 'Hey Sanvi' or ask a question") 
+                      ? (interimSpeech ? `"${interimSpeech}"` : 'Say "Hey Sanvi"') 
                       : isSpeaking 
-                        ? "Sanvi is speaking response..." 
+                        ? "Sanvi is speaking..." 
                         : "Mic Idle • Tap mic icon to start"}
                   </span>
                 </div>
