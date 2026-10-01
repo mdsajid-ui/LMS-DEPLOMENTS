@@ -64,7 +64,11 @@ import {
   PaymentApprovalView,
   RegistrationLinkView,
   RegistrationView,
-  FeeView
+  FeeView,
+  LiveSessionView,
+  LiveSessionDeleteView,
+  AssignmentApprovalView,
+  UploadResumeView
 } from '../components/AdminMasterViews';
 import collectionData from '../data/collectionReportData.json';
 import { 
@@ -137,9 +141,11 @@ export default function AdminPortalPage() {
     if (url.includes('dailycollection') || url.includes('daily-collection')) return 'daily-collection';
     if (url.includes('monthlycollection') || url.includes('monthly-collection')) return 'monthly-collection';
     if (url.includes('fee')) return 'fee';
+    if (url.includes('sessiondelete')) return 'session-delete';
     if (url.includes('session')) return 'session';
     if (url.includes('reg')) return 'reg';
-    if (url.includes('assignment')) return 'assignment';
+    if (url.includes('assignmentapproval') || url.includes('assignment')) return 'assignment';
+    if (url.includes('uploadresume') || url.includes('resume')) return 'resume';
     if (url.includes('dashboard')) return 'monthly-collection';
     if (url.includes('master')) return 'user-master';
     return 'user-master'; // Default to User Master (Screenshot 1)
@@ -165,8 +171,10 @@ export default function AdminPortalPage() {
     else if (menuKey === 'external-link') window.location.hash = '/admin/external_link.aspx';
     else if (menuKey === 'fee') window.location.hash = '/admin/Fee.aspx';
     else if (menuKey === 'session') window.location.hash = '/admin/Session.aspx';
+    else if (menuKey === 'session-delete') window.location.hash = '/admin/sessiondelete.aspx';
     else if (menuKey === 'reg') window.location.hash = '/admin/Reg.aspx';
     else if (menuKey === 'assignment') window.location.hash = '/admin/AssignmentApproval.aspx';
+    else if (menuKey === 'resume') window.location.hash = '/admin/UploadResume.aspx';
     else if (menuKey === 'daily-collection') window.location.hash = '/admin/DailyCollection.aspx';
     else if (menuKey === 'monthly-collection') window.location.hash = '/admin/MonthlyCollection.aspx';
     else if (menuKey === 'dashboard') window.location.hash = '/admin/dashboard.aspx';
@@ -839,15 +847,27 @@ export default function AdminPortalPage() {
                   <span>Live Session (Session.aspx)</span>
                 </button>
                 <button
+                  onClick={() => handleSelectMenu('session-delete')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'session-delete' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'session-delete' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>Live Session - Delete</span>
+                </button>
+                <button
                   onClick={() => handleSelectMenu('assignment')}
                   className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'assignment' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
                 >
                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'assignment' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
                   <span>Assignment</span>
                 </button>
+                <button
+                  onClick={() => handleSelectMenu('resume')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'resume' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'resume' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>Resume</span>
+                </button>
                 {[
-                  "Live Session - Delete", 
-                  "Resume", 
                   "My Interview Kit", 
                   "Non Live Session", 
                   "Assign Student for Non live sessions", 
@@ -1043,9 +1063,11 @@ export default function AdminPortalPage() {
                 {activeMenu === 'pay-approval' && "Payment Approval"}
                 {activeMenu === 'external-link' && "Registration Link"}
                 {activeMenu === 'fee' && "Fee"}
-                {activeMenu === 'session' && "Live Session"}
-                {activeMenu === 'reg' && "Registration"}
-                {activeMenu === 'assignment' && "Assignment"}
+                {activeMenu === 'session' && "Class Materials"}
+                {activeMenu === 'session-delete' && "Session Delete"}
+                {activeMenu === 'reg' && "Registration Form"}
+                {activeMenu === 'assignment' && "Assignment Approval"}
+                {activeMenu === 'resume' && "Upload Resume"}
                 {activeMenu === 'monthly-collection' && "Monthly Collection"}
                 {activeMenu === 'daily-collection' && "Daily Collection"}
                 {activeMenu === 'dashboard' && "Monthly Collection"}
@@ -1159,198 +1181,17 @@ export default function AdminPortalPage() {
           )}
 
           {/* ========================================================= */}
-          {/* VIEW 2: LIVE SESSION (Session.aspx) - Live Reflected in LMS */}
+          {/* VIEW 2: LIVE SESSION (Session.aspx) - Matches Screenshots 1 & 2 */}
           {/* ========================================================= */}
           {activeMenu === 'session' && (
-            <div className="space-y-6">
-              <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 p-4 rounded-lg flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-xs flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Real-Time Student Portal Synchronization Active</span>
-                  </h4>
-                  <p className="text-[11px] text-emerald-700 mt-0.5">
-                    Any video stream URL, material zip, or assignment added here is instantly visible and playable in the Student LMS!
-                  </p>
-                </div>
-              </div>
+            <LiveSessionView showToast={showToast} />
+          )}
 
-              <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-                <form onSubmit={handleAddLiveSession} className="space-y-4 text-xs font-sans">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Date *</label>
-                      <input
-                        type="date"
-                        value={sessionForm.date}
-                        onChange={(e) => setSessionForm({ ...sessionForm, date: e.target.value })}
-                        className="w-full px-3 py-1.5 border border-slate-300 rounded focus:border-teal-500"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Mentor (ddlmen) *</label>
-                      <select
-                        value={sessionForm.mentor}
-                        onChange={(e) => setSessionForm({ ...sessionForm, mentor: e.target.value })}
-                        className="w-full px-3 py-1.5 border border-slate-300 rounded bg-white"
-                      >
-                        {mentorsList.map(m => (
-                          <option key={m} value={m}>{m}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Batch (ddlbat) *</label>
-                      <select
-                        value={sessionForm.batch}
-                        onChange={(e) => setSessionForm({ ...sessionForm, batch: e.target.value })}
-                        className="w-full px-3 py-1.5 border border-slate-300 rounded bg-white"
-                      >
-                        {batchesList.map(b => (
-                          <option key={b} value={b}>{b}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Application (ddlappli) *</label>
-                      <select
-                        value={sessionForm.application}
-                        onChange={(e) => setSessionForm({ ...sessionForm, application: e.target.value })}
-                        className="w-full px-3 py-1.5 border border-slate-300 rounded bg-white"
-                      >
-                        {applicationsList.map(a => (
-                          <option key={a} value={a}>{a}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Session Title (txtsess) *</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. B1.SESSION-1 or B5.SESSION-5"
-                        value={sessionForm.sessionTitle}
-                        onChange={(e) => setSessionForm({ ...sessionForm, sessionTitle: e.target.value })}
-                        className="w-full px-3 py-1.5 border border-slate-300 rounded"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Sort Order *</label>
-                      <input
-                        type="number"
-                        value={sessionForm.sortOrder}
-                        onChange={(e) => setSessionForm({ ...sessionForm, sortOrder: e.target.value })}
-                        className="w-full px-3 py-1.5 border border-slate-300 rounded font-mono"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Topic Type *</label>
-                      <select
-                        value={sessionForm.topicType}
-                        onChange={(e) => setSessionForm({ ...sessionForm, topicType: e.target.value })}
-                        className="w-full px-3 py-1.5 border border-slate-300 rounded bg-white font-bold"
-                      >
-                        <option value="CLASS VIDEOS">CLASS VIDEOS (Green Pill)</option>
-                        <option value="MATERIALS">MATERIALS (Blue Pill)</option>
-                        <option value="ASSIGNMENTS">ASSIGNMENTS (Orange Pill)</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Uploaded Link (txtcontent_edit) *</label>
-                      <input
-                        type="text"
-                        placeholder="VdoCipher embed URL, Google Drive folder URL, or MP4 link"
-                        value={sessionForm.uploadedLink}
-                        onChange={(e) => setSessionForm({ ...sessionForm, uploadedLink: e.target.value })}
-                        className="w-full px-3 py-1.5 border border-slate-300 rounded font-mono"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">File Description (description_edit)</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Session 1 Class 1 Video Lecture or Raw Data.zip"
-                        value={sessionForm.description}
-                        onChange={(e) => setSessionForm({ ...sessionForm, description: e.target.value })}
-                        className="w-full px-3 py-1.5 border border-slate-300 rounded"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-2 flex justify-end">
-                    <button
-                      type="submit"
-                      className="bg-[#26B99A] hover:bg-[#209e83] text-white font-bold text-xs px-6 py-2 rounded shadow-xs cursor-pointer flex items-center gap-1.5"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Submit Session Item (Live Push to Students)</span>
-                    </button>
-                  </div>
-                </form>
-              </div>
-
-              {/* Stored Sessions List */}
-              <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm space-y-3">
-                <span className="font-bold text-xs uppercase tracking-wider text-slate-700 block">
-                  Current Course Folders in Student LMS
-                </span>
-                <div className="overflow-x-auto border border-slate-200 rounded">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead className="bg-[#2A3F54] text-white">
-                      <tr>
-                        <th className="py-2.5 px-3">Folder Title</th>
-                        <th className="py-2.5 px-3">Subject / Application</th>
-                        <th className="py-2.5 px-3">Instructor</th>
-                        <th className="py-2.5 px-3">Has Video</th>
-                        <th className="py-2.5 px-3">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {(storedSessions.excel || []).map(s => (
-                        <tr key={s.id} className="hover:bg-slate-50">
-                          <td className="py-2.5 px-3 font-bold text-slate-800">{s.title}</td>
-                          <td className="py-2.5 px-3">Excel Base and Advanced</td>
-                          <td className="py-2.5 px-3">{s.instructor || "Dr. Sandip Mukherjee"}</td>
-                          <td className="py-2.5 px-3">
-                            {s.vdocipherEmbedUrl || s.videoUrl ? (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                Video Stream Active
-                              </span>
-                            ) : (
-                              <span className="text-slate-400">None</span>
-                            )}
-                          </td>
-                          <td className="py-2.5 px-3">
-                            <button
-                              onClick={() => handleDeleteLiveSession(s.id, 'excel')}
-                              className="text-red-500 hover:text-red-700 cursor-pointer p-1"
-                              title="Delete from Student LMS"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+          {/* ========================================================= */}
+          {/* VIEW 2B: LIVE SESSION - DELETE (sessiondelete.aspx) - Matches Screenshot 3 */}
+          {/* ========================================================= */}
+          {activeMenu === 'session-delete' && (
+            <LiveSessionDeleteView showToast={showToast} />
           )}
 
           {/* ========================================================= */}
@@ -1361,66 +1202,20 @@ export default function AdminPortalPage() {
           )}
 
           {/* ========================================================= */}
-          {/* VIEW 4: ASSIGNMENT EVALUATION                             */}
+          {/* VIEW 4: ASSIGNMENT APPROVAL (AssignmentApproval.aspx) - Matches Screenshot 4 */}
           {/* ========================================================= */}
           {activeMenu === 'assignment' && (
-            <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm space-y-4">
-              <h3 className="font-bold text-sm text-slate-800">Assignment Approval & Review</h3>
-              <div className="overflow-x-auto border border-slate-200 rounded">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead className="bg-[#2A3F54] text-white">
-                    <tr>
-                      <th className="py-2 px-3">Student Name</th>
-                      <th className="py-2 px-3">Task Title</th>
-                      <th className="py-2 px-3">Submitted File</th>
-                      <th className="py-2 px-3">Date</th>
-                      <th className="py-2 px-3">Status</th>
-                      <th className="py-2 px-3 text-center">Evaluate</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {assignmentsApprovalList.map(a => (
-                      <tr key={a.id} className="hover:bg-slate-50">
-                        <td className="py-2.5 px-3 font-bold text-slate-800">{a.studentName}</td>
-                        <td className="py-2.5 px-3">{a.title}</td>
-                        <td className="py-2.5 px-3">
-                          <button
-                            onClick={() => {
-                              downloadFile(a.submittedFile);
-                              showToast(`Downloading: ${a.submittedFile}`);
-                            }}
-                            className="text-blue-600 hover:underline flex items-center gap-1 font-mono text-[11px] cursor-pointer"
-                          >
-                            <Download className="w-3 h-3" />
-                            <span>{a.submittedFile}</span>
-                          </button>
-                        </td>
-                        <td className="py-2.5 px-3 font-mono">{a.submittedDate}</td>
-                        <td className="py-2.5 px-3">
-                          {a.status === 'Approved' ? (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                              Approved ({a.score})
-                            </span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
-                              Pending Evaluation
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          <button
-                            onClick={() => setReviewModalItem(a)}
-                            className="bg-[#26B99A] hover:bg-[#209e83] text-white font-bold text-[11px] px-3 py-1 rounded cursor-pointer"
-                          >
-                            Evaluate
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <AssignmentApprovalView showToast={showToast} />
+          )}
+
+          {/* ========================================================= */}
+          {/* VIEW 4B: UPLOAD RESUME (UploadResume.aspx) - Matches Screenshot 5 */}
+          {/* ========================================================= */}
+          {activeMenu === 'resume' && (
+            <UploadResumeView 
+              showToast={showToast} 
+              onBack={() => handleSelectMenu('user-master')} 
+            />
           )}
 
           {/* ========================================================= */}

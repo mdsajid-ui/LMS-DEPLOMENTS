@@ -28,14 +28,47 @@ import {
   UploadCloud,
   FileText,
   ExternalLink,
-  Search
+  Search,
+  Shuffle,
+  Download,
+  Video,
+  Play
 } from 'lucide-react';
 import { 
   getStoredStudents, 
   saveAdminStudent, 
   getStoredFees, 
-  saveAdminFee 
+  saveAdminFee,
+  getAllStoredSessions,
+  saveAdminSession,
+  deleteAdminSession,
+  getStoredResumes,
+  saveAdminResume,
+  deleteAdminResume,
+  getStoredAssignmentsList,
+  updateAdminAssignment
 } from '../utils/lmsStorage';
+
+export const masterApplicationDropdownList = [
+  "All",
+  "EXCEL BASE AND ADVANCED",
+  "EXCEL VBA",
+  "SQL SERVER",
+  "SAS BASE AND ADVANCED",
+  "PYTHON PROGRAMMING",
+  "R PROGRAMMING",
+  "BIG DATA & DATA ENGINEERING MODULES",
+  "ALTERYX",
+  "TABLEAU",
+  "POWER BI",
+  "ADVANCED ANALYTICS IN EXCEL",
+  "ADVANCED ANALYTICS IN PYTHON",
+  "ADVANCED ANALYTICS IN SAS",
+  "MACHINE LEARNING AND AI",
+  "MACHINE LEARNING IN PYTHON",
+  "DEEP LEARNING AND AI IN PYTHON, KERAS AND TENSORFLOW",
+  "AWS CLOUD COMPUTING"
+];
 
 // Common Table Top Controls
 function TableControls({ pageSize, setPageSize, search, setSearch, onPageReset }) {
@@ -3974,6 +4007,962 @@ export function FeeView({ showToast }) {
           </button>
         </div>
       </form>
+    </div>
+  );
+}
+
+// =========================================================================
+// 13. LIVE SESSION VIEW (Screenshots 1 & 2: edu.dvanalyticsmds.com/admin/Session.aspx)
+// =========================================================================
+export function LiveSessionView({ showToast }) {
+  const [sessionsMap, setSessionsMap] = useState(() => getAllStoredSessions());
+  const [filterBatch, setFilterBatch] = useState("All Batch");
+  const [filterApp, setFilterApp] = useState("Select Application");
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+
+  // Form matching Screenshot 2
+  const [form, setForm] = useState({
+    date: "01-10-2026",
+    mentor: "Select Mentor",
+    batch: "Batch 202209",
+    application: "Select Application",
+    sessionTitle: "",
+    sortOrder: "1",
+    uploadedLink: "",
+    topicType: "CLASS VIDEOS"
+  });
+
+  const handleCreateSubmit = (e) => {
+    e.preventDefault();
+    if (!form.sessionTitle.trim()) {
+      showToast("Please enter a session title");
+      return;
+    }
+    saveAdminSession({
+      date: form.date,
+      mentor: form.mentor === "Select Mentor" ? "Dr. Sandip Mukherjee" : form.mentor,
+      batch: form.batch,
+      application: form.application === "Select Application" ? "EXCEL BASE AND ADVANCED" : form.application,
+      sessionTitle: form.sessionTitle.trim(),
+      sortOrder: form.sortOrder,
+      topicType: form.topicType,
+      uploadedLink: form.uploadedLink || "https://embed.vdocipher.com/demo/stream-preview",
+      description: `${form.sessionTitle} Video Lecture`
+    });
+    setSessionsMap(getAllStoredSessions());
+    setCreateModalOpen(false);
+    showToast(`Session "${form.sessionTitle}" created and live in student LMS!`);
+    setForm({
+      date: "01-10-2026",
+      mentor: "Select Mentor",
+      batch: "Batch 202209",
+      application: "Select Application",
+      sessionTitle: "",
+      sortOrder: "1",
+      uploadedLink: "",
+      topicType: "CLASS VIDEOS"
+    });
+  };
+
+  // Convert sessionsMap into flat array for display
+  const allSessionsList = useMemo(() => {
+    const list = [];
+    Object.entries(sessionsMap).forEach(([subj, sessions]) => {
+      (sessions || []).forEach((s, idx) => {
+        list.push({
+          id: s.id || `${subj}-${idx}`,
+          subjectKey: subj,
+          title: s.title || `Session ${idx + 1}`,
+          application: subj.toUpperCase() === 'EXCEL' ? 'EXCEL BASE AND ADVANCED' : (subj.toUpperCase() === 'SQL' ? 'SQL SERVER' : 'PYTHON PROGRAMMING'),
+          batch: s.batch || 'Batch 202209',
+          date: s.recordingDate || '2026-09-15',
+          mentor: s.instructor || 'Dr. Sandip Mukherjee',
+          sortOrder: idx + 1,
+          videoUrl: s.vdocipherEmbedUrl || s.videoUrl || s.driveFolderUrl || ''
+        });
+      });
+    });
+    return list;
+  }, [sessionsMap]);
+
+  const filteredSessions = useMemo(() => {
+    return allSessionsList.filter(s => {
+      const matchBatch = filterBatch === "All Batch" || s.batch === filterBatch;
+      const matchApp = filterApp === "Select Application" || filterApp === "All" || s.application.toLowerCase().includes(filterApp.toLowerCase()) || filterApp.toLowerCase().includes(s.subjectKey);
+      return matchBatch && matchApp;
+    });
+  }, [allSessionsList, filterBatch, filterApp]);
+
+  return (
+    <div className="bg-white rounded border border-slate-200 shadow-xs p-6 space-y-5 text-xs font-sans">
+      {/* Top Action Button - Exactly as Screenshot 1 */}
+      <div>
+        <button
+          onClick={() => setCreateModalOpen(true)}
+          className="bg-[#26b99a] hover:bg-[#1f967d] text-white font-medium text-xs px-3.5 py-1.5 rounded-[3px] shadow-2xs cursor-pointer transition-colors"
+        >
+          Create Session
+        </button>
+      </div>
+
+      {/* Filter Bar - Exactly as Screenshot 1 */}
+      <div className="bg-slate-50/70 border border-slate-200/90 rounded p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+        {/* Batch ID */}
+        <div className="flex items-center gap-2 flex-1 max-w-sm">
+          <label className="text-slate-700 font-bold whitespace-nowrap text-xs">
+            Batch ID
+          </label>
+          <div className="flex items-center flex-1 border border-slate-300 rounded bg-white overflow-hidden shadow-2xs">
+            <select
+              value={filterBatch}
+              onChange={(e) => setFilterBatch(e.target.value)}
+              className="w-full px-2.5 py-1.5 text-xs bg-transparent focus:outline-none cursor-pointer"
+            >
+              <option value="All Batch">All Batch</option>
+              {initialBatchesMaster.map(b => (
+                <option key={b.id} value={b.batchName}>{b.batchName}</option>
+              ))}
+            </select>
+            <button 
+              type="button"
+              onClick={() => setFilterBatch("All Batch")}
+              title="Reset Batch"
+              className="px-2 py-1.5 text-slate-400 hover:text-slate-600 border-l border-slate-200 bg-slate-50 cursor-pointer"
+            >
+              <Shuffle className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Application */}
+        <div className="flex items-center gap-2 flex-1 max-w-sm">
+          <label className="text-slate-700 font-bold whitespace-nowrap text-xs">
+            Application
+          </label>
+          <div className="flex items-center flex-1 border border-slate-300 rounded bg-white overflow-hidden shadow-2xs">
+            <select
+              value={filterApp}
+              onChange={(e) => setFilterApp(e.target.value)}
+              className="w-full px-2.5 py-1.5 text-xs bg-transparent focus:outline-none cursor-pointer"
+            >
+              <option value="Select Application">Select Application</option>
+              {masterApplicationDropdownList.map((app, idx) => (
+                <option key={idx} value={app}>{app}</option>
+              ))}
+            </select>
+            <button 
+              type="button"
+              onClick={() => setFilterApp("Select Application")}
+              title="Reset Application"
+              className="px-2 py-1.5 text-slate-400 hover:text-slate-600 border-l border-slate-200 bg-slate-50 cursor-pointer"
+            >
+              <Shuffle className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Blue Search Button */}
+        <div>
+          <button
+            type="button"
+            onClick={() => showToast(`Search applied for ${filterBatch} | ${filterApp}`)}
+            className="bg-[#337ab7] hover:bg-[#286090] text-white font-medium text-xs px-5 py-1.5 rounded-[3px] shadow-2xs cursor-pointer transition-colors"
+          >
+            Search
+          </button>
+        </div>
+      </div>
+
+      {/* Sessions Data Table */}
+      <div className="overflow-x-auto border border-slate-200 rounded">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead className="bg-[#2A3F54] text-white">
+            <tr>
+              <th className="py-2.5 px-3">#</th>
+              <th className="py-2.5 px-3">Date</th>
+              <th className="py-2.5 px-3">Batch</th>
+              <th className="py-2.5 px-3">Application</th>
+              <th className="py-2.5 px-3">Session Title</th>
+              <th className="py-2.5 px-3">Mentor</th>
+              <th className="py-2.5 px-3 text-center">Order</th>
+              <th className="py-2.5 px-3">Content Link</th>
+              <th className="py-2.5 px-3 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {filteredSessions.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="py-6 text-center text-slate-400 font-medium">
+                  No sessions found matching current filter. Click "Create Session" above to add new lectures.
+                </td>
+              </tr>
+            ) : (
+              filteredSessions.map((s, idx) => (
+                <tr key={s.id} className="hover:bg-slate-50">
+                  <td className="py-2.5 px-3 font-mono text-slate-400">{idx + 1}</td>
+                  <td className="py-2.5 px-3 font-mono">{s.date}</td>
+                  <td className="py-2.5 px-3 font-mono font-medium text-teal-700">{s.batch}</td>
+                  <td className="py-2.5 px-3 font-semibold text-slate-800">{s.application}</td>
+                  <td className="py-2.5 px-3 font-bold text-slate-900">{s.title}</td>
+                  <td className="py-2.5 px-3 text-slate-600">{s.mentor}</td>
+                  <td className="py-2.5 px-3 text-center font-mono">{s.sortOrder}</td>
+                  <td className="py-2.5 px-3 font-mono text-[11px] text-blue-600 truncate max-w-[200px]">
+                    {s.videoUrl ? (
+                      <span className="flex items-center gap-1">
+                        <Video className="w-3 h-3 text-emerald-600 shrink-0" />
+                        <span className="truncate">{s.videoUrl}</span>
+                      </span>
+                    ) : (
+                      <span className="text-slate-400">Class Materials</span>
+                    )}
+                  </td>
+                  <td className="py-2.5 px-3 text-center">
+                    <button
+                      onClick={() => showToast(`Playing/Verifying: ${s.title}`)}
+                      className="bg-[#26b99a] hover:bg-[#1f967d] text-white px-2 py-0.5 rounded-[3px] text-[10px] font-medium cursor-pointer shadow-2xs"
+                    >
+                      View
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* CREATE SESSION MODAL - Exactly matching Screenshot 2 */}
+      {createModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded shadow-2xl max-w-md w-full p-6 space-y-4 text-xs font-sans border border-slate-300 animate-in fade-in zoom-in-95">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b pb-2.5">
+              <h3 className="font-semibold text-sm text-slate-800">Create Session</h3>
+              <button
+                type="button"
+                onClick={() => setCreateModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 text-lg font-bold leading-none cursor-pointer"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleCreateSubmit} className="space-y-3.5 pt-1">
+              {/* Date * */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  Date<span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    placeholder="dd-mm-yyyy"
+                    value={form.date}
+                    onChange={(e) => setForm({ ...form, date: e.target.value })}
+                    className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:border-teal-500 bg-white font-mono text-xs"
+                  />
+                  <Calendar className="w-4 h-4 text-slate-400 absolute right-3 top-2 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Mentor * */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  Mentor<span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={form.mentor}
+                  onChange={(e) => setForm({ ...form, mentor: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:border-teal-500 bg-white text-xs"
+                >
+                  <option value="Select Mentor">Select Mentor</option>
+                  {initialMentorsMaster.map(m => (
+                    <option key={m.id} value={m.mentorName}>{m.mentorName}</option>
+                  ))}
+                  <option value="Dr. Sandip Mukherjee">Dr. Sandip Mukherjee</option>
+                  <option value="SAJID">SAJID</option>
+                </select>
+              </div>
+
+              {/* Batch * */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  Batch<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Batch 202209 or BATCH 202606"
+                  value={form.batch}
+                  onChange={(e) => setForm({ ...form, batch: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:border-teal-500 bg-white text-xs font-mono"
+                />
+              </div>
+
+              {/* Application * */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  Application<span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={form.application}
+                  onChange={(e) => setForm({ ...form, application: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:border-teal-500 bg-white text-xs"
+                >
+                  <option value="Select Application">Select Application</option>
+                  {masterApplicationDropdownList.filter(a => a !== 'All').map((app, idx) => (
+                    <option key={idx} value={app}>{app}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Session * */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  Session<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. B1.SESSION-1 or Advanced Pivot Tables"
+                  value={form.sessionTitle}
+                  onChange={(e) => setForm({ ...form, sessionTitle: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:border-teal-500 bg-white text-xs font-medium"
+                />
+              </div>
+
+              {/* Sort Order * */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  Sort Order<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  required
+                  value={form.sortOrder}
+                  onChange={(e) => setForm({ ...form, sortOrder: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:border-teal-500 bg-white text-xs font-mono"
+                />
+              </div>
+
+              {/* Video URL (Seamless LMS live sync) */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  Video Embed / Stream URL (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="https://player.vdocipher.com/v2/?otp=... or video URL"
+                  value={form.uploadedLink}
+                  onChange={(e) => setForm({ ...form, uploadedLink: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:border-teal-500 bg-white text-xs font-mono"
+                />
+              </div>
+
+              {/* Modal Footer - Exactly matching Screenshot 2 */}
+              <div className="flex justify-end gap-2 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setCreateModalOpen(false)}
+                  className="px-4 py-1.5 border border-slate-300 rounded hover:bg-slate-100 text-slate-700 cursor-pointer font-medium text-xs transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-[#26b99a] hover:bg-[#1f967d] text-white rounded font-bold cursor-pointer transition-colors shadow-2xs text-xs"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =========================================================================
+// 14. LIVE SESSION - DELETE VIEW (Screenshot 3: edu.dvanalyticsmds.com/admin/sessiondelete.aspx)
+// =========================================================================
+export function LiveSessionDeleteView({ showToast }) {
+  const [sessionsMap, setSessionsMap] = useState(() => getAllStoredSessions());
+  const [selectedBatch, setSelectedBatch] = useState("Batch 202209");
+  const [selectedApp, setSelectedApp] = useState("EXCEL BASE AND ADVANCED");
+
+  const sessionsList = useMemo(() => {
+    const list = [];
+    Object.entries(sessionsMap).forEach(([subj, sessions]) => {
+      (sessions || []).forEach((s, idx) => {
+        list.push({
+          id: s.id,
+          subjectKey: subj,
+          title: s.title || `Session ${idx + 1}`,
+          application: subj.toUpperCase() === 'EXCEL' ? 'EXCEL BASE AND ADVANCED' : (subj.toUpperCase() === 'SQL' ? 'SQL SERVER' : 'PYTHON PROGRAMMING'),
+          batch: s.batch || 'Batch 202209',
+          date: s.recordingDate || '2026-09-15',
+          mentor: s.instructor || 'Dr. Sandip Mukherjee'
+        });
+      });
+    });
+    return list;
+  }, [sessionsMap]);
+
+  const filteredList = useMemo(() => {
+    return sessionsList.filter(s => {
+      const matchBatch = !selectedBatch || s.batch === selectedBatch;
+      const matchApp = selectedApp === "All" || s.application.toLowerCase().includes(selectedApp.toLowerCase()) || selectedApp.toLowerCase().includes(s.subjectKey);
+      return matchBatch && matchApp;
+    });
+  }, [sessionsList, selectedBatch, selectedApp]);
+
+  const handleDelete = (sessionId, subjectKey, title) => {
+    if (window.confirm(`Are you sure you want to delete "${title}"? This will delete the session from the Student LMS immediately.`)) {
+      deleteAdminSession(sessionId, subjectKey);
+      setSessionsMap(getAllStoredSessions());
+      showToast(`Session "${title}" deleted successfully.`);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded border border-slate-200 shadow-xs p-6 space-y-6 text-xs font-sans">
+      <div className="max-w-2xl mx-auto space-y-4">
+        {/* Batch * - Tag Pill Box matching Screenshot 3 */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+          <label className="sm:col-span-3 text-right font-bold text-slate-700">
+            Batch <span className="text-red-500">*</span>
+          </label>
+          <div className="sm:col-span-9 flex items-center gap-2">
+            <div className="w-full flex items-center flex-wrap gap-1.5 px-3 py-1.5 border border-slate-300 rounded bg-white min-h-[34px]">
+              {selectedBatch ? (
+                <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-800 font-mono text-xs px-2 py-0.5 rounded border border-slate-300">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBatch("")}
+                    className="text-slate-400 hover:text-red-600 font-bold leading-none cursor-pointer"
+                  >
+                    ×
+                  </button>
+                  <span>{selectedBatch}</span>
+                </span>
+              ) : (
+                <select
+                  onChange={(e) => setSelectedBatch(e.target.value)}
+                  className="w-full bg-transparent text-xs focus:outline-none"
+                >
+                  <option value="">Select Batch to Delete Sessions...</option>
+                  {initialBatchesMaster.map(b => (
+                    <option key={b.id} value={b.batchName}>{b.batchName}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Application - Full Dropdown matching Screenshot 3 */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+          <label className="sm:col-span-3 text-right font-bold text-slate-700">
+            Application
+          </label>
+          <div className="sm:col-span-9">
+            <select
+              value={selectedApp}
+              onChange={(e) => setSelectedApp(e.target.value)}
+              className="w-full px-3 py-1.5 border border-slate-300 rounded bg-white text-xs focus:outline-none font-medium text-slate-800"
+            >
+              {masterApplicationDropdownList.map((app, idx) => (
+                <option key={idx} value={app}>{app}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* List label */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-start pt-2">
+          <label className="sm:col-span-3 text-right font-bold text-slate-700 pt-1">
+            List
+          </label>
+          <div className="sm:col-span-9 space-y-2">
+            <div className="overflow-x-auto border border-slate-200 rounded">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="bg-[#2A3F54] text-white">
+                  <tr>
+                    <th className="py-2 px-3">Session Title</th>
+                    <th className="py-2 px-3">Application</th>
+                    <th className="py-2 px-3">Date</th>
+                    <th className="py-2 px-3 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredList.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-5 text-center text-slate-400">
+                        No sessions found for {selectedBatch || 'all batches'} in {selectedApp}.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredList.map(s => (
+                      <tr key={s.id} className="hover:bg-slate-50">
+                        <td className="py-2.5 px-3 font-bold text-slate-800">{s.title}</td>
+                        <td className="py-2.5 px-3 text-slate-600">{s.application}</td>
+                        <td className="py-2.5 px-3 font-mono">{s.date}</td>
+                        <td className="py-2.5 px-3 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(s.id, s.subjectKey, s.title)}
+                            className="bg-[#d9534f] hover:bg-[#c9302c] text-white px-2.5 py-0.5 rounded-[3px] border border-[#d43f3a] text-[11px] font-medium cursor-pointer shadow-2xs"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =========================================================================
+// 15. ASSIGNMENT APPROVAL VIEW (Screenshot 4: edu.dvanalyticsmds.com/admin/AssignmentApproval.aspx)
+// =========================================================================
+export function AssignmentApprovalView({ showToast }) {
+  const [assignments, setAssignments] = useState(() => getStoredAssignmentsList());
+  const [filterBatch, setFilterBatch] = useState("All Batch");
+  const [filterApp, setFilterApp] = useState("All");
+  const [reviewModalItem, setReviewModalItem] = useState(null);
+  const [gradeInput, setGradeInput] = useState("A+");
+  const [remarksInput, setRemarksInput] = useState("");
+
+  const filtered = useMemo(() => {
+    return assignments.filter(a => {
+      const matchBatch = filterBatch === "All Batch" || a.batch === filterBatch;
+      const matchApp = filterApp === "All" || a.application === filterApp;
+      return matchBatch && matchApp;
+    });
+  }, [assignments, filterBatch, filterApp]);
+
+  const handleApprove = (id, studentName) => {
+    updateAdminAssignment(id, { status: "Approved", grade: "A" });
+    setAssignments(getStoredAssignmentsList());
+    showToast(`Assignment for ${studentName} approved!`);
+  };
+
+  const handleSaveReview = (e) => {
+    e.preventDefault();
+    if (!reviewModalItem) return;
+    updateAdminAssignment(reviewModalItem.id, {
+      status: "Approved",
+      grade: gradeInput,
+      remarks: remarksInput
+    });
+    setAssignments(getStoredAssignmentsList());
+    setReviewModalItem(null);
+    showToast(`Feedback submitted for ${reviewModalItem.studentName}!`);
+  };
+
+  return (
+    <div className="bg-white rounded border border-slate-200 shadow-xs p-6 space-y-5 text-xs font-sans">
+      {/* Filter Box matching Screenshot 4 */}
+      <div className="max-w-md bg-white border border-slate-200 rounded p-4 space-y-3 shadow-2xs">
+        {/* Batch */}
+        <div>
+          <label className="block text-slate-700 font-bold mb-1">Batch</label>
+          <select
+            value={filterBatch}
+            onChange={(e) => setFilterBatch(e.target.value)}
+            className="w-full px-3 py-1.5 border border-slate-300 rounded bg-white text-xs focus:outline-none"
+          >
+            <option value="All Batch">All Batch</option>
+            {initialBatchesMaster.map(b => (
+              <option key={b.id} value={b.batchName}>{b.batchName}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Application */}
+        <div>
+          <label className="block text-slate-700 font-bold mb-1">Application</label>
+          <select
+            value={filterApp}
+            onChange={(e) => setFilterApp(e.target.value)}
+            className="w-full px-3 py-1.5 border border-slate-300 rounded bg-white text-xs focus:outline-none"
+          >
+            {masterApplicationDropdownList.map((app, idx) => (
+              <option key={idx} value={app}>{app}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Submissions Table */}
+      <div className="overflow-x-auto border border-slate-200 rounded">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead className="bg-[#2A3F54] text-white">
+            <tr>
+              <th className="py-2.5 px-3">#</th>
+              <th className="py-2.5 px-3">Student Name</th>
+              <th className="py-2.5 px-3">Roll No</th>
+              <th className="py-2.5 px-3">Batch</th>
+              <th className="py-2.5 px-3">Application</th>
+              <th className="py-2.5 px-3">Task Title</th>
+              <th className="py-2.5 px-3">Submitted File</th>
+              <th className="py-2.5 px-3">Date</th>
+              <th className="py-2.5 px-3">Status</th>
+              <th className="py-2.5 px-3 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={10} className="py-6 text-center text-slate-400">
+                  No assignment submissions found matching filter criteria.
+                </td>
+              </tr>
+            ) : (
+              filtered.map((a, idx) => (
+                <tr key={a.id} className="hover:bg-slate-50">
+                  <td className="py-2.5 px-3 font-mono text-slate-400">{idx + 1}</td>
+                  <td className="py-2.5 px-3 font-bold text-slate-800">{a.studentName}</td>
+                  <td className="py-2.5 px-3 font-mono text-teal-700">{a.rollNo}</td>
+                  <td className="py-2.5 px-3 font-mono">{a.batch}</td>
+                  <td className="py-2.5 px-3 font-semibold text-slate-700">{a.application}</td>
+                  <td className="py-2.5 px-3">{a.title}</td>
+                  <td className="py-2.5 px-3">
+                    <button
+                      onClick={() => showToast(`Downloading: ${a.submittedFile}`)}
+                      className="text-blue-600 hover:underline flex items-center gap-1 font-mono text-[11px] cursor-pointer"
+                    >
+                      <Download className="w-3 h-3" />
+                      <span>{a.submittedFile}</span>
+                    </button>
+                  </td>
+                  <td className="py-2.5 px-3 font-mono">{a.submittedDate}</td>
+                  <td className="py-2.5 px-3">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                      a.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                    }`}>
+                      {a.status}
+                    </span>
+                  </td>
+                  <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                    <div className="flex items-center justify-center gap-1.5">
+                      {a.status !== 'Approved' && (
+                        <button
+                          onClick={() => handleApprove(a.id, a.studentName)}
+                          className="bg-[#26b99a] hover:bg-[#1f967d] text-white px-2 py-0.5 rounded-[3px] text-[10px] font-medium cursor-pointer shadow-2xs"
+                        >
+                          Approve
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          setReviewModalItem(a);
+                          setGradeInput(a.grade || "A+");
+                          setRemarksInput(a.remarks || "");
+                        }}
+                        className="bg-[#337ab7] hover:bg-[#286090] text-white px-2 py-0.5 rounded-[3px] text-[10px] font-medium cursor-pointer shadow-2xs"
+                      >
+                        Feedback
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Review Modal */}
+      {reviewModalItem && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded shadow-2xl max-w-sm w-full p-5 space-y-4 text-xs font-sans border border-slate-300">
+            <div className="flex items-center justify-between border-b pb-2">
+              <h3 className="font-semibold text-sm text-slate-800">Assignment Review</h3>
+              <button onClick={() => setReviewModalItem(null)} className="text-slate-400 hover:text-slate-600 font-bold">×</button>
+            </div>
+            <form onSubmit={handleSaveReview} className="space-y-3">
+              <div>
+                <span className="block text-slate-500 font-medium">Student</span>
+                <span className="font-bold text-slate-800">{reviewModalItem.studentName} ({reviewModalItem.rollNo})</span>
+              </div>
+              <div>
+                <span className="block text-slate-500 font-medium">Task</span>
+                <span className="font-medium text-slate-700">{reviewModalItem.title}</span>
+              </div>
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Grade</label>
+                <select
+                  value={gradeInput}
+                  onChange={(e) => setGradeInput(e.target.value)}
+                  className="w-full border border-slate-300 rounded px-2.5 py-1.5 focus:outline-none"
+                >
+                  <option value="A+">A+ (Outstanding)</option>
+                  <option value="A">A (Very Good)</option>
+                  <option value="B+">B+ (Good)</option>
+                  <option value="B">B (Needs Improvement)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Mentor Feedback / Remarks</label>
+                <textarea
+                  rows={3}
+                  value={remarksInput}
+                  onChange={(e) => setRemarksInput(e.target.value)}
+                  placeholder="Enter mentor remarks for the student..."
+                  className="w-full border border-slate-300 rounded px-2.5 py-1.5 focus:outline-none"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2 border-t">
+                <button
+                  type="button"
+                  onClick={() => setReviewModalItem(null)}
+                  className="px-3 py-1.5 border border-slate-300 rounded hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-[#26b99a] text-white rounded font-bold hover:bg-[#1f967d]"
+                >
+                  Save Review
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =========================================================================
+// 16. UPLOAD RESUME VIEW (Screenshot 5: edu.dvanalyticsmds.com/admin/UploadResume.aspx)
+// =========================================================================
+export function UploadResumeView({ showToast, onBack }) {
+  const [resumes, setResumes] = useState(() => getStoredResumes());
+  const [students] = useState(() => getStoredStudents());
+  const [form, setForm] = useState({
+    batch: "Select Batch",
+    course: "Select Course",
+    studentId: "Select Student ID",
+    pdfLink: "",
+    wordLink: ""
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (form.studentId === "Select Student ID") {
+      showToast("Please select a Student ID");
+      return;
+    }
+    const student = students.find(s => s.phone === form.studentId || s.rollNo === form.studentId);
+    saveAdminResume({
+      studentId: form.studentId,
+      studentName: student ? student.name : "SK ABDUL SAJID",
+      course: form.course === "Select Course" ? "APIDS" : form.course,
+      batch: form.batch === "Select Batch" ? "Batch 202209" : form.batch,
+      pdfLink: form.pdfLink,
+      wordLink: form.wordLink
+    });
+    setResumes(getStoredResumes());
+    showToast("Resume uploaded successfully!");
+    setForm({
+      batch: "Select Batch",
+      course: "Select Course",
+      studentId: "Select Student ID",
+      pdfLink: "",
+      wordLink: ""
+    });
+  };
+
+  const handleDelete = (id, name) => {
+    if (window.confirm(`Delete resume entry for ${name}?`)) {
+      deleteAdminResume(id);
+      setResumes(getStoredResumes());
+      showToast(`Resume entry for ${name} removed.`);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded border border-slate-200 shadow-xs p-6 space-y-6 text-xs font-sans">
+      {/* Centered Form matching Screenshot 5 */}
+      <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-4">
+        {/* Batch * */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+          <label className="sm:col-span-4 text-right font-bold text-slate-700">
+            Batch <span className="text-red-500">*</span>
+          </label>
+          <div className="sm:col-span-8">
+            <select
+              value={form.batch}
+              onChange={(e) => setForm({ ...form, batch: e.target.value })}
+              className="w-full px-3 py-1.5 border border-slate-300 rounded bg-white text-xs focus:outline-none"
+            >
+              <option value="Select Batch">Select Batch</option>
+              {initialBatchesMaster.map(b => (
+                <option key={b.id} value={b.batchName}>{b.batchName}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Course * */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+          <label className="sm:col-span-4 text-right font-bold text-slate-700">
+            Course <span className="text-red-500">*</span>
+          </label>
+          <div className="sm:col-span-8">
+            <select
+              value={form.course}
+              onChange={(e) => setForm({ ...form, course: e.target.value })}
+              className="w-full px-3 py-1.5 border border-slate-300 rounded bg-white text-xs focus:outline-none"
+            >
+              <option value="Select Course">Select Course</option>
+              {initialCoursesMaster.map(c => (
+                <option key={c.id} value={c.courseName}>{c.courseName}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Student ID * */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+          <label className="sm:col-span-4 text-right font-bold text-slate-700">
+            Student ID <span className="text-red-500">*</span>
+          </label>
+          <div className="sm:col-span-8">
+            <select
+              value={form.studentId}
+              onChange={(e) => setForm({ ...form, studentId: e.target.value })}
+              className="w-full px-3 py-1.5 border border-slate-300 rounded bg-white text-xs focus:outline-none font-mono"
+            >
+              <option value="Select Student ID">Select Student ID</option>
+              {students.map(s => (
+                <option key={s.id} value={s.phone || s.rollNo}>
+                  {s.phone} - {s.name} ({s.rollNo})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Resume Link(PDF) * */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+          <label className="sm:col-span-4 text-right font-bold text-slate-700">
+            Resume Link(PDF)<span className="text-red-500">*</span>
+          </label>
+          <div className="sm:col-span-8">
+            <input
+              type="text"
+              required
+              placeholder="Enter Google Drive or Cloud link for PDF resume"
+              value={form.pdfLink}
+              onChange={(e) => setForm({ ...form, pdfLink: e.target.value })}
+              className="w-full px-3 py-1.5 border border-slate-300 rounded bg-white text-xs focus:outline-none focus:border-teal-500 font-mono"
+            />
+          </div>
+        </div>
+
+        {/* Resume Link(WORD) * */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+          <label className="sm:col-span-4 text-right font-bold text-slate-700">
+            Resume Link(WORD)<span className="text-red-500">*</span>
+          </label>
+          <div className="sm:col-span-8">
+            <input
+              type="text"
+              required
+              placeholder="Enter Google Drive or Cloud link for Word (.docx) resume"
+              value={form.wordLink}
+              onChange={(e) => setForm({ ...form, wordLink: e.target.value })}
+              className="w-full px-3 py-1.5 border border-slate-300 rounded bg-white text-xs focus:outline-none focus:border-teal-500 font-mono"
+            />
+          </div>
+        </div>
+
+        {/* Buttons matching Screenshot 5: Submit (Teal) & Back (Blue) */}
+        <div className="sm:ml-[33.33%] pt-2 flex items-center gap-3">
+          <button
+            type="submit"
+            className="bg-[#26b99a] hover:bg-[#1f967d] text-white font-medium text-xs px-6 py-2 rounded-[3px] shadow-2xs cursor-pointer transition-colors"
+          >
+            Submit
+          </button>
+          <button
+            type="button"
+            onClick={onBack}
+            className="bg-[#337ab7] hover:bg-[#286090] text-white font-medium text-xs px-6 py-2 rounded-[3px] shadow-2xs cursor-pointer transition-colors"
+          >
+            Back
+          </button>
+        </div>
+      </form>
+
+      {/* Uploaded Resumes Ledger */}
+      <div className="pt-6 border-t border-slate-200 space-y-3">
+        <span className="font-bold text-xs uppercase tracking-wider text-slate-700 block">
+          Uploaded Student Resumes Registry
+        </span>
+        <div className="overflow-x-auto border border-slate-200 rounded">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead className="bg-[#2A3F54] text-white">
+              <tr>
+                <th className="py-2 px-3">Student ID</th>
+                <th className="py-2 px-3">Student Name</th>
+                <th className="py-2 px-3">Course</th>
+                <th className="py-2 px-3">Batch</th>
+                <th className="py-2 px-3">PDF Resume</th>
+                <th className="py-2 px-3">Word Resume</th>
+                <th className="py-2 px-3">Date</th>
+                <th className="py-2 px-3 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {resumes.map(r => (
+                <tr key={r.id} className="hover:bg-slate-50">
+                  <td className="py-2.5 px-3 font-mono font-bold text-teal-700">{r.studentId}</td>
+                  <td className="py-2.5 px-3 font-bold text-slate-800">{r.studentName}</td>
+                  <td className="py-2.5 px-3 font-semibold text-blue-700">{r.course}</td>
+                  <td className="py-2.5 px-3 font-mono">{r.batch}</td>
+                  <td className="py-2.5 px-3 font-mono text-[11px]">
+                    <a href={r.pdfLink} target="_blank" rel="noopener noreferrer" className="text-red-600 hover:underline flex items-center gap-1">
+                      <FileText className="w-3 h-3" />
+                      <span>PDF Link</span>
+                    </a>
+                  </td>
+                  <td className="py-2.5 px-3 font-mono text-[11px]">
+                    <a href={r.wordLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
+                      <FileText className="w-3 h-3" />
+                      <span>DOCX Link</span>
+                    </a>
+                  </td>
+                  <td className="py-2.5 px-3 font-mono">{r.uploadedDate}</td>
+                  <td className="py-2.5 px-3 text-center">
+                    <button
+                      onClick={() => handleDelete(r.id, r.studentName)}
+                      className="text-red-500 hover:text-red-700 cursor-pointer p-1"
+                      title="Delete Resume"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

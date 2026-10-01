@@ -280,3 +280,167 @@ export function saveAdminStudent(studentData) {
   window.dispatchEvent(new CustomEvent('dva_data_updated', { detail: { type: 'students' } }));
   return updated;
 }
+
+// ==========================================
+// RESUME UPLOAD PERSISTENCE (UploadResume.aspx)
+// ==========================================
+const initialResumesList = [
+  {
+    id: 1,
+    studentId: "9955774102",
+    studentName: "SK ABDUL SAJID",
+    course: "APIDS",
+    batch: "BATCH 202606",
+    pdfLink: "https://edu.dvanalyticsmds.com/resumes/SK_Abdul_Sajid_APIDS.pdf",
+    wordLink: "https://edu.dvanalyticsmds.com/resumes/SK_Abdul_Sajid_APIDS.docx",
+    uploadedDate: "2026-09-18"
+  },
+  {
+    id: 2,
+    studentId: "9812345678",
+    studentName: "PRIYANKA MISHRA",
+    course: "APIDS",
+    batch: "BATCH 202606",
+    pdfLink: "https://edu.dvanalyticsmds.com/resumes/Priyanka_Mishra_APIDS.pdf",
+    wordLink: "https://edu.dvanalyticsmds.com/resumes/Priyanka_Mishra_APIDS.docx",
+    uploadedDate: "2026-09-22"
+  },
+  {
+    id: 3,
+    studentId: "9439281720",
+    studentName: "SOUVIK SWAIN",
+    course: "APIDA",
+    batch: "Batch 202209",
+    pdfLink: "https://edu.dvanalyticsmds.com/resumes/Souvik_Swain_APIDA.pdf",
+    wordLink: "https://edu.dvanalyticsmds.com/resumes/Souvik_Swain_APIDA.docx",
+    uploadedDate: "2026-09-28"
+  }
+];
+
+export function getStoredResumes() {
+  try {
+    const raw = localStorage.getItem('dva_lms_resumes_v1');
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  try {
+    localStorage.setItem('dva_lms_resumes_v1', JSON.stringify(initialResumesList));
+  } catch (e) {}
+  return initialResumesList;
+}
+
+export function saveAdminResume(resumeData) {
+  const list = getStoredResumes();
+  const created = {
+    id: Date.now(),
+    uploadedDate: new Date().toISOString().split('T')[0],
+    ...resumeData
+  };
+  const updated = [created, ...list];
+  try {
+    localStorage.setItem('dva_lms_resumes_v1', JSON.stringify(updated));
+  } catch (e) {}
+  window.dispatchEvent(new CustomEvent('dva_data_updated', { detail: { type: 'resumes' } }));
+  return updated;
+}
+
+export function deleteAdminResume(id) {
+  const list = getStoredResumes();
+  const updated = list.filter(r => r.id !== id);
+  try {
+    localStorage.setItem('dva_lms_resumes_v1', JSON.stringify(updated));
+  } catch (e) {}
+  window.dispatchEvent(new CustomEvent('dva_data_updated', { detail: { type: 'resumes' } }));
+  return updated;
+}
+
+// ==========================================
+// ASSIGNMENT APPROVAL PERSISTENCE (AssignmentApproval.aspx)
+// ==========================================
+const initialAdminAssignments = [
+  {
+    id: 101,
+    studentName: "SK ABDUL SAJID",
+    rollNo: "DVA-202606-448",
+    batch: "Batch 202209",
+    application: "EXCEL BASE AND ADVANCED",
+    title: "Financial Modeling & Pivot Automation",
+    submittedFile: "Abdul_Sajid_Excel_Assignment4.xlsx",
+    submittedDate: "28-09-2026",
+    status: "Pending",
+    grade: "",
+    remarks: ""
+  },
+  {
+    id: 102,
+    studentName: "PRIYANKA MISHRA",
+    rollNo: "DVA-202606-449",
+    batch: "Batch 202209",
+    application: "PYTHON PROGRAMMING",
+    title: "Pandas Data Cleaning & Feature Engineering",
+    submittedFile: "Priyanka_Python_Pandas.ipynb",
+    submittedDate: "29-09-2026",
+    status: "Approved",
+    grade: "A+",
+    remarks: "Excellent handling of missing values and datetime manipulation."
+  },
+  {
+    id: 103,
+    studentName: "SOUVIK SWAIN",
+    rollNo: "DVA-202209-312",
+    batch: "Batch 202209",
+    application: "SQL SERVER",
+    title: "Window Functions & CTE Analytics",
+    submittedFile: "Souvik_SQL_ComplexQueries.sql",
+    submittedDate: "30-09-2026",
+    status: "Pending",
+    grade: "",
+    remarks: ""
+  },
+  {
+    id: 104,
+    studentName: "SWATILEKHA SETHI",
+    rollNo: "DVA-202209-314",
+    batch: "Batch 202209",
+    application: "POWER BI",
+    title: "Executive Sales KPI Dashboard",
+    submittedFile: "Swatilekha_Sales_Dashboard.pbix",
+    submittedDate: "01-10-2026",
+    status: "Pending",
+    grade: "",
+    remarks: ""
+  },
+  {
+    id: 105,
+    studentName: "ANANYA MOHANTY",
+    rollNo: "DVA-202301-501",
+    batch: "Batch 202301",
+    application: "MACHINE LEARNING AND AI",
+    title: "Random Forest & XGBoost Customer Churn",
+    submittedFile: "Ananya_ML_ChurnModel.ipynb",
+    submittedDate: "01-10-2026",
+    status: "Pending",
+    grade: "",
+    remarks: ""
+  }
+];
+
+export function getStoredAssignmentsList() {
+  try {
+    const raw = localStorage.getItem('dva_lms_admin_assignments_v1');
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  try {
+    localStorage.setItem('dva_lms_admin_assignments_v1', JSON.stringify(initialAdminAssignments));
+  } catch (e) {}
+  return initialAdminAssignments;
+}
+
+export function updateAdminAssignment(id, updateFields) {
+  const list = getStoredAssignmentsList();
+  const updated = list.map(a => a.id === id ? { ...a, ...updateFields } : a);
+  try {
+    localStorage.setItem('dva_lms_admin_assignments_v1', JSON.stringify(updated));
+  } catch (e) {}
+  window.dispatchEvent(new CustomEvent('dva_data_updated', { detail: { type: 'assignments' } }));
+  return updated;
+}
