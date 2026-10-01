@@ -43,7 +43,12 @@ import {
   ClipboardCheck,
   CreditCard,
   UserCheck,
-  FileCheck
+  FileCheck,
+  Gauge,
+  Monitor,
+  Folder,
+  Type,
+  Mail
 } from 'lucide-react';
 import { downloadFile, generateAndDownloadExcel } from '../utils/excelHelper';
 import Logo from '../components/Logo';
@@ -564,56 +569,58 @@ export default function AdminPortalPage() {
           )}
         </div>
 
-        {/* Accordion Sidebar Menu (Matches Screenshots 1 to 5 exactly) */}
+        {/* Accordion Sidebar Menu (Exact Gentelella layout matching screenshots) */}
         <nav className="flex-1 overflow-y-auto py-2 text-xs divide-y divide-[#374f67]/40">
           {/* 1. Dashboard Accordion */}
-          <div>
+          <div className={openAccordions.dashboard ? "border-r-[4px] border-[#1abb9c] bg-[#233342]" : ""}>
             <button
               onClick={() => toggleAccordion('dashboard')}
               className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-[#34495E] transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
-                <TrendingUp className="w-4 h-4 text-slate-400" />
+                <Gauge className="w-4 h-4 text-slate-400" />
                 {sidebarOpen && <span className="font-semibold">Dashboard</span>}
               </div>
               {sidebarOpen && (
-                openAccordions.dashboard ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />
+                openAccordions.dashboard ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
               )}
             </button>
             {sidebarOpen && openAccordions.dashboard && (
-              <div className="bg-[#243444] py-1 pl-9 pr-3 space-y-1">
+              <div className="relative pl-5 py-1 text-[11px] bg-[#202d3d] before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-teal-500/30">
                 <button
                   onClick={() => handleSelectMenu('dashboard')}
-                  className={`w-full text-left py-1.5 px-2 rounded transition-colors ${activeMenu === 'dashboard' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-400 hover:text-white'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'dashboard' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
                 >
-                  • Monthly Collection
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500 group-hover:bg-[#1abb9c] shrink-0 -ml-1 transition-colors" />
+                  <span>Monthly Collection</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('dashboard')}
-                  className="w-full text-left py-1.5 px-2 rounded text-slate-400 hover:text-white transition-colors"
+                  className="w-full flex items-center gap-2.5 py-1.5 px-3 rounded text-slate-300 hover:text-white hover:bg-[#1f2b37] transition-colors text-left group cursor-pointer"
                 >
-                  • Daily Collection
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500 group-hover:bg-[#1abb9c] shrink-0 -ml-1 transition-colors" />
+                  <span>Daily Collection</span>
                 </button>
               </div>
             )}
           </div>
 
-          {/* 2. Master Accordion (Matches Screenshot 2) */}
-          <div>
+          {/* 2. Master Accordion */}
+          <div className={openAccordions.master ? "border-r-[4px] border-[#1abb9c] bg-[#233342]" : ""}>
             <button
               onClick={() => toggleAccordion('master')}
               className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-[#34495E] transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
-                <Database className="w-4 h-4 text-slate-400" />
+                <Monitor className="w-4 h-4 text-slate-400" />
                 {sidebarOpen && <span className="font-semibold">Master</span>}
               </div>
               {sidebarOpen && (
-                openAccordions.master ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />
+                openAccordions.master ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
               )}
             </button>
             {sidebarOpen && openAccordions.master && (
-              <div className="bg-[#243444] py-1 pl-9 pr-3 space-y-1 text-[11px]">
+              <div className="relative pl-5 py-1 text-[11px] bg-[#202d3d] before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-teal-500/30">
                 {["User Master", "Branch Master", "Skill Master", "Application Master", "Course Master", "Batch Master", "Mentor Master", "Non Live Training", "TeleCaller Master", "Department", "Designation"].map(m => (
                   <button
                     key={m}
@@ -621,31 +628,32 @@ export default function AdminPortalPage() {
                       handleSelectMenu('master');
                       showToast(`Opened ${m}`);
                     }}
-                    className="w-full text-left py-1 px-2 rounded text-slate-400 hover:text-white transition-colors"
+                    className="w-full flex items-center gap-2.5 py-1.5 px-3 rounded text-slate-300 hover:text-white hover:bg-[#1f2b37] transition-colors text-left group cursor-pointer"
                   >
-                    • {m}
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-500 group-hover:bg-[#1abb9c] shrink-0 -ml-1 transition-colors" />
+                    <span>{m}</span>
                   </button>
                 ))}
               </div>
             )}
           </div>
 
-          {/* 3. Approval Accordion (Matches Screenshot 3) */}
-          <div>
+          {/* 3. Approval Accordion */}
+          <div className={openAccordions.approval ? "border-r-[4px] border-[#1abb9c] bg-[#233342]" : ""}>
             <button
               onClick={() => toggleAccordion('approval')}
               className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-[#34495E] transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
-                <ClipboardCheck className="w-4 h-4 text-slate-400" />
+                <CheckCircle2 className="w-4 h-4 text-slate-400" />
                 {sidebarOpen && <span className="font-semibold">Approval</span>}
               </div>
               {sidebarOpen && (
-                openAccordions.approval ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />
+                openAccordions.approval ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
               )}
             </button>
             {sidebarOpen && openAccordions.approval && (
-              <div className="bg-[#243444] py-1 pl-9 pr-3 space-y-1 text-[11px]">
+              <div className="relative pl-5 py-1 text-[11px] bg-[#202d3d] before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-teal-500/30">
                 {["Payment Approval", "Registration Approval", "Employee Approval", "Expense Approval", "Appraisal Approval"].map(a => (
                   <button
                     key={a}
@@ -653,120 +661,173 @@ export default function AdminPortalPage() {
                       handleSelectMenu('approval');
                       showToast(`Viewing ${a}`);
                     }}
-                    className="w-full text-left py-1 px-2 rounded text-slate-400 hover:text-white transition-colors"
+                    className="w-full flex items-center gap-2.5 py-1.5 px-3 rounded text-slate-300 hover:text-white hover:bg-[#1f2b37] transition-colors text-left group cursor-pointer"
                   >
-                    • {a}
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-500 group-hover:bg-[#1abb9c] shrink-0 -ml-1 transition-colors" />
+                    <span>{a}</span>
                   </button>
                 ))}
               </div>
             )}
           </div>
 
-          {/* 4. Transaction Accordion (Matches Screenshot 4 & 5) */}
-          <div>
+          {/* 4. Transaction Accordion */}
+          <div className={openAccordions.transaction ? "border-r-[4px] border-[#1abb9c] bg-[#233342]" : ""}>
             <button
               onClick={() => toggleAccordion('transaction')}
               className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-[#34495E] transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
-                <FolderOpen className="w-4 h-4 text-slate-400" />
+                <Folder className="w-4 h-4 text-slate-400" />
                 {sidebarOpen && <span className="font-semibold">Transaction</span>}
               </div>
               {sidebarOpen && (
-                openAccordions.transaction ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />
+                openAccordions.transaction ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
               )}
             </button>
             {sidebarOpen && openAccordions.transaction && (
-              <div className="bg-[#243444] py-1 pl-9 pr-3 space-y-1 text-[11px]">
+              <div className="relative pl-5 py-1 text-[11px] bg-[#202d3d] before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-teal-500/30">
                 <button
                   onClick={() => handleSelectMenu('reg')}
-                  className={`w-full text-left py-1.5 px-2 rounded transition-colors ${activeMenu === 'reg' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-400 hover:text-white'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'reg' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
                 >
-                  • Registration (Reg.aspx)
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'reg' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>Registration (Reg.aspx)</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('fee')}
-                  className={`w-full text-left py-1.5 px-2 rounded transition-colors ${activeMenu === 'fee' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-400 hover:text-white'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'fee' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
                 >
-                  • Fee (Fee.aspx)
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'fee' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>Fee (Fee.aspx)</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('session')}
-                  className={`w-full text-left py-1.5 px-2 rounded transition-colors ${activeMenu === 'session' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-400 hover:text-white'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'session' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
                 >
-                  • Live Session (Session.aspx)
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'session' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>Live Session (Session.aspx)</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('assignment')}
-                  className={`w-full text-left py-1.5 px-2 rounded transition-colors ${activeMenu === 'assignment' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-400 hover:text-white'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'assignment' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
                 >
-                  • Assignment
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'assignment' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>Assignment</span>
                 </button>
-                {["Live Session - Delete", "Resume", "My Interview Kit", "Non Live Session", "Assign Student for Non live sessions", "Discussion Forum", "Release User", "EXE Users", "App Users", "Class", "Assign Students for Batch", "Mock Interview", "Import Lead", "Batch Completion", "Assign Batch For Collection", "Expense"].map(t => (
+                {[
+                  "Live Session - Delete", 
+                  "Resume", 
+                  "My Interview Kit", 
+                  "Non Live Session", 
+                  "Assign Student for Non live sessions", 
+                  "Discussion Forum", 
+                  "Release User", 
+                  "EXE Users", 
+                  "App Users", 
+                  "Class", 
+                  "Assign Students for Batch", 
+                  "Mock Interview", 
+                  "Import Lead", 
+                  "Batch Completion", 
+                  "Assign Batch For Collection", 
+                  "Expense"
+                ].map(t => (
                   <button
                     key={t}
                     onClick={() => showToast(`Selected transaction: ${t}`)}
-                    className="w-full text-left py-1 px-2 rounded text-slate-400 hover:text-white transition-colors"
+                    className="w-full flex items-center gap-2.5 py-1.5 px-3 rounded text-slate-300 hover:text-white hover:bg-[#1f2b37] transition-colors text-left group cursor-pointer"
                   >
-                    • {t}
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-500 group-hover:bg-[#1abb9c] shrink-0 -ml-1 transition-colors" />
+                    <span>{t}</span>
                   </button>
                 ))}
               </div>
             )}
           </div>
 
-          {/* 5. Application Test Accordion */}
-          <div>
+          {/* 5. Application Test Accordion (Matches Screenshot media_1790833990861.png) */}
+          <div className={openAccordions.applicationTest ? "border-r-[4px] border-[#1abb9c] bg-[#233342]" : ""}>
             <button
               onClick={() => toggleAccordion('applicationTest')}
               className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-[#34495E] transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
-                <FileCheck className="w-4 h-4 text-slate-400" />
+                <Type className="w-4 h-4 text-slate-400 font-serif" />
                 {sidebarOpen && <span className="font-semibold">Application Test</span>}
               </div>
               {sidebarOpen && (
-                openAccordions.applicationTest ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />
+                openAccordions.applicationTest ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
               )}
             </button>
             {sidebarOpen && openAccordions.applicationTest && (
-              <div className="bg-[#243444] py-1 pl-9 pr-3 space-y-1 text-[11px]">
-                {["Practical Test Questions", "MCQ", "Assign MCQ To Batch", "Assign Practical Questions", "Practical Test Evaluation", "Assign PI To Batch", "PI Questions", "PI Evaluation"].map(at => (
+              <div className="relative pl-5 py-1 text-[11px] bg-[#202d3d] before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-teal-500/30">
+                {[
+                  { name: "Practical Test Questions", url: "PracticalTestQuestions.aspx" },
+                  { name: "MCQ", url: "MCQMaster.aspx" },
+                  { name: "Assign MCQ To Batch", url: "AssignMCQ.aspx" },
+                  { name: "Assign Practical Questions", url: "AssignPractical.aspx" },
+                  { name: "Practical Test Evaluation", url: "PracticalTestEvaluation.aspx" },
+                  { name: "Assign PI To Batch", url: "AssignPI.aspx" },
+                  { name: "PI Questions", url: "PIQuestions.aspx" },
+                  { name: "PI", url: "PIMaster.aspx" },
+                  { name: "PI Evaluation", url: "PIEvaluation.aspx" }
+                ].map(at => (
                   <button
-                    key={at}
-                    onClick={() => showToast(`Application Test: ${at}`)}
-                    className="w-full text-left py-1 px-2 rounded text-slate-400 hover:text-white transition-colors"
+                    key={at.name}
+                    onClick={() => {
+                      showToast(`Navigated to ${at.name} (${at.url})`);
+                    }}
+                    title={`https://edu.dvanalyticsmds.com/admin/${at.url}`}
+                    className="w-full flex items-center gap-2.5 py-1.5 px-3 rounded text-slate-300 hover:text-white hover:bg-[#1f2b37] transition-colors text-left group cursor-pointer"
                   >
-                    • {at}
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-500 group-hover:bg-[#1abb9c] shrink-0 -ml-1 transition-colors" />
+                    <span>{at.name}</span>
                   </button>
                 ))}
               </div>
             )}
           </div>
 
-          {/* 6. Reports Accordion */}
-          <div>
+          {/* 6. Reports Accordion (Matches Screenshot media_1790834000571.png) */}
+          <div className={openAccordions.reports ? "border-r-[4px] border-[#1abb9c] bg-[#233342]" : ""}>
             <button
               onClick={() => toggleAccordion('reports')}
               className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-[#34495E] transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
-                <FileText className="w-4 h-4 text-slate-400" />
+                <Mail className="w-4 h-4 text-slate-400" />
                 {sidebarOpen && <span className="font-semibold">Reports</span>}
               </div>
               {sidebarOpen && (
-                openAccordions.reports ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />
+                openAccordions.reports ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
               )}
             </button>
             {sidebarOpen && openAccordions.reports && (
-              <div className="bg-[#243444] py-1 pl-9 pr-3 space-y-1 text-[11px]">
-                {["Invoice", "Student", "Collection", "Collection Summary", "Outstanding", "Feedback", "Attendance", "Assignment", "MCQ", "Practical", "Expense"].map(r => (
+              <div className="relative pl-5 py-1 text-[11px] bg-[#202d3d] before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-teal-500/30">
+                {[
+                  { name: "Invoice", url: "rpt_Invoice.aspx" },
+                  { name: "Student", url: "rpt_Student.aspx" },
+                  { name: "Collection", url: "rpt_Collection.aspx" },
+                  { name: "Collection Summary", url: "rpt_CollectionSummary.aspx" },
+                  { name: "Outstanding", url: "rpt_Outstanding.aspx" },
+                  { name: "Feedback", url: "rpt_Feedback.aspx" },
+                  { name: "Attendance", url: "rpt_Attendance.aspx" },
+                  { name: "Assignment", url: "rpt_Assignment.aspx" },
+                  { name: "MCQ", url: "rpt_MCQ.aspx" },
+                  { name: "Practical", url: "rpt_Practical.aspx" },
+                  { name: "Expense", url: "rpt_Expense.aspx" }
+                ].map(r => (
                   <button
-                    key={r}
-                    onClick={() => showToast(`Viewing Report: ${r}`)}
-                    className="w-full text-left py-1 px-2 rounded text-slate-400 hover:text-white transition-colors"
+                    key={r.name}
+                    onClick={() => {
+                      showToast(`Viewing Report: ${r.name} (${r.url})`);
+                    }}
+                    title={`https://edu.dvanalyticsmds.com/admin/${r.url}`}
+                    className="w-full flex items-center gap-2.5 py-1.5 px-3 rounded text-slate-300 hover:text-white hover:bg-[#1f2b37] transition-colors text-left group cursor-pointer"
                   >
-                    • {r}
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-500 group-hover:bg-[#1abb9c] shrink-0 -ml-1 transition-colors" />
+                    <span>{r.name}</span>
                   </button>
                 ))}
               </div>
