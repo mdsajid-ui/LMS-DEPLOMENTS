@@ -11,7 +11,31 @@ import {
   initialPaymentApprovals,
   initialRegistrationLinks
 } from '../data/adminMasterData';
-import { ArrowUpDown, X, Plus, Edit2, Lock, CheckCircle2, Eye, Check, Trash2, Send } from 'lucide-react';
+import { 
+  ArrowUpDown, 
+  X, 
+  Plus, 
+  Edit2, 
+  Lock, 
+  CheckCircle2, 
+  Eye, 
+  Check, 
+  Trash2, 
+  Send,
+  Calendar,
+  Mail,
+  Phone,
+  UploadCloud,
+  FileText,
+  ExternalLink,
+  Search
+} from 'lucide-react';
+import { 
+  getStoredStudents, 
+  saveAdminStudent, 
+  getStoredFees, 
+  saveAdminFee 
+} from '../utils/lmsStorage';
 
 // Common Table Top Controls
 function TableControls({ pageSize, setPageSize, search, setSearch, onPageReset }) {
@@ -2794,4 +2818,1164 @@ export function RegistrationLinkView({ showToast }) {
     </div>
   );
 }
+
+// =========================================================================
+// 11. REGISTRATION VIEW (Screenshots 1, 2, 3, 4: Reg.aspx & Reg.aspx?status=Add)
+// =========================================================================
+export function RegistrationView({ showToast }) {
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'add'
+  const [students, setStudents] = useState(() => getStoredStudents());
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+
+  // Filters on list view
+  const [filterFromDate, setFilterFromDate] = useState("");
+  const [filterToDate, setFilterToDate] = useState("");
+  const [filterCourse, setFilterCourse] = useState("All Course");
+  const [filterBatch, setFilterBatch] = useState("All Batch");
+
+  // Registration Form State (Screenshots 2, 3, 4)
+  const [regForm, setRegForm] = useState({
+    date: "01-10-2026",
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    dob: "",
+    age: "",
+    gender: "Male",
+    education: "",
+    yearOfPassing: "",
+    experience: "",
+    aadharNo: "",
+    panNo: "",
+    email1: "",
+    email2: "",
+    mobile1: "",
+    mobile2: "",
+    whatsAppNo: "",
+    emergencyContact: "",
+    localAddress: "",
+    permanentAddress: "",
+    bloodGroup: "O+",
+    branch: "BHUBANESHWAR",
+    batchId: "BATCH 202606",
+    course: "APIDS",
+    courseFee: "350000",
+    discountType: "Scholarship",
+    discountValue: "0",
+    committedFee: "350000",
+    installment: "3",
+    paymentBy: "Student" // 'Student' | 'Bank'
+  });
+
+  const handleCourseChange = (courseName) => {
+    const feeMap = {
+      "APIDS": 350000,
+      "APIDA": 295000,
+      "MPGA": 141600,
+      "APCF": 150000,
+      "AIML": 259600,
+      "BASIC PACK": 80000,
+      "INTERMEDIATE PACK": 100000,
+      "ADVANCED PACK": 120000
+    };
+    const baseFee = feeMap[courseName] || 65000;
+    const disc = parseInt(regForm.discountValue || 0);
+    const committed = Math.max(0, baseFee - disc);
+    setRegForm(prev => ({
+      ...prev,
+      course: courseName,
+      courseFee: baseFee.toString(),
+      committedFee: committed.toString()
+    }));
+  };
+
+  const handleDiscountChange = (val) => {
+    const disc = parseInt(val || 0);
+    const base = parseInt(regForm.courseFee || 350000);
+    const committed = Math.max(0, base - disc);
+    setRegForm(prev => ({
+      ...prev,
+      discountValue: val,
+      committedFee: committed.toString()
+    }));
+  };
+
+  const handleDobChange = (val) => {
+    let computedAge = "";
+    if (val) {
+      const birthYear = new Date(val).getFullYear();
+      if (!isNaN(birthYear)) {
+        computedAge = (2026 - birthYear).toString();
+      }
+    }
+    setRegForm(prev => ({
+      ...prev,
+      dob: val,
+      age: computedAge || prev.age
+    }));
+  };
+
+  const handleSubmitRegistration = (e) => {
+    e.preventDefault();
+    if (!regForm.firstName || !regForm.lastName || !regForm.mobile1) {
+      alert("Please fill in First Name, Last Name, and Mobile Number");
+      return;
+    }
+    const fullName = `${regForm.firstName} ${regForm.middleName ? regForm.middleName + ' ' : ''}${regForm.lastName}`.trim().toUpperCase();
+    const created = {
+      name: fullName,
+      email: regForm.email1 || `${regForm.firstName.toLowerCase()}@dvanalytics.com`,
+      phone: regForm.mobile1,
+      course: regForm.course,
+      batch: regForm.batchId,
+      regDate: "2026-10-01",
+      totalFee: `₹${parseInt(regForm.committedFee).toLocaleString('en-IN')}`,
+      paidFee: `₹${Math.round(parseInt(regForm.committedFee) * 0.5).toLocaleString('en-IN')}`,
+      dueFee: `₹${Math.round(parseInt(regForm.committedFee) * 0.5).toLocaleString('en-IN')}`,
+      status: "Active",
+      gender: regForm.gender,
+      college: regForm.education || "University",
+      location: regForm.branch
+    };
+
+    const updated = saveAdminStudent(created);
+    setStudents(updated);
+    setViewMode('list');
+    showToast(`✓ Student ${fullName} registered successfully in ${created.course}!`);
+  };
+
+  const filteredStudents = useMemo(() => {
+    return students.filter(s => {
+      const matchSearch = !search || 
+        s.name.toLowerCase().includes(search.toLowerCase()) ||
+        s.rollNo?.toLowerCase().includes(search.toLowerCase()) ||
+        s.course.toLowerCase().includes(search.toLowerCase()) ||
+        s.batch.toLowerCase().includes(search.toLowerCase());
+      const matchCourse = filterCourse === "All Course" || s.course === filterCourse;
+      const matchBatch = filterBatch === "All Batch" || s.batch === filterBatch;
+      return matchSearch && matchCourse && matchBatch;
+    });
+  }, [students, search, filterCourse, filterBatch]);
+
+  const totalPages = Math.ceil(filteredStudents.length / pageSize) || 1;
+  const paginatedStudents = filteredStudents.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  // -------------------------------------------------------------
+  // RENDER ADD MODE (Exact match for Screenshots 2, 3, 4)
+  // -------------------------------------------------------------
+  if (viewMode === 'add') {
+    return (
+      <div className="bg-white p-6 sm:p-8 rounded-sm border border-slate-200 shadow-2xs font-sans text-xs space-y-6">
+        <form onSubmit={handleSubmitRegistration} className="space-y-6">
+          {/* SECTION 1: Personal & Educational Details */}
+          <div className="space-y-3.5 max-w-4xl mx-auto">
+            {/* Date */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                Date <span className="text-red-500">*</span>
+              </label>
+              <div className="sm:col-span-9">
+                <input
+                  type="text"
+                  value={regForm.date}
+                  onChange={(e) => setRegForm({ ...regForm, date: e.target.value })}
+                  className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* First Name */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                First Name <span className="text-red-500">*</span>
+              </label>
+              <div className="sm:col-span-9">
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter First Name"
+                  value={regForm.firstName}
+                  onChange={(e) => setRegForm({ ...regForm, firstName: e.target.value })}
+                  className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white"
+                />
+              </div>
+            </div>
+
+            {/* Middle Name */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                Middle Name
+              </label>
+              <div className="sm:col-span-9">
+                <input
+                  type="text"
+                  placeholder="Enter Middle Name (Optional)"
+                  value={regForm.middleName}
+                  onChange={(e) => setRegForm({ ...regForm, middleName: e.target.value })}
+                  className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white"
+                />
+              </div>
+            </div>
+
+            {/* Last Name */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                Last Name <span className="text-red-500">*</span>
+              </label>
+              <div className="sm:col-span-9">
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter Last Name"
+                  value={regForm.lastName}
+                  onChange={(e) => setRegForm({ ...regForm, lastName: e.target.value })}
+                  className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white"
+                />
+              </div>
+            </div>
+
+            {/* DOB */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                DOB <span className="text-red-500">*</span>
+              </label>
+              <div className="sm:col-span-9">
+                <input
+                  type="date"
+                  required
+                  value={regForm.dob}
+                  onChange={(e) => handleDobChange(e.target.value)}
+                  className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white"
+                />
+              </div>
+            </div>
+
+            {/* Age */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                Age <span className="text-red-500">*</span>
+              </label>
+              <div className="sm:col-span-9">
+                <input
+                  type="number"
+                  required
+                  placeholder="e.g. 24"
+                  value={regForm.age}
+                  onChange={(e) => setRegForm({ ...regForm, age: e.target.value })}
+                  className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Gender */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                Gender <span className="text-red-500">*</span>
+              </label>
+              <div className="sm:col-span-9">
+                <select
+                  value={regForm.gender}
+                  onChange={(e) => setRegForm({ ...regForm, gender: e.target.value })}
+                  className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white"
+                >
+                  <option value="Select Gender">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Education */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                Education <span className="text-red-500">*</span>
+              </label>
+              <div className="sm:col-span-9">
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. B.Tech / MCA / B.Sc"
+                  value={regForm.education}
+                  onChange={(e) => setRegForm({ ...regForm, education: e.target.value })}
+                  className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white"
+                />
+              </div>
+            </div>
+
+            {/* Year Of Passing */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                Year Of Passing
+              </label>
+              <div className="sm:col-span-9">
+                <input
+                  type="text"
+                  placeholder="e.g. 2024"
+                  value={regForm.yearOfPassing}
+                  onChange={(e) => setRegForm({ ...regForm, yearOfPassing: e.target.value })}
+                  className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Experience */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                Experience <span className="text-red-500">*</span>
+              </label>
+              <div className="sm:col-span-9">
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Fresher or 2 Years"
+                  value={regForm.experience}
+                  onChange={(e) => setRegForm({ ...regForm, experience: e.target.value })}
+                  className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 2: Identity & Contact Details (Screenshot 3) */}
+          <div className="border-t border-slate-200 pt-5 space-y-4 max-w-4xl mx-auto">
+            {/* Aadhar & PAN */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-slate-700">Aadhar No. <span className="text-red-500">*</span></label>
+                  <span className="text-red-500 cursor-pointer hover:underline text-[11px] font-medium">*View Aadhar</span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Enter Aadhar Number"
+                  value={regForm.aadharNo}
+                  onChange={(e) => setRegForm({ ...regForm, aadharNo: e.target.value })}
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white font-mono"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-slate-700">PAN No. <span className="text-red-500">*</span></label>
+                  <span className="text-red-500 cursor-pointer hover:underline text-[11px] font-medium">*View PAN</span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Enter PAN Number"
+                  value={regForm.panNo}
+                  onChange={(e) => setRegForm({ ...regForm, panNo: e.target.value })}
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white font-mono uppercase"
+                />
+              </div>
+            </div>
+
+            {/* Email 1 & 2 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Email ID 1 <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-2.5 top-2" />
+                  <input
+                    type="email"
+                    required
+                    placeholder="Enter Email ID 1"
+                    value={regForm.email1}
+                    onChange={(e) => setRegForm({ ...regForm, email1: e.target.value })}
+                    className="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Email ID 2</label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-2.5 top-2" />
+                  <input
+                    type="email"
+                    placeholder="Enter Email ID 2"
+                    value={regForm.email2}
+                    onChange={(e) => setRegForm({ ...regForm, email2: e.target.value })}
+                    className="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile 1 & 2 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Mobile No. 1 <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 text-slate-400 absolute left-2.5 top-2" />
+                  <input
+                    type="text"
+                    required
+                    placeholder="Enter Mobile Number 1"
+                    value={regForm.mobile1}
+                    onChange={(e) => setRegForm({ ...regForm, mobile1: e.target.value })}
+                    className="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Mobile No. 2</label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 text-slate-400 absolute left-2.5 top-2" />
+                  <input
+                    type="text"
+                    placeholder="Enter Mobile Number 2"
+                    value={regForm.mobile2}
+                    onChange={(e) => setRegForm({ ...regForm, mobile2: e.target.value })}
+                    className="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white font-mono"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* WhatsApp & Emergency */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">WhatsApp No. <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  placeholder="WhatsApp No.(Add Contry Code eg:919876543210)"
+                  value={regForm.whatsAppNo}
+                  onChange={(e) => setRegForm({ ...regForm, whatsAppNo: e.target.value })}
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Emergency Contact No. <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  placeholder="Enter Emergency Contact No."
+                  value={regForm.emergencyContact}
+                  onChange={(e) => setRegForm({ ...regForm, emergencyContact: e.target.value })}
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Local & Permanent Address */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Local Address <span className="text-red-500">*</span></label>
+                <textarea
+                  rows={3}
+                  placeholder="Local Address (Maximum 250 characters)"
+                  value={regForm.localAddress}
+                  onChange={(e) => setRegForm({ ...regForm, localAddress: e.target.value })}
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Permanent Address <span className="text-red-500">*</span></label>
+                <textarea
+                  rows={3}
+                  placeholder="Permanent Address (Maximum 250 characters)"
+                  value={regForm.permanentAddress}
+                  onChange={(e) => setRegForm({ ...regForm, permanentAddress: e.target.value })}
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white"
+                />
+              </div>
+            </div>
+
+            {/* Document Review Links */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-[11px]">
+              <div>
+                <span className="font-bold text-slate-700">Consent Form <span className="text-red-500">*</span></span>
+                <span className="text-red-500 ml-1 cursor-pointer hover:underline block font-medium">View Consent Form</span>
+              </div>
+              <div>
+                <span className="font-bold text-slate-700">Placement Assitance Document <span className="text-red-500">*</span></span>
+                <span className="text-red-500 ml-1 cursor-pointer hover:underline block font-medium">View Placement Assitance Document</span>
+              </div>
+              <div>
+                <span className="font-bold text-slate-700">Cancelation & Refund Policy <span className="text-red-500">*</span></span>
+                <span className="text-red-500 ml-1 cursor-pointer hover:underline block font-medium">View Cancelation & Refund Document</span>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 3: Course & Fee Details (Screenshot 4) */}
+          <div className="border-t border-slate-200 pt-5 space-y-3.5 max-w-4xl mx-auto">
+            {/* Blood Group */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                Blood Group <span className="text-red-500">*</span>
+              </label>
+              <div className="sm:col-span-9">
+                <select
+                  value={regForm.bloodGroup}
+                  onChange={(e) => setRegForm({ ...regForm, bloodGroup: e.target.value })}
+                  className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none bg-white"
+                >
+                  <option value="Select Blood Group">Select Blood Group</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Branch */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                Branch <span className="text-red-500">*</span>
+              </label>
+              <div className="sm:col-span-9">
+                <select
+                  value={regForm.branch}
+                  onChange={(e) => setRegForm({ ...regForm, branch: e.target.value })}
+                  className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none bg-white font-medium"
+                >
+                  <option value="Select Branch">Select Branch</option>
+                  <option value="BANGALORE">BANGALORE</option>
+                  <option value="BHUBANESHWAR">BHUBANESHWAR</option>
+                  <option value="DUBAI">DUBAI</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Batch ID */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                Batch ID <span className="text-red-500">*</span>
+              </label>
+              <div className="sm:col-span-9">
+                <select
+                  value={regForm.batchId}
+                  onChange={(e) => setRegForm({ ...regForm, batchId: e.target.value })}
+                  className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none bg-white"
+                >
+                  <option value="Select Batch">Select Batch</option>
+                  {initialBatchesMaster.map(b => (
+                    <option key={b.id} value={b.batchName}>{b.batchName}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Course */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                Course <span className="text-red-500">*</span>
+              </label>
+              <div className="sm:col-span-9">
+                <select
+                  value={regForm.course}
+                  onChange={(e) => handleCourseChange(e.target.value)}
+                  className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none bg-white font-semibold"
+                >
+                  <option value="Select Course">Select Course</option>
+                  {initialCoursesMaster.map(c => (
+                    <option key={c.id} value={c.courseName}>{c.courseName}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Course Fee */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                Course Fee <span className="text-red-500">*</span>
+              </label>
+              <div className="sm:col-span-9">
+                <input
+                  type="text"
+                  readOnly
+                  value={regForm.courseFee}
+                  className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs bg-slate-100 font-mono font-bold text-slate-700"
+                />
+              </div>
+            </div>
+
+            {/* Discount Type & Value */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                Discount Type
+              </label>
+              <div className="sm:col-span-9 flex items-center gap-2 max-w-lg">
+                <select
+                  value={regForm.discountType}
+                  onChange={(e) => setRegForm({ ...regForm, discountType: e.target.value })}
+                  className="flex-1 px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none bg-white"
+                >
+                  <option value="Select Discount">Select Discount</option>
+                  <option value="Scholarship">Scholarship</option>
+                  <option value="Early Bird">Early Bird</option>
+                  <option value="Corporate">Corporate</option>
+                </select>
+                <input
+                  type="number"
+                  placeholder="Discount Value"
+                  value={regForm.discountValue}
+                  onChange={(e) => handleDiscountChange(e.target.value)}
+                  className="w-32 px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none bg-white font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Committed Fee */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                Committed Fee <span className="text-red-500">*</span>
+              </label>
+              <div className="sm:col-span-9">
+                <input
+                  type="text"
+                  readOnly
+                  value={regForm.committedFee}
+                  className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs bg-slate-100 font-mono font-bold text-emerald-700"
+                />
+              </div>
+            </div>
+
+            {/* No. Of Installment */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                No. Of Installment <span className="text-red-500">*</span>
+              </label>
+              <div className="sm:col-span-9">
+                <select
+                  value={regForm.installment}
+                  onChange={(e) => setRegForm({ ...regForm, installment: e.target.value })}
+                  className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none bg-white"
+                >
+                  <option value="Select Installment">Select Installment</option>
+                  <option value="1">1 Installment (Full Payment)</option>
+                  <option value="2">2 Installments</option>
+                  <option value="3">3 Installments</option>
+                  <option value="4">4 Installments</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Payment By */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                Payment By <span className="text-red-500">*</span>
+              </label>
+              <div className="sm:col-span-9 flex items-center gap-4">
+                <label className="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-800">
+                  <input
+                    type="radio"
+                    name="paymentBy"
+                    value="Student"
+                    checked={regForm.paymentBy === 'Student'}
+                    onChange={() => setRegForm({ ...regForm, paymentBy: 'Student' })}
+                    className="text-teal-600 focus:ring-teal-500"
+                  />
+                  <span>Student</span>
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-800">
+                  <input
+                    type="radio"
+                    name="paymentBy"
+                    value="Bank"
+                    checked={regForm.paymentBy === 'Bank'}
+                    onChange={() => setRegForm({ ...regForm, paymentBy: 'Bank' })}
+                    className="text-teal-600 focus:ring-teal-500"
+                  />
+                  <span>Bank</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="pt-4 flex items-center gap-2 max-w-lg sm:ml-[25%]">
+              <button
+                type="submit"
+                className="bg-[#26b99a] hover:bg-[#1f967d] text-white font-bold text-xs px-5 py-2 rounded-[3px] shadow-2xs cursor-pointer transition-colors"
+              >
+                Submit
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                className="bg-[#337ab7] hover:bg-[#286090] text-white font-bold text-xs px-5 py-2 rounded-[3px] shadow-2xs cursor-pointer transition-colors"
+              >
+                Back
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
+  // -------------------------------------------------------------
+  // RENDER LIST MODE (Exact match for Screenshot 1: Reg.aspx)
+  // -------------------------------------------------------------
+  return (
+    <div className="space-y-4 font-sans">
+      {/* Top Action Button */}
+      <div>
+        <button
+          onClick={() => setViewMode('add')}
+          className="bg-[#26B99A] hover:bg-[#1f967d] text-white text-xs font-semibold px-3 py-1.5 rounded-[3px] shadow-2xs cursor-pointer inline-flex items-center gap-1 transition-colors"
+        >
+          Create Registration
+        </button>
+      </div>
+
+      {/* Filter Bar (Matches Screenshot 1) */}
+      <div className="bg-white p-4 rounded-sm border border-slate-200 shadow-2xs flex flex-wrap items-end gap-3 text-xs">
+        <div>
+          <label className="block text-slate-600 font-semibold mb-1">From Date</label>
+          <div className="relative">
+            <input
+              type="date"
+              value={filterFromDate}
+              onChange={(e) => setFilterFromDate(e.target.value)}
+              className="border border-slate-300 rounded px-2.5 py-1.5 text-xs bg-white focus:outline-none focus:border-teal-500 w-36"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-slate-600 font-semibold mb-1">To Date</label>
+          <div className="relative">
+            <input
+              type="date"
+              value={filterToDate}
+              onChange={(e) => setFilterToDate(e.target.value)}
+              className="border border-slate-300 rounded px-2.5 py-1.5 text-xs bg-white focus:outline-none focus:border-teal-500 w-36"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-slate-600 font-semibold mb-1">Course ID</label>
+          <select
+            value={filterCourse}
+            onChange={(e) => setFilterCourse(e.target.value)}
+            className="border border-slate-300 rounded px-2.5 py-1.5 text-xs bg-white focus:outline-none focus:border-teal-500 min-w-[140px]"
+          >
+            <option value="All Course">All Course</option>
+            {initialCoursesMaster.map(c => (
+              <option key={c.id} value={c.courseName}>{c.courseName}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-slate-600 font-semibold mb-1">Batch ID</label>
+          <select
+            value={filterBatch}
+            onChange={(e) => setFilterBatch(e.target.value)}
+            className="border border-slate-300 rounded px-2.5 py-1.5 text-xs bg-white focus:outline-none focus:border-teal-500 min-w-[140px]"
+          >
+            <option value="All Batch">All Batch</option>
+            {initialBatchesMaster.map(b => (
+              <option key={b.id} value={b.batchName}>{b.batchName}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <button
+            onClick={() => showToast(`Filter applied: ${filterCourse}, ${filterBatch}`)}
+            className="bg-[#337ab7] hover:bg-[#286090] text-white font-bold text-xs px-5 py-1.5 rounded-[3px] shadow-2xs cursor-pointer transition-colors"
+          >
+            Search
+          </button>
+        </div>
+      </div>
+
+      {/* Table Controls */}
+      <TableControls
+        pageSize={pageSize}
+        setPageSize={setPageSize}
+        search={search}
+        setSearch={setSearch}
+        onPageReset={() => setCurrentPage(1)}
+      />
+
+      {/* Registered Students Table */}
+      <div className="overflow-x-auto border border-slate-200 bg-white">
+        <table className="w-full text-xs text-left border-collapse">
+          <thead>
+            <tr className="border-b border-slate-300 bg-white">
+              <th className="border border-slate-200 px-3 py-2.5 font-bold text-slate-800 text-center select-none w-14">
+                <div className="flex items-center justify-center gap-1">
+                  <span>S.No</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Student ID / Roll</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Student Name</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Course</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Batch</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Total Fee</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Paid</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Due</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none w-28">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Action</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedStudents.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="text-center py-6 text-slate-500">No matching registration records</td>
+              </tr>
+            ) : (
+              paginatedStudents.map((s, idx) => (
+                <tr key={s.id || idx} className="hover:bg-slate-50 border-b border-slate-200 transition-colors">
+                  <td className="border border-slate-200 px-3 py-2 text-center text-slate-700">
+                    {(currentPage - 1) * pageSize + idx + 1}
+                  </td>
+                  <td className="border border-slate-200 px-4 py-2 text-center text-slate-700 font-mono">
+                    {s.rollNo || `DVA-2026-${100 + idx}`}
+                  </td>
+                  <td className="border border-slate-200 px-4 py-2 text-center text-slate-800 font-medium">
+                    {s.name}
+                  </td>
+                  <td className="border border-slate-200 px-4 py-2 text-center text-slate-700">
+                    {s.course}
+                  </td>
+                  <td className="border border-slate-200 px-4 py-2 text-center text-slate-700">
+                    {s.batch}
+                  </td>
+                  <td className="border border-slate-200 px-4 py-2 text-center text-slate-700 font-mono">
+                    {s.totalFee}
+                  </td>
+                  <td className="border border-slate-200 px-4 py-2 text-center text-emerald-700 font-mono font-bold">
+                    {s.paidFee}
+                  </td>
+                  <td className="border border-slate-200 px-4 py-2 text-center text-red-600 font-mono">
+                    {s.dueFee}
+                  </td>
+                  <td className="border border-slate-200 px-3 py-2 text-center whitespace-nowrap">
+                    <button
+                      onClick={() => {
+                        window.location.hash = '/admin/Fee.aspx';
+                        showToast(`Initiating fee payment for ${s.name}`);
+                      }}
+                      className="bg-[#337ab7] hover:bg-[#286090] text-white px-2.5 py-0.5 rounded-[3px] border border-[#2e6da4] text-[11px] font-medium cursor-pointer shadow-2xs"
+                    >
+                      Collect Fee
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalEntries={filteredStudents.length}
+        pageSize={pageSize}
+        setPage={setCurrentPage}
+      />
+    </div>
+  );
+}
+
+// =========================================================================
+// 12. FEE VIEW (Screenshot 5: Fee.aspx)
+// =========================================================================
+export function FeeView({ showToast }) {
+  const students = useMemo(() => getStoredStudents(), []);
+  const [feeForm, setFeeForm] = useState({
+    date: "01-10-2026",
+    studentId: "9955774102",
+    committedFee: "65000",
+    batch: "BATCH 202606",
+    course: "APIDS",
+    balance: "30000",
+    amount: "35000",
+    modeOfPay: "UPI",
+    remarks: "Quarterly installment paid via UPI",
+    refDoc: ""
+  });
+
+  const handleStudentIdChange = (idVal) => {
+    setFeeForm(prev => ({
+      ...prev,
+      studentId: idVal
+    }));
+    const found = students.find(s => s.phone === idVal || s.rollNo?.includes(idVal));
+    if (found) {
+      const commFee = parseInt(found.totalFee?.replace(/[^0-9]/g, '') || 65000);
+      const paid = parseInt(found.paidFee?.replace(/[^0-9]/g, '') || 0);
+      const bal = Math.max(0, commFee - paid);
+      setFeeForm(prev => ({
+        ...prev,
+        committedFee: commFee.toString(),
+        batch: found.batch,
+        course: found.course,
+        balance: bal.toString(),
+        remarks: `Payment collection for ${found.name} (${found.rollNo || idVal})`
+      }));
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!feeForm.studentId || !feeForm.amount) {
+      alert("Please provide Student ID and Amount");
+      return;
+    }
+
+    saveAdminFee({
+      date: feeForm.date,
+      studentId: feeForm.studentId,
+      studentName: students.find(s => s.phone === feeForm.studentId)?.name || "STUDENT " + feeForm.studentId,
+      committedFee: feeForm.committedFee,
+      batch: feeForm.batch,
+      course: feeForm.course,
+      balance: Math.max(0, parseInt(feeForm.balance || 0) - parseInt(feeForm.amount || 0)).toString(),
+      amount: feeForm.amount,
+      modeOfPay: feeForm.modeOfPay,
+      remarks: feeForm.remarks,
+      referenceDoc: feeForm.refDoc || "Receipt_INV_88392.pdf"
+    });
+
+    showToast(`✓ Fee payment of ₹${parseInt(feeForm.amount).toLocaleString('en-IN')} submitted successfully!`);
+    setFeeForm(prev => ({
+      ...prev,
+      amount: "",
+      balance: Math.max(0, parseInt(prev.balance || 0) - parseInt(prev.amount || 0)).toString()
+    }));
+  };
+
+  return (
+    <div className="bg-white p-6 sm:p-8 rounded-sm border border-slate-200 shadow-2xs font-sans text-xs space-y-4 max-w-4xl mx-auto">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Date */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+          <label className="sm:col-span-3 text-right font-bold text-slate-700">
+            Date <span className="text-red-500">*</span>
+          </label>
+          <div className="sm:col-span-9">
+            <input
+              type="text"
+              required
+              value={feeForm.date}
+              onChange={(e) => setFeeForm({ ...feeForm, date: e.target.value })}
+              className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white"
+            />
+          </div>
+        </div>
+
+        {/* Student ID */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+          <label className="sm:col-span-3 text-right font-bold text-slate-700">
+            Student ID <span className="text-red-500">*</span>
+          </label>
+          <div className="sm:col-span-9">
+            <input
+              type="text"
+              required
+              placeholder="e.g. 9955774102 or Student Roll"
+              value={feeForm.studentId}
+              onChange={(e) => handleStudentIdChange(e.target.value)}
+              className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white font-mono font-medium"
+            />
+          </div>
+        </div>
+
+        {/* Committed Fee */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+          <label className="sm:col-span-3 text-right font-bold text-slate-700">
+            Commited Fee <span className="text-red-500">*</span>
+          </label>
+          <div className="sm:col-span-9">
+            <input
+              type="text"
+              readOnly
+              value={feeForm.committedFee}
+              className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs bg-slate-100 font-mono font-bold text-slate-700"
+            />
+          </div>
+        </div>
+
+        {/* Batch */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+          <label className="sm:col-span-3 text-right font-bold text-slate-700">
+            Batch <span className="text-red-500">*</span>
+          </label>
+          <div className="sm:col-span-9">
+            <select
+              value={feeForm.batch}
+              onChange={(e) => setFeeForm({ ...feeForm, batch: e.target.value })}
+              className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none bg-white"
+            >
+              {initialBatchesMaster.map(b => (
+                <option key={b.id} value={b.batchName}>{b.batchName}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Course */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+          <label className="sm:col-span-3 text-right font-bold text-slate-700">
+            Course <span className="text-red-500">*</span>
+          </label>
+          <div className="sm:col-span-9">
+            <select
+              value={feeForm.course}
+              onChange={(e) => setFeeForm({ ...feeForm, course: e.target.value })}
+              className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none bg-white font-semibold"
+            >
+              {initialCoursesMaster.map(c => (
+                <option key={c.id} value={c.courseName}>{c.courseName}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Balance */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+          <label className="sm:col-span-3 text-right font-bold text-slate-700">
+            Balance <span className="text-red-500">*</span>
+          </label>
+          <div className="sm:col-span-9">
+            <input
+              type="text"
+              readOnly
+              value={feeForm.balance}
+              className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs bg-slate-100 font-mono font-bold text-red-600"
+            />
+          </div>
+        </div>
+
+        {/* Amount */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+          <label className="sm:col-span-3 text-right font-bold text-slate-700">
+            Amount <span className="text-red-500">*</span>
+          </label>
+          <div className="sm:col-span-9">
+            <input
+              type="number"
+              required
+              placeholder="Enter Installment Amount"
+              value={feeForm.amount}
+              onChange={(e) => setFeeForm({ ...feeForm, amount: e.target.value })}
+              className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white font-mono font-bold text-slate-800"
+            />
+          </div>
+        </div>
+
+        {/* Mode Of Pay */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+          <label className="sm:col-span-3 text-right font-bold text-slate-700">
+            Mode Of Pay <span className="text-red-500">*</span>
+          </label>
+          <div className="sm:col-span-9">
+            <select
+              value={feeForm.modeOfPay}
+              onChange={(e) => setFeeForm({ ...feeForm, modeOfPay: e.target.value })}
+              className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none bg-white font-medium"
+            >
+              <option value="Select Mode of Pay">Select Mode of Pay</option>
+              <option value="UPI">UPI</option>
+              <option value="Net Banking">Net Banking</option>
+              <option value="Debit / Credit Card">Debit / Credit Card</option>
+              <option value="Cash">Cash</option>
+              <option value="Cheque">Cheque</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Remarks */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-start">
+          <label className="sm:col-span-3 text-right font-bold text-slate-700 pt-1.5">
+            Remarks
+          </label>
+          <div className="sm:col-span-9">
+            <textarea
+              rows={3}
+              placeholder="Enter payment notes, UTR, or bank reference"
+              value={feeForm.remarks}
+              onChange={(e) => setFeeForm({ ...feeForm, remarks: e.target.value })}
+              className="w-full max-w-lg px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white"
+            />
+          </div>
+        </div>
+
+        {/* Upload Reference Document */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+          <label className="sm:col-span-3 text-right font-bold text-slate-700">
+            Upload Reference Document
+          </label>
+          <div className="sm:col-span-9">
+            <input
+              type="file"
+              onChange={(e) => setFeeForm({ ...feeForm, refDoc: e.target.files?.[0]?.name || "" })}
+              className="text-xs text-slate-600 file:mr-3 file:py-1 file:px-3 file:rounded file:border file:border-slate-300 file:text-xs file:bg-slate-50 hover:file:bg-slate-100 cursor-pointer"
+            />
+          </div>
+        </div>
+
+        {/* Submit Button */}
+        <div className="pt-2 sm:ml-[25%]">
+          <button
+            type="submit"
+            className="bg-[#26b99a] hover:bg-[#1f967d] text-white font-bold text-xs px-6 py-2 rounded-[3px] shadow-2xs cursor-pointer transition-colors"
+          >
+            Submit
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 
