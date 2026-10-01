@@ -956,9 +956,9 @@ export default function AdminPortalPage() {
                 {activeMenu === 'session' && "Live Session"}
                 {activeMenu === 'reg' && "Registration"}
                 {activeMenu === 'assignment' && "Assignment"}
-                {activeMenu === 'monthly-collection' && "Dashboard / Monthly Collection"}
-                {activeMenu === 'daily-collection' && "Dashboard / Daily Collection"}
-                {activeMenu === 'dashboard' && "Dashboard / Collection Intelligence"}
+                {activeMenu === 'monthly-collection' && "Monthly Collection"}
+                {activeMenu === 'daily-collection' && "Daily Collection"}
+                {activeMenu === 'dashboard' && "Monthly Collection"}
               </span>
             </div>
 
@@ -2026,28 +2026,107 @@ export default function AdminPortalPage() {
                   )}
                 </div>
               ) : (
-                /* View 2: Embedded Analytics Visualizer without double sidebar */
-                <div className="bg-[#090c16] rounded-xl border border-slate-800 shadow-xl overflow-hidden">
-                  <div className="bg-[#0f1423] px-4 py-2.5 border-b border-slate-800 flex items-center justify-between text-xs text-slate-400">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                      <span className="font-bold text-slate-200">Interactive Intelligence Engine Active</span>
-                      <span className="text-slate-500">•</span>
-                      <span className="text-slate-400">6,230 Transactions Loaded</span>
+                /* View 2: Native Light-Theme Analytics Breakdown */
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* 1. Branch Split */}
+                    <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-xs space-y-3">
+                      <div className="flex items-center justify-between border-b pb-2">
+                        <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider">Branch Share (Filtered)</h4>
+                        <Building className="w-4 h-4 text-slate-400" />
+                      </div>
+                      <div className="space-y-3 text-xs">
+                        <div>
+                          <div className="flex justify-between font-bold mb-1">
+                            <span>Bhubaneswar (BBSR)</span>
+                            <span className="font-mono text-blue-700">₹24,85,12,450</span>
+                          </div>
+                          <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-blue-600 rounded-full" style={{ width: '67%' }}></div>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-mono">4,180 Verified Transactions</span>
+                        </div>
+                        <div>
+                          <div className="flex justify-between font-bold mb-1">
+                            <span>Bangalore (BLR)</span>
+                            <span className="font-mono text-indigo-700">₹12,26,34,271</span>
+                          </div>
+                          <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-indigo-600 rounded-full" style={{ width: '33%' }}></div>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-mono">2,050 Verified Transactions</span>
+                        </div>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => setDailyViewMode('table')}
-                      className="text-xs text-teal-400 hover:text-teal-300 font-bold hover:underline cursor-pointer"
-                    >
-                      Back to Table View
-                    </button>
+
+                    {/* 2. Top Courses */}
+                    <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-xs space-y-3">
+                      <div className="flex items-center justify-between border-b pb-2">
+                        <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider">Course Revenue Share</h4>
+                        <BookOpen className="w-4 h-4 text-slate-400" />
+                      </div>
+                      <div className="space-y-2 text-xs">
+                        {[
+                          { name: "APIDS", amount: "₹18.42 Cr", pct: 49.6, color: "bg-teal-500" },
+                          { name: "APIDA", amount: "₹8.91 Cr", pct: 24.0, color: "bg-blue-500" },
+                          { name: "FDE", amount: "₹4.87 Cr", pct: 13.1, color: "bg-amber-500" },
+                          { name: "MPGA", amount: "₹3.12 Cr", pct: 8.4, color: "bg-purple-500" },
+                          { name: "DAS", amount: "₹1.79 Cr", pct: 4.8, color: "bg-rose-500" }
+                        ].map(c => (
+                          <div key={c.name}>
+                            <div className="flex justify-between text-[11px] mb-0.5">
+                              <span className="font-medium text-slate-700">{c.name}</span>
+                              <span className="font-bold font-mono">{c.amount}</span>
+                            </div>
+                            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                              <div className={`h-full ${c.color} rounded-full`} style={{ width: `${c.pct}%` }}></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 3. Payment Methods */}
+                    <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-xs space-y-3">
+                      <div className="flex items-center justify-between border-b pb-2">
+                        <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider">Top Payment Channels</h4>
+                        <DollarSign className="w-4 h-4 text-slate-400" />
+                      </div>
+                      <div className="space-y-2 text-xs">
+                        {[
+                          { mode: "DV Analytics ICICI Bank", pct: 64, note: "Direct RTGS / NEFT / IMPS" },
+                          { mode: "DV Analytics HDFC Bank", pct: 22, note: "Corporate Account" },
+                          { mode: "Cash Deposits", pct: 9, note: "Branch Counters" },
+                          { mode: "UPI / QR Payments", pct: 5, note: "Gateway Settlement" }
+                        ].map(m => (
+                          <div key={m.mode} className="p-2 bg-slate-50 rounded border border-slate-100">
+                            <div className="flex justify-between font-bold text-[11px]">
+                              <span>{m.mode}</span>
+                              <span className="text-teal-700">{m.pct}%</span>
+                            </div>
+                            <span className="text-[10px] text-slate-400 block">{m.note}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
-                  <iframe
-                    src="./daily-collection.html?embedded=true"
-                    className="w-full h-[950px] border-0 block bg-[#090c16]"
-                    title="Daily Collection Report Dashboard"
-                  />
+                  {/* External Dashboard Launch Card */}
+                  <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-xs text-slate-800">Advanced Collection Visualizer Tool</h4>
+                      <p className="text-[11px] text-slate-500">Access the standalone interactive analytics workspace with real-time Chart.js engines</p>
+                    </div>
+                    <a
+                      href="./daily-collection.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded font-bold text-xs shadow-xs inline-flex items-center gap-1.5"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Launch In Standalone Window</span>
+                    </a>
+                  </div>
                 </div>
               )}
             </div>
