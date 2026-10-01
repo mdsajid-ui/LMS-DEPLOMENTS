@@ -122,7 +122,6 @@ export default function App() {
           onOpenSchedule={() => setScheduleOpen(true)}
           onOpenSupport={handleOpenSupport}
           onOpenChat={handleOpenChat}
-          onOpenAdmin={handleOpenAdmin}
           selectedBatch={selectedBatch}
           setSelectedBatch={setSelectedBatch}
         />

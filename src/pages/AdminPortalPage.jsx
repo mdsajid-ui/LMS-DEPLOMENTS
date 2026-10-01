@@ -18,7 +18,7 @@ import {
   Trash2, 
   Key, 
   Eye, 
-  EyeOff,
+  EyeOff, 
   LogOut, 
   Filter, 
   ChevronRight, 
@@ -36,15 +36,29 @@ import {
   Award,
   Database,
   Building,
-  ArrowLeft,
   Check,
-  Send
+  Send,
+  FolderOpen,
+  PieChart,
+  ClipboardCheck,
+  CreditCard,
+  UserCheck,
+  FileCheck
 } from 'lucide-react';
 import { downloadFile, generateAndDownloadExcel } from '../utils/excelHelper';
 import Logo from '../components/Logo';
+import { 
+  saveAdminSession, 
+  deleteAdminSession, 
+  getAllStoredSessions, 
+  getStoredFees, 
+  saveAdminFee, 
+  getStoredStudents, 
+  saveAdminStudent 
+} from '../utils/lmsStorage';
 
-export default function AdminPortalPage({ onBackToStudentLms }) {
-  // Authentication State
+export default function AdminPortalPage() {
+  // Authentication State (Independent Admin Session)
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [adminUser, setAdminUser] = useState({
     username: "skabdulsajid",
@@ -59,33 +73,50 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loginError, setLoginError] = useState("");
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
-  // Navigation State with URL Hash Synchronization
+  // Sidebar Accordion State (Exact structure from screenshots media_1790833890610.png to media_1790833925679.png)
+  const [openAccordions, setOpenAccordions] = useState({
+    dashboard: true,
+    master: false,
+    approval: false,
+    transaction: true,
+    applicationTest: false,
+    reports: false
+  });
+
+  const toggleAccordion = (section) => {
+    setOpenAccordions(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  // URL Hash Navigation Detection
   const getInitialMenu = () => {
     const url = (window.location.hash + window.location.pathname).toLowerCase();
-    if (url.includes('session')) return 'session';
-    if (url.includes('assignment')) return 'assignment';
     if (url.includes('fee')) return 'fee';
-    if (url.includes('batch')) return 'batch';
-    if (url.includes('report')) return 'reports';
+    if (url.includes('session')) return 'session';
+    if (url.includes('reg')) return 'reg';
+    if (url.includes('assignment')) return 'assignment';
+    if (url.includes('master')) return 'master';
     if (url.includes('dashboard')) return 'dashboard';
-    return 'reg'; // Default to Reg.aspx as requested!
+    return 'fee'; // Default matching user's active screenshot Fee.aspx
   };
 
   const [activeMenu, setActiveMenu] = useState(() => getInitialMenu());
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleSelectMenu = (menuKey) => {
     setActiveMenu(menuKey);
-    if (menuKey === 'reg') window.location.hash = '/admin/Reg.aspx';
+    if (menuKey === 'fee') window.location.hash = '/admin/Fee.aspx';
     else if (menuKey === 'session') window.location.hash = '/admin/Session.aspx';
+    else if (menuKey === 'reg') window.location.hash = '/admin/Reg.aspx';
     else if (menuKey === 'assignment') window.location.hash = '/admin/AssignmentApproval.aspx';
-    else if (menuKey === 'fee') window.location.hash = '/admin/Fee.aspx';
-    else window.location.hash = `/admin/${menuKey}`;
+    else window.location.hash = `/admin/${menuKey}.aspx`;
   };
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  // Notifications
+  // Toast Alerts
   const [toastMessage, setToastMessage] = useState("");
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -93,178 +124,73 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
   };
 
   // ==========================================
-  // 1. REGISTRATION (Reg.aspx) DATA & STATE
+  // 1. FEE MANAGEMENT (Fee.aspx) - Screenshot 1
   // ==========================================
-  const [regFilterFromDate, setRegFilterFromDate] = useState("2026-01-01");
-  const [regFilterToDate, setRegFilterToDate] = useState("2026-12-31");
-  const [regFilterCourse, setRegFilterCourse] = useState("APIDS");
-  const [regFilterBatch, setRegFilterBatch] = useState("BATCH 202606");
-  const [regSearchKeyword, setRegSearchKeyword] = useState("");
+  const [feeRecords, setFeeRecords] = useState(() => getStoredFees());
 
-  const initialStudents = [
-    {
-      id: 1,
-      rollNo: "DVA-202606-448",
-      name: "SK ABDUL SAJID",
-      email: "sajid.student@dvanalytics.com",
-      phone: "+91 98765 43210",
-      course: "APIDS",
-      batch: "BATCH 202606",
-      regDate: "2026-06-05",
-      totalFee: "₹65,000",
-      paidFee: "₹65,000",
-      dueFee: "₹0",
-      status: "Active",
-      gender: "Male",
-      college: "Biju Patnaik University of Technology",
-      location: "Bhubaneswar / Kolkata"
-    },
-    {
-      id: 2,
-      rollNo: "DVA-202606-449",
-      name: "PRIYANKA MISHRA",
-      email: "priyanka.m@dvanalytics.com",
-      phone: "+91 98123 45678",
-      course: "APIDS",
-      batch: "BATCH 202606",
-      regDate: "2026-06-05",
-      totalFee: "₹65,000",
-      paidFee: "₹45,000",
-      dueFee: "₹20,000",
-      status: "Active",
-      gender: "Female",
-      college: "KIIT University",
-      location: "Bhubaneswar"
-    },
-    {
-      id: 3,
-      rollNo: "DVA-202606-450",
-      name: "ROHIT KUMAR SHARMA",
-      email: "rohit.sharma@gmail.com",
-      phone: "+91 97654 32109",
-      course: "APIDA",
-      batch: "BATCH 202606",
-      regDate: "2026-06-06",
-      totalFee: "₹55,000",
-      paidFee: "₹55,000",
-      dueFee: "₹0",
-      status: "Active",
-      gender: "Male",
-      college: "Utkal University",
-      location: "Cuttack"
-    },
-    {
-      id: 4,
-      rollNo: "DVA-202606-451",
-      name: "ANANYA MOHANTY",
-      email: "ananya.mohanty@yahoo.com",
-      phone: "+91 94370 11223",
-      course: "MPGA",
-      batch: "BATCH 202606",
-      regDate: "2026-06-07",
-      totalFee: "₹75,000",
-      paidFee: "₹40,000",
-      dueFee: "₹35,000",
-      status: "Active",
-      gender: "Female",
-      college: "ITER SOA University",
-      location: "Bhubaneswar"
-    },
-    {
-      id: 5,
-      rollNo: "DVA-202606-452",
-      name: "DEBASISH DAS",
-      email: "debasish.das@outlook.com",
-      phone: "+91 99371 88990",
-      course: "AIML",
-      batch: "BATCH 202606",
-      regDate: "2026-06-08",
-      totalFee: "₹85,000",
-      paidFee: "₹85,000",
-      dueFee: "₹0",
-      status: "Active",
-      gender: "Male",
-      college: "VSSUT Burla",
-      location: "Sambalpur"
-    }
-  ];
-
-  const [students, setStudents] = useState(initialStudents);
-
-  // Create Registration Modal State (Reg.aspx - btncreate)
-  const [createRegOpen, setCreateRegOpen] = useState(false);
-  const [newStudent, setNewStudent] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    course: "APIDS",
+  const [feeForm, setFeeForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    studentId: "9955774102",
+    committedFee: "65000",
     batch: "BATCH 202606",
-    gender: "Male",
-    college: "",
-    location: "",
-    totalFee: "65000",
-    paidFee: "35000",
-    regDate: new Date().toISOString().split('T')[0]
+    course: "APIDS",
+    balance: "0",
+    amount: "35000",
+    modeOfPay: "UPI / Bank Transfer",
+    remarks: "Installment payment verified via payment gateway.",
+    referenceDocName: "Receipt_INV_88392.pdf"
   });
 
-  const handleCreateStudent = (e) => {
-    e.preventDefault();
-    if (!newStudent.name || !newStudent.phone) {
-      alert("Please fill in Student Name and Phone number");
-      return;
+  const handleStudentIdChange = (idVal) => {
+    setFeeForm(prev => ({
+      ...prev,
+      studentId: idVal
+    }));
+    // Auto-lookup matching student
+    const found = studentsList.find(s => s.phone === idVal || s.rollNo.includes(idVal));
+    if (found) {
+      const commFee = parseInt(found.totalFee.replace(/[^0-9]/g, '') || 65000);
+      const paid = parseInt(found.paidFee.replace(/[^0-9]/g, '') || 0);
+      const bal = Math.max(0, commFee - paid);
+      setFeeForm(prev => ({
+        ...prev,
+        committedFee: commFee.toString(),
+        batch: found.batch,
+        course: found.course,
+        balance: bal.toString(),
+        remarks: `Payment record for ${found.name} (${found.rollNo})`
+      }));
     }
-    const due = Math.max(0, parseInt(newStudent.totalFee || 0) - parseInt(newStudent.paidFee || 0));
-    const created = {
-      id: Date.now(),
-      rollNo: `DVA-${newStudent.batch.replace(/[^0-9]/g, '')}-${Math.floor(Math.random() * 400 + 460)}`,
-      name: newStudent.name.toUpperCase(),
-      email: newStudent.email || `${newStudent.name.toLowerCase().replace(/\s+/g, '.')}@dvanalytics.com`,
-      phone: newStudent.phone,
-      course: newStudent.course,
-      batch: newStudent.batch,
-      regDate: newStudent.regDate,
-      totalFee: `₹${parseInt(newStudent.totalFee).toLocaleString('en-IN')}`,
-      paidFee: `₹${parseInt(newStudent.paidFee).toLocaleString('en-IN')}`,
-      dueFee: `₹${due.toLocaleString('en-IN')}`,
-      status: "Active",
-      gender: newStudent.gender,
-      college: newStudent.college || "BPUT University",
-      location: newStudent.location || "Bhubaneswar"
-    };
-
-    setStudents([created, ...students]);
-    setCreateRegOpen(false);
-    showToast(`Student ${created.name} registered successfully with ID: ${created.rollNo}`);
-    setNewStudent({
-      name: "",
-      email: "",
-      phone: "",
-      course: "APIDS",
-      batch: "BATCH 202606",
-      gender: "Male",
-      college: "",
-      location: "",
-      totalFee: "65000",
-      paidFee: "35000",
-      regDate: new Date().toISOString().split('T')[0]
-    });
   };
 
-  // Change Password Modal State
-  const [passwordModalStudent, setPasswordModalStudent] = useState(null);
-  const [newPasswordValue, setNewPasswordValue] = useState("");
-  const handleChangePassword = () => {
-    if (!newPasswordValue) {
-      alert("Please enter a new password");
+  const handleFeeSubmit = (e) => {
+    e.preventDefault();
+    if (!feeForm.studentId || !feeForm.amount) {
+      alert("Please enter Student ID and Amount");
       return;
     }
-    showToast(`Password for ${passwordModalStudent.name} updated successfully!`);
-    setPasswordModalStudent(null);
-    setNewPasswordValue("");
+
+    const newRecord = {
+      date: feeForm.date,
+      studentId: feeForm.studentId,
+      studentName: studentsList.find(s => s.phone === feeForm.studentId)?.name || "STUDENT " + feeForm.studentId,
+      committedFee: feeForm.committedFee,
+      batch: feeForm.batch,
+      course: feeForm.course,
+      balance: Math.max(0, parseInt(feeForm.balance || 0) - parseInt(feeForm.amount || 0)).toString(),
+      amount: feeForm.amount,
+      modeOfPay: feeForm.modeOfPay,
+      remarks: feeForm.remarks,
+      referenceDoc: feeForm.referenceDocName || "Payment_Receipt.pdf"
+    };
+
+    const updated = saveAdminFee(newRecord);
+    setFeeRecords(updated);
+    showToast(`Fee payment of ₹${parseInt(feeForm.amount).toLocaleString('en-IN')} submitted successfully for Student ID ${feeForm.studentId}!`);
   };
 
   // ==========================================
-  // 2. LIVE SESSION (Session.aspx) DATA & STATE
+  // 2. LIVE SESSION (Session.aspx) - Live Reflection
   // ==========================================
   const mentorsList = [
     "DEBENDRA DEBADUTTA DAS",
@@ -315,102 +241,113 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     description: "Session 1 Class 1 Video Stream"
   });
 
-  const [publishedSessions, setPublishedSessions] = useState([
-    {
-      id: 1,
-      date: "2026-06-05",
-      mentor: "DEBENDRA DEBADUTTA DAS",
-      batch: "BATCH 202606",
-      application: "EXCEL BASE AND ADVANCED",
-      sessionTitle: "B1.SESSION-1",
-      sortOrder: 1,
-      topicType: "CLASS VIDEOS",
-      uploadedLink: "https://player.vdocipher.com/v2/?otp=20160313versASE3232Tj8PbBLlQCLHDTQp2I37Tn35428tQ5YVO2eMzx1M59M5y",
-      description: "Class 1: Advanced Formulae, Dynamic Cell References & Retail Data"
-    },
-    {
-      id: 2,
-      date: "2026-06-05",
-      mentor: "DEBENDRA DEBADUTTA DAS",
-      batch: "BATCH 202606",
-      application: "EXCEL BASE AND ADVANCED",
-      sessionTitle: "B1.SESSION-1",
-      sortOrder: 2,
-      topicType: "MATERIALS",
-      uploadedLink: "https://drive.google.com/drive/folders/1s2bketdfisU7l0tOW3Zglpw5P5tuCeHU",
-      description: "A2.RAW DATA.zip (Session Materials & Practice Datasets)"
-    },
-    {
-      id: 3,
-      date: "2026-06-05",
-      mentor: "DEBENDRA DEBADUTTA DAS",
-      batch: "BATCH 202606",
-      application: "EXCEL BASE AND ADVANCED",
-      sessionTitle: "B1.SESSION-1",
-      sortOrder: 3,
-      topicType: "ASSIGNMENTS",
-      uploadedLink: "https://drive.google.com/drive/folders/1s2bketdfisU7l0tOW3Zglpw5P5tuCeHU",
-      description: "SESSION-1 ASSIGNMENTS.xlsx (Homework Problems Statement)"
-    },
-    {
-      id: 4,
-      date: "2026-06-12",
-      mentor: "GANESH K KUMAR",
-      batch: "BATCH 202606",
-      application: "SQL SERVER",
-      sessionTitle: "B1.SESSION-1",
-      sortOrder: 1,
-      topicType: "CLASS VIDEOS",
-      uploadedLink: "https://drive.google.com/drive/folders/1nR8A_kcFYpYPIYuknhllAzfv43wlz9GI",
-      description: "SQL Server Installation, DDL & DML Operations"
-    },
-    {
-      id: 5,
-      date: "2026-06-19",
-      mentor: "AYUSHKANT PANDA",
-      batch: "BATCH 202606",
-      application: "PYTHON PROGRAMMING",
-      sessionTitle: "B1.SESSION-1",
-      sortOrder: 1,
-      topicType: "CLASS VIDEOS",
-      uploadedLink: "https://drive.google.com/drive/folders/1x86D2j38HxNJWavtVGRZWTmSdHQ6tnpG",
-      description: "Python Core Data Structures, Functions & Pandas"
-    }
-  ]);
+  const [storedSessions, setStoredSessions] = useState(() => getAllStoredSessions());
 
-  const handleAddSession = (e) => {
+  const handleAddLiveSession = (e) => {
     e.preventDefault();
     if (!sessionForm.sessionTitle || !sessionForm.uploadedLink) {
       alert("Please provide Session Title and Uploaded Link");
       return;
     }
 
-    const newSess = {
-      id: Date.now(),
+    // Call persistent storage update - reflects directly in student portal!
+    saveAdminSession({
       date: sessionForm.date,
       mentor: sessionForm.mentor,
       batch: sessionForm.batch,
       application: sessionForm.application,
       sessionTitle: sessionForm.sessionTitle,
-      sortOrder: parseInt(sessionForm.sortOrder || 1),
+      sortOrder: sessionForm.sortOrder,
       topicType: sessionForm.topicType,
       uploadedLink: sessionForm.uploadedLink,
-      description: sessionForm.description || `${sessionForm.application} ${sessionForm.sessionTitle}`
-    };
+      description: sessionForm.description
+    });
 
-    setPublishedSessions([newSess, ...publishedSessions]);
-    showToast(`Live Session ${newSess.sessionTitle} (${newSess.topicType}) added to LMS!`);
+    setStoredSessions(getAllStoredSessions());
+    showToast(`✓ LIVE UPDATE: ${sessionForm.sessionTitle} (${sessionForm.topicType}) uploaded! Reflected immediately in Student Portal.`);
   };
 
-  const handleDeleteSession = (id) => {
-    if (window.confirm("Are you sure you want to delete this session item?")) {
-      setPublishedSessions(publishedSessions.filter(s => s.id !== id));
-      showToast("Session removed successfully.");
+  const handleDeleteLiveSession = (sessionId, subjectName) => {
+    if (window.confirm("Are you sure you want to delete this session? It will be removed from the Student Portal immediately.")) {
+      deleteAdminSession(sessionId, subjectName);
+      setStoredSessions(getAllStoredSessions());
+      showToast("Session item deleted and removed from Student Portal.");
     }
   };
 
   // ==========================================
-  // 3. ASSIGNMENT APPROVAL DATA & STATE
+  // 3. REGISTRATION (Reg.aspx)
+  // ==========================================
+  const [studentsList, setStudentsList] = useState(() => getStoredStudents());
+  const [createRegOpen, setCreateRegOpen] = useState(false);
+  const [regFilterFromDate, setRegFilterFromDate] = useState("2026-01-01");
+  const [regFilterToDate, setRegFilterToDate] = useState("2026-12-31");
+  const [regFilterCourse, setRegFilterCourse] = useState("APIDS");
+  const [regFilterBatch, setRegFilterBatch] = useState("BATCH 202606");
+  const [regSearchKeyword, setRegSearchKeyword] = useState("");
+
+  const [newStudentForm, setNewStudentForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    course: "APIDS",
+    batch: "BATCH 202606",
+    gender: "Male",
+    college: "",
+    location: "",
+    totalFee: "65000",
+    paidFee: "35000",
+    regDate: new Date().toISOString().split('T')[0]
+  });
+
+  const handleCreateStudentSubmit = (e) => {
+    e.preventDefault();
+    if (!newStudentForm.name || !newStudentForm.phone) {
+      alert("Please fill in Student Name and Phone");
+      return;
+    }
+    const due = Math.max(0, parseInt(newStudentForm.totalFee || 0) - parseInt(newStudentForm.paidFee || 0));
+    const createdData = {
+      name: newStudentForm.name.toUpperCase(),
+      email: newStudentForm.email || `${newStudentForm.name.toLowerCase().replace(/\s+/g, '.')}@dvanalytics.com`,
+      phone: newStudentForm.phone,
+      course: newStudentForm.course,
+      batch: newStudentForm.batch,
+      regDate: newStudentForm.regDate,
+      totalFee: `₹${parseInt(newStudentForm.totalFee).toLocaleString('en-IN')}`,
+      paidFee: `₹${parseInt(newStudentForm.paidFee).toLocaleString('en-IN')}`,
+      dueFee: `₹${due.toLocaleString('en-IN')}`,
+      status: "Active",
+      gender: newStudentForm.gender,
+      college: newStudentForm.college || "BPUT University",
+      location: newStudentForm.location || "Bhubaneswar"
+    };
+
+    const updatedList = saveAdminStudent(createdData);
+    setStudentsList(updatedList);
+    setCreateRegOpen(false);
+    showToast(`Student ${createdData.name} registered successfully!`);
+    setNewStudentForm({
+      name: "",
+      email: "",
+      phone: "",
+      course: "APIDS",
+      batch: "BATCH 202606",
+      gender: "Male",
+      college: "",
+      location: "",
+      totalFee: "65000",
+      paidFee: "35000",
+      regDate: new Date().toISOString().split('T')[0]
+    });
+  };
+
+  // Password reset modal
+  const [passwordModalStudent, setPasswordModalStudent] = useState(null);
+  const [newPasswordVal, setNewPasswordVal] = useState("");
+
+  // ==========================================
+  // 4. ASSIGNMENT APPROVAL
   // ==========================================
   const [assignmentsApprovalList, setAssignmentsApprovalList] = useState([
     {
@@ -424,7 +361,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
       submittedDate: "2026-06-10",
       status: "Approved",
       score: "98/100",
-      feedback: "Excellent formula structuring and dynamic ranges."
+      feedback: "Formulas and cell ranges structured accurately."
     },
     {
       id: 102,
@@ -438,22 +375,8 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
       status: "Pending",
       score: "",
       feedback: ""
-    },
-    {
-      id: 103,
-      studentName: "ROHIT KUMAR SHARMA",
-      rollNo: "DVA-202606-450",
-      batch: "BATCH 202606",
-      subject: "SQL SERVER",
-      title: "SQL Practical Queries - Joins & Aggregations",
-      submittedFile: "Rohit_SQL_Queries.sql",
-      submittedDate: "2026-06-14",
-      status: "Pending",
-      score: "",
-      feedback: ""
     }
   ]);
-
   const [reviewModalItem, setReviewModalItem] = useState(null);
   const [reviewScore, setReviewScore] = useState("95");
   const [reviewFeedback, setReviewFeedback] = useState("Great work! All criteria met.");
@@ -475,51 +398,20 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     setReviewModalItem(null);
   };
 
-  const handleRejectAssignment = () => {
-    if (!reviewModalItem) return;
-    setAssignmentsApprovalList(prev => prev.map(item => {
-      if (item.id === reviewModalItem.id) {
-        return {
-          ...item,
-          status: "Needs Revision",
-          score: "Resubmit",
-          feedback: reviewFeedback || "Please review questions 3 & 4 and resubmit."
-        };
-      }
-      return item;
-    }));
-    showToast(`Revision requested for ${reviewModalItem.studentName}`);
-    setReviewModalItem(null);
-  };
-
   // ==========================================
-  // LOGIN SCREEN (Matching media_1790774040715.png)
+  // LOGIN SCREEN (Standalone Admin Auth)
   // ==========================================
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#f1f5f9] flex flex-col items-center justify-center p-4">
-        {/* Floating Top Navigation */}
-        <div className="absolute top-4 left-6 flex items-center gap-3">
-          <button
-            onClick={onBackToStudentLms}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-all shadow-xs"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Return to Student LMS</span>
-          </button>
-        </div>
-
-        {/* Login Box - Exactly matching edu.dvanalyticsmds.com/admin/index.aspx */}
         <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200/80 p-8 sm:p-10 relative">
-          {/* Logo Header */}
           <div className="text-center mb-8">
             <div className="inline-block mb-3">
               <Logo />
             </div>
-            <p className="text-xs text-slate-400 font-medium">Enterprise Administrator Portal</p>
+            <p className="text-xs text-slate-500 font-medium">Enterprise Administrator Portal</p>
           </div>
 
-          {/* Form */}
           <form 
             onSubmit={(e) => {
               e.preventDefault();
@@ -532,7 +424,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                   email: `${loginUsername}@dvanalytics.com`
                 });
               } else {
-                setLoginError("Invalid Admin credentials. Try skabdulsajid / @2288");
+                setLoginError("Invalid credentials. Enter skabdulsajid / @2288");
               }
             }} 
             className="space-y-5"
@@ -544,22 +436,18 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
               </div>
             )}
 
-            {/* Username Field */}
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-slate-500">Username</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={loginUsername}
-                  onChange={(e) => setLoginUsername(e.target.value)}
-                  placeholder="Enter administrator username"
-                  className="w-full px-4 py-2.5 bg-blue-50/60 focus:bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:border-red-500 focus:outline-none transition-all"
-                  required
-                />
-              </div>
+              <input
+                type="text"
+                value={loginUsername}
+                onChange={(e) => setLoginUsername(e.target.value)}
+                placeholder="Enter administrator username"
+                className="w-full px-4 py-2.5 bg-blue-50/60 focus:bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:border-red-500 focus:outline-none transition-all"
+                required
+              />
             </div>
 
-            {/* Password Field */}
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-slate-500">Password</label>
               <div className="relative">
@@ -581,7 +469,6 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between text-xs pt-1">
               <label className="flex items-center gap-2 cursor-pointer text-slate-600">
                 <input
@@ -595,14 +482,13 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
 
               <button
                 type="button"
-                onClick={() => alert("Password reset link sent to registered administrator email.")}
+                onClick={() => alert("Password reset link sent to administrator email.")}
                 className="text-red-500 hover:text-red-600 font-medium"
               >
                 Forgot Password ?
               </button>
             </div>
 
-            {/* Red / Coral Sign In Button (matches screenshot) */}
             <button
               type="submit"
               className="w-full py-3 bg-[#e74c3c] hover:bg-[#c0392b] text-white font-bold text-sm rounded-full shadow-md hover:shadow-lg transition-all transform active:scale-[0.99] cursor-pointer mt-4"
@@ -611,7 +497,6 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
             </button>
           </form>
 
-          {/* Quick Autocomplete presets from user's Chrome password manager */}
           <div className="mt-8 pt-6 border-t border-slate-100">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2 text-center">
               Quick Admin Credentials:
@@ -624,7 +509,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                   setLoginPassword("@2288");
                   setIsAuthenticated(true);
                 }}
-                className="p-2 text-left bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors text-xs cursor-pointer"
+                className="p-2 text-left bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 text-xs cursor-pointer"
               >
                 <div className="font-bold text-slate-800">skabdulsajid</div>
                 <div className="text-[10px] text-slate-500">Super Admin (@2288)</div>
@@ -637,7 +522,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                   setLoginPassword("@2288");
                   setIsAuthenticated(true);
                 }}
-                className="p-2 text-left bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors text-xs cursor-pointer"
+                className="p-2 text-left bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 text-xs cursor-pointer"
               >
                 <div className="font-bold text-slate-800">Debendra</div>
                 <div className="text-[10px] text-slate-500">Director / Admin</div>
@@ -650,10 +535,10 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
   }
 
   // ==========================================
-  // AUTHENTICATED ADMIN PORTAL
+  // MAIN AUTHENTICATED ADMIN PORTAL VIEW
   // ==========================================
   return (
-    <div className="min-h-screen bg-[#f4f6f9] text-slate-900 flex font-sans antialiased">
+    <div className="min-h-screen bg-[#f7f8fa] text-slate-900 flex font-sans antialiased">
       {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed top-20 right-6 z-50 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 border border-slate-700 animate-in fade-in slide-in-from-top-2">
@@ -662,31 +547,12 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
         </div>
       )}
 
-      {/* Admin Sidebar (Dark Navy matching edu.dvanalyticsmds.com/admin) */}
+      {/* Admin Sidebar (Dark Navy `#2A3F54` matching edu.dvanalyticsmds.com/admin screenshots) */}
       <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-[#2A3F54] text-[#E7E7E7] flex flex-col transition-all duration-300 shrink-0 border-r border-[#1e2f3e] z-40 select-none`}>
-        {/* Sidebar Header with DV Analytics Logo */}
-        <div className="p-4 border-b border-[#374f67] flex items-center justify-between">
-          <div className="flex items-center gap-2 overflow-hidden">
-            <div className="bg-white p-1.5 rounded-lg shadow-sm">
-              <img src="./dv-logo.png" alt="DV Logo" className="h-6 w-auto object-contain" />
-            </div>
-            {sidebarOpen && (
-              <div>
-                <span className="font-bold text-sm text-white tracking-wide block leading-tight">
-                  DV Analytics
-                </span>
-                <span className="text-[10px] text-teal-300 font-mono">
-                  Admin Portal v2.0
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Profile Card inside Sidebar */}
+        {/* Profile Card inside Sidebar (Matches Screenshot 1-5) */}
         <div className="p-4 border-b border-[#374f67] flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-orange-400 text-white flex items-center justify-center font-bold text-sm shadow-md shrink-0">
-            {adminUser.displayName.charAt(0)}
+          <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-600 overflow-hidden flex items-center justify-center shrink-0">
+            <img src="./student-avatar.jpg" alt="Admin" className="w-full h-full object-cover" />
           </div>
           {sidebarOpen && (
             <div className="overflow-hidden">
@@ -694,386 +560,526 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
               <span className="font-bold text-sm text-white truncate block">
                 {adminUser.displayName}
               </span>
-              <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-mono">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                Active Admin
-              </span>
             </div>
           )}
         </div>
 
-        {/* Menu Navigation Categories */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-1 text-xs">
-          {/* 1. Dashboard */}
-          <button
-            onClick={() => handleSelectMenu('dashboard')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
-              activeMenu === 'dashboard'
-                ? 'bg-[#1abb9c] text-white font-bold shadow-xs'
-                : 'text-slate-300 hover:bg-[#34495E] hover:text-white'
-            }`}
-          >
-            <TrendingUp className="w-4 h-4 shrink-0" />
-            {sidebarOpen && <span>Dashboard Overview</span>}
-          </button>
+        {/* Accordion Sidebar Menu (Matches Screenshots 1 to 5 exactly) */}
+        <nav className="flex-1 overflow-y-auto py-2 text-xs divide-y divide-[#374f67]/40">
+          {/* 1. Dashboard Accordion */}
+          <div>
+            <button
+              onClick={() => toggleAccordion('dashboard')}
+              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-[#34495E] transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <TrendingUp className="w-4 h-4 text-slate-400" />
+                {sidebarOpen && <span className="font-semibold">Dashboard</span>}
+              </div>
+              {sidebarOpen && (
+                openAccordions.dashboard ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />
+              )}
+            </button>
+            {sidebarOpen && openAccordions.dashboard && (
+              <div className="bg-[#243444] py-1 pl-9 pr-3 space-y-1">
+                <button
+                  onClick={() => handleSelectMenu('dashboard')}
+                  className={`w-full text-left py-1.5 px-2 rounded transition-colors ${activeMenu === 'dashboard' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-400 hover:text-white'}`}
+                >
+                  • Monthly Collection
+                </button>
+                <button
+                  onClick={() => handleSelectMenu('dashboard')}
+                  className="w-full text-left py-1.5 px-2 rounded text-slate-400 hover:text-white transition-colors"
+                >
+                  • Daily Collection
+                </button>
+              </div>
+            )}
+          </div>
 
-          {/* 2. Registration (Reg.aspx) */}
-          <button
-            onClick={() => handleSelectMenu('reg')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
-              activeMenu === 'reg'
-                ? 'bg-[#1abb9c] text-white font-bold shadow-xs'
-                : 'text-slate-300 hover:bg-[#34495E] hover:text-white'
-            }`}
-          >
-            <Users className="w-4 h-4 shrink-0" />
-            {sidebarOpen && <span>Registration (Reg.aspx)</span>}
-          </button>
+          {/* 2. Master Accordion (Matches Screenshot 2) */}
+          <div>
+            <button
+              onClick={() => toggleAccordion('master')}
+              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-[#34495E] transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <Database className="w-4 h-4 text-slate-400" />
+                {sidebarOpen && <span className="font-semibold">Master</span>}
+              </div>
+              {sidebarOpen && (
+                openAccordions.master ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />
+              )}
+            </button>
+            {sidebarOpen && openAccordions.master && (
+              <div className="bg-[#243444] py-1 pl-9 pr-3 space-y-1 text-[11px]">
+                {["User Master", "Branch Master", "Skill Master", "Application Master", "Course Master", "Batch Master", "Mentor Master", "Non Live Training", "TeleCaller Master", "Department", "Designation"].map(m => (
+                  <button
+                    key={m}
+                    onClick={() => {
+                      handleSelectMenu('master');
+                      showToast(`Opened ${m}`);
+                    }}
+                    className="w-full text-left py-1 px-2 rounded text-slate-400 hover:text-white transition-colors"
+                  >
+                    • {m}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-          {/* 3. Live Session (Session.aspx) */}
-          <button
-            onClick={() => handleSelectMenu('session')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
-              activeMenu === 'session'
-                ? 'bg-[#1abb9c] text-white font-bold shadow-xs'
-                : 'text-slate-300 hover:bg-[#34495E] hover:text-white'
-            }`}
-          >
-            <Video className="w-4 h-4 shrink-0" />
-            {sidebarOpen && <span>Live Session (Session.aspx)</span>}
-          </button>
+          {/* 3. Approval Accordion (Matches Screenshot 3) */}
+          <div>
+            <button
+              onClick={() => toggleAccordion('approval')}
+              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-[#34495E] transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <ClipboardCheck className="w-4 h-4 text-slate-400" />
+                {sidebarOpen && <span className="font-semibold">Approval</span>}
+              </div>
+              {sidebarOpen && (
+                openAccordions.approval ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />
+              )}
+            </button>
+            {sidebarOpen && openAccordions.approval && (
+              <div className="bg-[#243444] py-1 pl-9 pr-3 space-y-1 text-[11px]">
+                {["Payment Approval", "Registration Approval", "Employee Approval", "Expense Approval", "Appraisal Approval"].map(a => (
+                  <button
+                    key={a}
+                    onClick={() => {
+                      handleSelectMenu('approval');
+                      showToast(`Viewing ${a}`);
+                    }}
+                    className="w-full text-left py-1 px-2 rounded text-slate-400 hover:text-white transition-colors"
+                  >
+                    • {a}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-          {/* 4. Assignment Approval */}
-          <button
-            onClick={() => handleSelectMenu('assignment')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
-              activeMenu === 'assignment'
-                ? 'bg-[#1abb9c] text-white font-bold shadow-xs'
-                : 'text-slate-300 hover:bg-[#34495E] hover:text-white'
-            }`}
-          >
-            <FileSpreadsheet className="w-4 h-4 shrink-0" />
-            {sidebarOpen && <span>Assignment Evaluation</span>}
-          </button>
+          {/* 4. Transaction Accordion (Matches Screenshot 4 & 5) */}
+          <div>
+            <button
+              onClick={() => toggleAccordion('transaction')}
+              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-[#34495E] transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <FolderOpen className="w-4 h-4 text-slate-400" />
+                {sidebarOpen && <span className="font-semibold">Transaction</span>}
+              </div>
+              {sidebarOpen && (
+                openAccordions.transaction ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />
+              )}
+            </button>
+            {sidebarOpen && openAccordions.transaction && (
+              <div className="bg-[#243444] py-1 pl-9 pr-3 space-y-1 text-[11px]">
+                <button
+                  onClick={() => handleSelectMenu('reg')}
+                  className={`w-full text-left py-1.5 px-2 rounded transition-colors ${activeMenu === 'reg' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-400 hover:text-white'}`}
+                >
+                  • Registration (Reg.aspx)
+                </button>
+                <button
+                  onClick={() => handleSelectMenu('fee')}
+                  className={`w-full text-left py-1.5 px-2 rounded transition-colors ${activeMenu === 'fee' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-400 hover:text-white'}`}
+                >
+                  • Fee (Fee.aspx)
+                </button>
+                <button
+                  onClick={() => handleSelectMenu('session')}
+                  className={`w-full text-left py-1.5 px-2 rounded transition-colors ${activeMenu === 'session' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-400 hover:text-white'}`}
+                >
+                  • Live Session (Session.aspx)
+                </button>
+                <button
+                  onClick={() => handleSelectMenu('assignment')}
+                  className={`w-full text-left py-1.5 px-2 rounded transition-colors ${activeMenu === 'assignment' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-400 hover:text-white'}`}
+                >
+                  • Assignment
+                </button>
+                {["Live Session - Delete", "Resume", "My Interview Kit", "Non Live Session", "Assign Student for Non live sessions", "Discussion Forum", "Release User", "EXE Users", "App Users", "Class", "Assign Students for Batch", "Mock Interview", "Import Lead", "Batch Completion", "Assign Batch For Collection", "Expense"].map(t => (
+                  <button
+                    key={t}
+                    onClick={() => showToast(`Selected transaction: ${t}`)}
+                    className="w-full text-left py-1 px-2 rounded text-slate-400 hover:text-white transition-colors"
+                  >
+                    • {t}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-          {/* 5. Fee Management */}
-          <button
-            onClick={() => handleSelectMenu('fee')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
-              activeMenu === 'fee'
-                ? 'bg-[#1abb9c] text-white font-bold shadow-xs'
-                : 'text-slate-300 hover:bg-[#34495E] hover:text-white'
-            }`}
-          >
-            <DollarSign className="w-4 h-4 shrink-0" />
-            {sidebarOpen && <span>Fee & Collections (Fee.aspx)</span>}
-          </button>
+          {/* 5. Application Test Accordion */}
+          <div>
+            <button
+              onClick={() => toggleAccordion('applicationTest')}
+              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-[#34495E] transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <FileCheck className="w-4 h-4 text-slate-400" />
+                {sidebarOpen && <span className="font-semibold">Application Test</span>}
+              </div>
+              {sidebarOpen && (
+                openAccordions.applicationTest ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />
+              )}
+            </button>
+            {sidebarOpen && openAccordions.applicationTest && (
+              <div className="bg-[#243444] py-1 pl-9 pr-3 space-y-1 text-[11px]">
+                {["Practical Test Questions", "MCQ", "Assign MCQ To Batch", "Assign Practical Questions", "Practical Test Evaluation", "Assign PI To Batch", "PI Questions", "PI Evaluation"].map(at => (
+                  <button
+                    key={at}
+                    onClick={() => showToast(`Application Test: ${at}`)}
+                    className="w-full text-left py-1 px-2 rounded text-slate-400 hover:text-white transition-colors"
+                  >
+                    • {at}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-          {/* 6. Batch Master */}
-          <button
-            onClick={() => handleSelectMenu('batch')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
-              activeMenu === 'batch'
-                ? 'bg-[#1abb9c] text-white font-bold shadow-xs'
-                : 'text-slate-300 hover:bg-[#34495E] hover:text-white'
-            }`}
-          >
-            <Layers className="w-4 h-4 shrink-0" />
-            {sidebarOpen && <span>Batch & Course Master</span>}
-          </button>
-
-          {/* 7. Reports */}
-          <button
-            onClick={() => handleSelectMenu('reports')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
-              activeMenu === 'reports'
-                ? 'bg-[#1abb9c] text-white font-bold shadow-xs'
-                : 'text-slate-300 hover:bg-[#34495E] hover:text-white'
-            }`}
-          >
-            <FileText className="w-4 h-4 shrink-0" />
-            {sidebarOpen && <span>Reports & Exports</span>}
-          </button>
+          {/* 6. Reports Accordion */}
+          <div>
+            <button
+              onClick={() => toggleAccordion('reports')}
+              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-[#34495E] transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <FileText className="w-4 h-4 text-slate-400" />
+                {sidebarOpen && <span className="font-semibold">Reports</span>}
+              </div>
+              {sidebarOpen && (
+                openAccordions.reports ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />
+              )}
+            </button>
+            {sidebarOpen && openAccordions.reports && (
+              <div className="bg-[#243444] py-1 pl-9 pr-3 space-y-1 text-[11px]">
+                {["Invoice", "Student", "Collection", "Collection Summary", "Outstanding", "Feedback", "Attendance", "Assignment", "MCQ", "Practical", "Expense"].map(r => (
+                  <button
+                    key={r}
+                    onClick={() => showToast(`Viewing Report: ${r}`)}
+                    className="w-full text-left py-1 px-2 rounded text-slate-400 hover:text-white transition-colors"
+                  >
+                    • {r}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </nav>
 
-        {/* Sidebar Footer */}
-        <div className="p-3 border-t border-[#374f67] space-y-2">
-          <button
-            onClick={onBackToStudentLms}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
-            {sidebarOpen && <span>Student LMS</span>}
-          </button>
-
+        {/* Sidebar Logout Action */}
+        <div className="p-3 border-t border-[#374f67]">
           <button
             onClick={() => setIsAuthenticated(false)}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-red-600/30 hover:bg-red-600 text-red-200 hover:text-white text-xs font-semibold transition-all cursor-pointer"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white text-xs font-semibold transition-all cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5 shrink-0" />
-            {sidebarOpen && <span>Logout Session</span>}
+            {sidebarOpen && <span>Sign Out</span>}
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Admin Top Navbar */}
-        <header className="h-16 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between shadow-2xs">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <div className="text-xs sm:text-sm font-bold text-slate-800">
-              DV Analytics LMS Administration Control Center
-            </div>
-          </div>
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white">
+        {/* Top Navbar Header (Matches Screenshot 1 Header) */}
+        <header className="h-14 bg-[#EDEDED] border-b border-slate-300 px-4 flex items-center justify-between shadow-2xs">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-1.5 rounded text-slate-600 hover:bg-slate-200 cursor-pointer"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
 
-          <div className="flex items-center gap-3">
+          {/* User Profile in Top Right Header */}
+          <div className="relative">
             <button
-              onClick={onBackToStudentLms}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
+              onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+              className="flex items-center gap-2 p-1 rounded hover:bg-slate-200 transition-colors cursor-pointer"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Student LMS</span>
+              <img src="./student-avatar.jpg" alt="Profile" className="w-7 h-7 rounded-full object-cover border border-slate-400" />
+              <span className="text-xs font-bold text-slate-700">{adminUser.displayName}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
             </button>
 
-            <div className="h-6 w-px bg-slate-200 hidden sm:block"></div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-700 hidden sm:inline-block">
-                {adminUser.displayName}
-              </span>
-              <div className="w-7 h-7 rounded-full bg-slate-800 text-white text-xs font-bold flex items-center justify-center">
-                S
+            {profileDropdownOpen && (
+              <div className="absolute right-0 mt-1 w-44 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50 text-xs">
+                <div className="px-3 py-2 border-b border-slate-100 font-bold text-slate-800">
+                  {adminUser.displayName}
+                </div>
+                <button
+                  onClick={() => setIsAuthenticated(false)}
+                  className="w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 flex items-center gap-2 cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Log Out</span>
+                </button>
               </div>
-            </div>
+            )}
           </div>
         </header>
 
-        {/* Scrollable Body */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Scrollable Page Body */}
+        <main className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Header Row: Breadcrumb on left + DV Analytics Logo on right (Matches Screenshot 1) */}
+          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+            <div className="flex items-center gap-2 text-slate-600 text-sm font-semibold">
+              <Edit3 className="w-4 h-4 text-slate-400" />
+              <span>/</span>
+              <span className="text-slate-800 font-bold">
+                {activeMenu === 'fee' && "Fee"}
+                {activeMenu === 'session' && "Live Session"}
+                {activeMenu === 'reg' && "Registration"}
+                {activeMenu === 'assignment' && "Assignment"}
+                {activeMenu === 'dashboard' && "Dashboard"}
+              </span>
+            </div>
+
+            <div>
+              <Logo />
+            </div>
+          </div>
+
           {/* ========================================================= */}
-          {/* TAB 1: REGISTRATION (Reg.aspx) - Exact Match              */}
+          {/* VIEW 1: FEE MANAGEMENT (Fee.aspx) - Matches Screenshot 1 */}
           {/* ========================================================= */}
-          {activeMenu === 'reg' && (
-            <div className="space-y-6">
-              {/* Breadcrumbs & Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                    <Users className="w-5 h-5 text-teal-600" />
-                    <span>Student Registration & Admissions (Reg.aspx)</span>
-                  </h2>
-                  <p className="text-xs text-slate-500">
-                    Manage student profiles, assign batches, courses, fees, and credentials.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setCreateRegOpen(true)}
-                    className="inline-flex items-center gap-2 bg-[#26B99A] hover:bg-[#209e83] text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm transition-all cursor-pointer"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Create Registration</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      generateAndDownloadExcel(
-                        students.map(s => ({
-                          "Roll No": s.rollNo,
-                          "Student Name": s.name,
-                          "Contact": s.phone,
-                          "Email": s.email,
-                          "Course": s.course,
-                          "Batch": s.batch,
-                          "Total Fee": s.totalFee,
-                          "Paid Fee": s.paidFee,
-                          "Due Fee": s.dueFee,
-                          "Reg Date": s.regDate,
-                          "College": s.college
-                        })),
-                        "DV_Analytics_Registered_Students.xlsx"
-                      );
-                      showToast("Exported registered students to Excel!");
-                    }}
-                    className="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-3 py-2 rounded-lg transition-colors cursor-pointer"
-                  >
-                    <Download className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Export</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Filter Panel (Exact fields from edu.dvanalyticsmds.com/admin/Reg.aspx) */}
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs space-y-4">
-                <div className="text-xs font-bold uppercase tracking-wider text-slate-600 border-b border-slate-100 pb-2">
-                  Filter Criteria & Batch Search
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">From Date</label>
+          {activeMenu === 'fee' && (
+            <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg border border-slate-200/90 shadow-sm space-y-6">
+              <form onSubmit={handleFeeSubmit} className="space-y-4 text-xs font-sans">
+                {/* 1. Date* */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                  <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                    Date <span className="text-red-500">*</span>
+                  </label>
+                  <div className="sm:col-span-9">
                     <input
                       type="date"
-                      value={regFilterFromDate}
-                      onChange={(e) => setRegFilterFromDate(e.target.value)}
-                      className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-teal-500 focus:outline-none"
+                      value={feeForm.date}
+                      onChange={(e) => setFeeForm({ ...feeForm, date: e.target.value })}
+                      className="w-full max-w-md px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 bg-white"
+                      required
                     />
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">To Date</label>
+                {/* 2. Student ID* */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                  <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                    Student ID <span className="text-red-500">*</span>
+                  </label>
+                  <div className="sm:col-span-9">
                     <input
-                      type="date"
-                      value={regFilterToDate}
-                      onChange={(e) => setRegFilterToDate(e.target.value)}
-                      className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-teal-500 focus:outline-none"
+                      type="text"
+                      value={feeForm.studentId}
+                      onChange={(e) => handleStudentIdChange(e.target.value)}
+                      placeholder="e.g. 9955774102 or Roll No"
+                      className="w-full max-w-md px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500 font-mono"
+                      required
                     />
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Course ID</label>
-                    <select
-                      value={regFilterCourse}
-                      onChange={(e) => setRegFilterCourse(e.target.value)}
-                      className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-teal-500 focus:outline-none bg-white"
-                    >
-                      <option value="">All Course</option>
-                      <option value="APIDS">APIDS</option>
-                      <option value="APIDA">APIDA</option>
-                      <option value="MPGA">MPGA</option>
-                      <option value="APCF">APCF</option>
-                      <option value="Workshop - Dubai">Workshop - Dubai</option>
-                      <option value="FDP">FDP</option>
-                      <option value="AIML">AIML</option>
-                      <option value="BASIC PACK">BASIC PACK</option>
-                      <option value="INTERMEDIATE PACK">INTERMEDIATE PACK</option>
-                      <option value="ADVANCED PACK">ADVANCED PACK</option>
-                    </select>
+                {/* 3. Committed Fee* */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                  <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                    Commited Fee <span className="text-red-500">*</span>
+                  </label>
+                  <div className="sm:col-span-9">
+                    <input
+                      type="text"
+                      value={feeForm.committedFee}
+                      onChange={(e) => setFeeForm({ ...feeForm, committedFee: e.target.value })}
+                      className="w-full max-w-md px-3 py-1.5 border border-slate-300 rounded text-xs bg-slate-50 focus:outline-none font-mono"
+                      required
+                    />
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Batch ID</label>
+                {/* 4. Batch* */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                  <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                    Batch <span className="text-red-500">*</span>
+                  </label>
+                  <div className="sm:col-span-9">
                     <select
-                      value={regFilterBatch}
-                      onChange={(e) => setRegFilterBatch(e.target.value)}
-                      className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-teal-500 focus:outline-none bg-white"
+                      value={feeForm.batch}
+                      onChange={(e) => setFeeForm({ ...feeForm, batch: e.target.value })}
+                      className="w-full max-w-md px-3 py-1.5 border border-slate-300 rounded text-xs bg-white focus:outline-none"
                     >
-                      <option value="">All Batch</option>
                       {batchesList.map(b => (
                         <option key={b} value={b}>{b}</option>
                       ))}
                     </select>
                   </div>
+                </div>
 
-                  <div className="flex items-end">
-                    <button
-                      onClick={() => showToast("Search query executed successfully.")}
-                      className="w-full bg-[#337ab7] hover:bg-[#286090] text-white text-xs font-bold py-2 px-4 rounded-lg shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                {/* 5. Course* */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                  <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                    Course <span className="text-red-500">*</span>
+                  </label>
+                  <div className="sm:col-span-9">
+                    <select
+                      value={feeForm.course}
+                      onChange={(e) => setFeeForm({ ...feeForm, course: e.target.value })}
+                      className="w-full max-w-md px-3 py-1.5 border border-slate-300 rounded text-xs bg-white focus:outline-none"
                     >
-                      <Search className="w-3.5 h-3.5" />
-                      <span>Search (btngo)</span>
+                      <option value="APIDS">APIDS</option>
+                      <option value="APIDA">APIDA</option>
+                      <option value="MPGA">MPGA</option>
+                      <option value="AIML">AIML</option>
+                      <option value="BASIC PACK">BASIC PACK</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* 6. Balance* */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                  <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                    Balance <span className="text-red-500">*</span>
+                  </label>
+                  <div className="sm:col-span-9">
+                    <input
+                      type="text"
+                      value={feeForm.balance}
+                      onChange={(e) => setFeeForm({ ...feeForm, balance: e.target.value })}
+                      className="w-full max-w-md px-3 py-1.5 border border-slate-300 rounded text-xs bg-slate-50 font-mono"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* 7. Amount* */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                  <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                    Amount <span className="text-red-500">*</span>
+                  </label>
+                  <div className="sm:col-span-9">
+                    <input
+                      type="number"
+                      value={feeForm.amount}
+                      onChange={(e) => setFeeForm({ ...feeForm, amount: e.target.value })}
+                      placeholder="Payment installment amount"
+                      className="w-full max-w-md px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none font-mono font-bold"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* 8. Mode Of Pay* */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                  <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                    Mode Of Pay <span className="text-red-500">*</span>
+                  </label>
+                  <div className="sm:col-span-9">
+                    <select
+                      value={feeForm.modeOfPay}
+                      onChange={(e) => setFeeForm({ ...feeForm, modeOfPay: e.target.value })}
+                      className="w-full max-w-md px-3 py-1.5 border border-slate-300 rounded text-xs bg-white focus:outline-none"
+                    >
+                      <option value="Select Mode of Pay">Select Mode of Pay</option>
+                      <option value="UPI / Bank Transfer">UPI / Bank Transfer</option>
+                      <option value="Net Banking">Net Banking</option>
+                      <option value="Debit / Credit Card">Debit / Credit Card</option>
+                      <option value="Cash">Cash</option>
+                      <option value="Cheque">Cheque</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* 9. Remarks */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-start">
+                  <label className="sm:col-span-3 text-right font-bold text-slate-700 pt-1">
+                    Remarks
+                  </label>
+                  <div className="sm:col-span-9">
+                    <textarea
+                      rows={3}
+                      value={feeForm.remarks}
+                      onChange={(e) => setFeeForm({ ...feeForm, remarks: e.target.value })}
+                      className="w-full max-w-md px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* 10. Upload Reference Document */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                  <label className="sm:col-span-3 text-right font-bold text-slate-700">
+                    Upload Reference Document
+                  </label>
+                  <div className="sm:col-span-9">
+                    <input
+                      type="file"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setFeeForm({ ...feeForm, referenceDocName: e.target.files[0].name });
+                        }
+                      }}
+                      className="text-xs text-slate-600 file:mr-3 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-slate-100 hover:file:bg-slate-200 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* 11. Green Submit Button (Matches Screenshot 1) */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-2">
+                  <div className="sm:col-start-4 sm:col-span-9">
+                    <button
+                      type="submit"
+                      className="bg-[#26B99A] hover:bg-[#209e83] text-white font-bold text-xs px-6 py-2 rounded shadow-xs transition-colors cursor-pointer"
+                    >
+                      Submit
                     </button>
                   </div>
                 </div>
+              </form>
 
-                {/* Instant Name / Keyword search */}
-                <div className="pt-2 flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-                    <input
-                      type="text"
-                      placeholder="Instant filter by student name, roll number, college, or location..."
-                      value={regSearchKeyword}
-                      onChange={(e) => setRegSearchKeyword(e.target.value)}
-                      className="w-full text-xs pl-9 pr-4 py-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none"
-                    />
-                  </div>
-                  <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap">
-                    Showing {students.length} registrations
-                  </span>
-                </div>
-              </div>
-
-              {/* Students Grid Table */}
-              <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-                <div className="overflow-x-auto">
+              {/* Transactions Ledger */}
+              <div className="pt-6 border-t border-slate-200 space-y-3">
+                <span className="font-bold text-xs uppercase tracking-wider text-slate-600 block">
+                  Recent Collection Receipts (Fee.aspx)
+                </span>
+                <div className="overflow-x-auto border border-slate-200 rounded">
                   <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-[#2A3F54] text-white font-semibold">
-                        <th className="py-3 px-3 w-12 text-center">S.No</th>
-                        <th className="py-3 px-3">Roll No</th>
-                        <th className="py-3 px-4">Student Name</th>
-                        <th className="py-3 px-3">Course</th>
-                        <th className="py-3 px-3">Batch</th>
-                        <th className="py-3 px-3">Fee Status</th>
-                        <th className="py-3 px-3">Reg Date</th>
-                        <th className="py-3 px-3 text-center">Actions</th>
+                    <thead className="bg-[#2A3F54] text-white">
+                      <tr>
+                        <th className="py-2 px-3">Date</th>
+                        <th className="py-2 px-3">Student ID</th>
+                        <th className="py-2 px-3">Student Name</th>
+                        <th className="py-2 px-3">Batch</th>
+                        <th className="py-2 px-3">Amount</th>
+                        <th className="py-2 px-3">Mode</th>
+                        <th className="py-2 px-3">Receipt</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {students
-                        .filter(s => {
-                          if (regSearchKeyword) {
-                            const kw = regSearchKeyword.toLowerCase();
-                            return s.name.toLowerCase().includes(kw) || s.rollNo.toLowerCase().includes(kw) || s.college.toLowerCase().includes(kw);
-                          }
-                          return true;
-                        })
-                        .map((student, idx) => (
-                          <tr key={student.id} className="hover:bg-slate-50 transition-colors">
-                            <td className="py-3 px-3 text-center font-mono text-slate-500">{idx + 1}</td>
-                            <td className="py-3 px-3 font-mono font-bold text-teal-700">{student.rollNo}</td>
-                            <td className="py-3 px-4">
-                              <span className="font-bold text-slate-800 block">{student.name}</span>
-                              <span className="text-[10px] text-slate-400 block">{student.email} • {student.phone}</span>
-                            </td>
-                            <td className="py-3 px-3">
-                              <span className="px-2 py-0.5 rounded font-bold text-[10px] bg-blue-50 text-blue-700 border border-blue-200">
-                                {student.course}
-                              </span>
-                            </td>
-                            <td className="py-3 px-3 font-mono text-slate-600">{student.batch}</td>
-                            <td className="py-3 px-3">
-                              <div className="text-[11px]">
-                                <span className="font-bold text-slate-800">{student.paidFee}</span> / <span className="text-slate-500">{student.totalFee}</span>
-                                {student.dueFee !== "₹0" ? (
-                                  <span className="block text-[10px] text-red-500 font-semibold">Due: {student.dueFee}</span>
-                                ) : (
-                                  <span className="block text-[10px] text-emerald-600 font-semibold">Fully Paid</span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="py-3 px-3 text-slate-500 font-mono text-[11px]">{student.regDate}</td>
-                            <td className="py-3 px-3 text-center">
-                              <div className="flex items-center justify-center gap-1.5">
-                                <button
-                                  onClick={() => {
-                                    setPasswordModalStudent(student);
-                                    setNewPasswordValue("");
-                                  }}
-                                  className="p-1.5 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors cursor-pointer"
-                                  title="Change Password"
-                                >
-                                  <Key className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={() => alert(`Student Profile: ${student.name}\nCollege: ${student.college}\nLocation: ${student.location}\nFee Due: ${student.dueFee}`)}
-                                  className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
-                                  title="View Details"
-                                >
-                                  <Eye className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                      {feeRecords.map((f, i) => (
+                        <tr key={i} className="hover:bg-slate-50">
+                          <td className="py-2 px-3 font-mono">{f.date}</td>
+                          <td className="py-2 px-3 font-mono font-bold text-teal-700">{f.studentId}</td>
+                          <td className="py-2 px-3 font-bold text-slate-800">{f.studentName || "SK ABDUL SAJID"}</td>
+                          <td className="py-2 px-3">{f.batch}</td>
+                          <td className="py-2 px-3 font-mono font-bold text-emerald-700">₹{parseInt(f.amount).toLocaleString('en-IN')}</td>
+                          <td className="py-2 px-3">{f.modeOfPay}</td>
+                          <td className="py-2 px-3">
+                            <button
+                              onClick={() => {
+                                downloadFile(f.referenceDoc || "Receipt.pdf");
+                                showToast(`Downloading receipt for Student ID ${f.studentId}`);
+                              }}
+                              className="text-blue-600 hover:underline flex items-center gap-1 font-mono text-[11px] cursor-pointer"
+                            >
+                              <Download className="w-3 h-3" />
+                              <span>{f.referenceDoc || "Receipt.pdf"}</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -1082,53 +1088,42 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
           )}
 
           {/* ========================================================= */}
-          {/* TAB 2: LIVE SESSION (Session.aspx) - Exact Match          */}
+          {/* VIEW 2: LIVE SESSION (Session.aspx) - Live Reflected in LMS */}
           {/* ========================================================= */}
           {activeMenu === 'session' && (
             <div className="space-y-6">
-              {/* Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+              <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 p-4 rounded-lg flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                    <Video className="w-5 h-5 text-teal-600" />
-                    <span>Live Session Management (Session.aspx)</span>
-                  </h2>
-                  <p className="text-xs text-slate-500">
-                    Publish video lectures, materials (.zip), and assignments directly to student portals.
+                  <h4 className="font-bold text-xs flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>Real-Time Student Portal Synchronization Active</span>
+                  </h4>
+                  <p className="text-[11px] text-emerald-700 mt-0.5">
+                    Any video stream URL, material zip, or assignment added here is instantly visible and playable in the Student LMS!
                   </p>
-                </div>
-                <div className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
-                  {publishedSessions.length} Active LMS Items
                 </div>
               </div>
 
-              {/* Session Creation Form (Exact fields from admin_Session.aspx.html) */}
-              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-2xs">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-3 mb-4">
-                  Add / Edit Session Item
-                </h3>
-
-                <form onSubmit={handleAddSession} className="space-y-4">
+              <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                <form onSubmit={handleAddLiveSession} className="space-y-4 text-xs font-sans">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {/* Date */}
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Date *</label>
                       <input
                         type="date"
                         value={sessionForm.date}
                         onChange={(e) => setSessionForm({ ...sessionForm, date: e.target.value })}
-                        className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-teal-500 focus:outline-none"
+                        className="w-full px-3 py-1.5 border border-slate-300 rounded focus:border-teal-500"
                         required
                       />
                     </div>
 
-                    {/* Mentor (ddlmen) */}
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Mentor (ddlmen) *</label>
                       <select
                         value={sessionForm.mentor}
                         onChange={(e) => setSessionForm({ ...sessionForm, mentor: e.target.value })}
-                        className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-teal-500 focus:outline-none bg-white font-medium"
+                        className="w-full px-3 py-1.5 border border-slate-300 rounded bg-white"
                       >
                         {mentorsList.map(m => (
                           <option key={m} value={m}>{m}</option>
@@ -1136,13 +1131,12 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                       </select>
                     </div>
 
-                    {/* Batch (ddlbat) */}
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Batch (ddlbat) *</label>
                       <select
                         value={sessionForm.batch}
                         onChange={(e) => setSessionForm({ ...sessionForm, batch: e.target.value })}
-                        className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-teal-500 focus:outline-none bg-white font-medium"
+                        className="w-full px-3 py-1.5 border border-slate-300 rounded bg-white"
                       >
                         {batchesList.map(b => (
                           <option key={b} value={b}>{b}</option>
@@ -1150,13 +1144,12 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                       </select>
                     </div>
 
-                    {/* Application (ddlappli) */}
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Application (ddlappli) *</label>
                       <select
                         value={sessionForm.application}
                         onChange={(e) => setSessionForm({ ...sessionForm, application: e.target.value })}
-                        className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-teal-500 focus:outline-none bg-white font-medium"
+                        className="w-full px-3 py-1.5 border border-slate-300 rounded bg-white"
                       >
                         {applicationsList.map(a => (
                           <option key={a} value={a}>{a}</option>
@@ -1166,38 +1159,35 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {/* Session Title (txtsess) */}
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Session Title (txtsess) *</label>
                       <input
                         type="text"
-                        placeholder="e.g. B1.SESSION-1 or B2.SESSION-2"
+                        placeholder="e.g. B1.SESSION-1 or B5.SESSION-5"
                         value={sessionForm.sessionTitle}
                         onChange={(e) => setSessionForm({ ...sessionForm, sessionTitle: e.target.value })}
-                        className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-teal-500 focus:outline-none font-medium"
+                        className="w-full px-3 py-1.5 border border-slate-300 rounded"
                         required
                       />
                     </div>
 
-                    {/* Sort Order (txtsortorder) */}
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Sort Order *</label>
                       <input
                         type="number"
                         value={sessionForm.sortOrder}
                         onChange={(e) => setSessionForm({ ...sessionForm, sortOrder: e.target.value })}
-                        className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-teal-500 focus:outline-none font-medium"
+                        className="w-full px-3 py-1.5 border border-slate-300 rounded font-mono"
                         required
                       />
                     </div>
 
-                    {/* Topic Type (ddltopics_edit: MATERIALS, ASSIGNMENTS, CLASS VIDEOS) */}
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Topic Type *</label>
                       <select
                         value={sessionForm.topicType}
                         onChange={(e) => setSessionForm({ ...sessionForm, topicType: e.target.value })}
-                        className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-teal-500 focus:outline-none bg-white font-bold text-slate-800"
+                        className="w-full px-3 py-1.5 border border-slate-300 rounded bg-white font-bold"
                       >
                         <option value="CLASS VIDEOS">CLASS VIDEOS (Green Pill)</option>
                         <option value="MATERIALS">MATERIALS (Blue Pill)</option>
@@ -1206,120 +1196,79 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                     </div>
                   </div>
 
-                  {/* Uploaded Link & File Description */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Uploaded Link (txtcontent_edit) *
-                      </label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Uploaded Link (txtcontent_edit) *</label>
                       <input
                         type="text"
                         placeholder="VdoCipher embed URL, Google Drive folder URL, or MP4 link"
                         value={sessionForm.uploadedLink}
                         onChange={(e) => setSessionForm({ ...sessionForm, uploadedLink: e.target.value })}
-                        className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-teal-500 focus:outline-none font-mono"
+                        className="w-full px-3 py-1.5 border border-slate-300 rounded font-mono"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        File Description (description_edit)
-                      </label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">File Description (description_edit)</label>
                       <input
                         type="text"
                         placeholder="e.g. Session 1 Class 1 Video Lecture or Raw Data.zip"
                         value={sessionForm.description}
                         onChange={(e) => setSessionForm({ ...sessionForm, description: e.target.value })}
-                        className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-teal-500 focus:outline-none"
+                        className="w-full px-3 py-1.5 border border-slate-300 rounded"
                       />
                     </div>
                   </div>
 
-                  {/* Submit Button (btnAdd) */}
                   <div className="pt-2 flex justify-end">
                     <button
                       type="submit"
-                      className="bg-[#26B99A] hover:bg-[#209e83] text-white font-bold text-xs px-6 py-2.5 rounded-lg shadow-sm transition-all cursor-pointer flex items-center gap-2"
+                      className="bg-[#26B99A] hover:bg-[#209e83] text-white font-bold text-xs px-6 py-2 rounded shadow-xs cursor-pointer flex items-center gap-1.5"
                     >
                       <Plus className="w-4 h-4" />
-                      <span>Submit Session (btnAdd)</span>
+                      <span>Submit Session Item (Live Push to Students)</span>
                     </button>
                   </div>
                 </form>
               </div>
 
-              {/* Published Sessions Table */}
-              <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-                <div className="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                  <span className="font-bold text-xs uppercase tracking-wider text-slate-700">
-                    Active Published Sessions List
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    Sortable by Application & Batch
-                  </span>
-                </div>
-
-                <div className="overflow-x-auto">
+              {/* Stored Sessions List */}
+              <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm space-y-3">
+                <span className="font-bold text-xs uppercase tracking-wider text-slate-700 block">
+                  Current Course Folders in Student LMS
+                </span>
+                <div className="overflow-x-auto border border-slate-200 rounded">
                   <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-[#2A3F54] text-white font-semibold">
-                        <th className="py-2.5 px-3 w-12 text-center">Order</th>
-                        <th className="py-2.5 px-3">Session</th>
-                        <th className="py-2.5 px-3">Application</th>
-                        <th className="py-2.5 px-3">Batch</th>
-                        <th className="py-2.5 px-3">Type</th>
-                        <th className="py-2.5 px-3">Mentor</th>
-                        <th className="py-2.5 px-3">Date</th>
-                        <th className="py-2.5 px-3 text-center w-20">Action</th>
+                    <thead className="bg-[#2A3F54] text-white">
+                      <tr>
+                        <th className="py-2.5 px-3">Folder Title</th>
+                        <th className="py-2.5 px-3">Subject / Application</th>
+                        <th className="py-2.5 px-3">Instructor</th>
+                        <th className="py-2.5 px-3">Has Video</th>
+                        <th className="py-2.5 px-3">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {publishedSessions.map((item) => (
-                        <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="py-3 px-3 text-center font-mono font-bold text-slate-600">
-                            {item.sortOrder}
-                          </td>
-                          <td className="py-3 px-3 font-bold text-slate-800">
-                            {item.sessionTitle}
-                            <span className="block text-[10px] text-slate-400 font-normal truncate max-w-xs">
-                              {item.description}
-                            </span>
-                          </td>
-                          <td className="py-3 px-3 font-semibold text-slate-700">
-                            {item.application}
-                          </td>
-                          <td className="py-3 px-3 font-mono text-slate-600">
-                            {item.batch}
-                          </td>
-                          <td className="py-3 px-3">
-                            {item.topicType === 'CLASS VIDEOS' && (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#2dbd9f]/20 text-teal-800 border border-[#2dbd9f]/40">
-                                VIDEOS
+                      {(storedSessions.excel || []).map(s => (
+                        <tr key={s.id} className="hover:bg-slate-50">
+                          <td className="py-2.5 px-3 font-bold text-slate-800">{s.title}</td>
+                          <td className="py-2.5 px-3">Excel Base and Advanced</td>
+                          <td className="py-2.5 px-3">{s.instructor || "Dr. Sandip Mukherjee"}</td>
+                          <td className="py-2.5 px-3">
+                            {s.vdocipherEmbedUrl || s.videoUrl ? (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                Video Stream Active
                               </span>
-                            )}
-                            {item.topicType === 'MATERIALS' && (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#3b97e9]/20 text-blue-800 border border-[#3b97e9]/40">
-                                MATERIALS (.zip)
-                              </span>
-                            )}
-                            {item.topicType === 'ASSIGNMENTS' && (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#f39c12]/20 text-amber-800 border border-[#f39c12]/40">
-                                ASSIGNMENTS
-                              </span>
+                            ) : (
+                              <span className="text-slate-400">None</span>
                             )}
                           </td>
-                          <td className="py-3 px-3 text-slate-600">
-                            {item.mentor}
-                          </td>
-                          <td className="py-3 px-3 font-mono text-slate-500">
-                            {item.date}
-                          </td>
-                          <td className="py-3 px-3 text-center">
+                          <td className="py-2.5 px-3">
                             <button
-                              onClick={() => handleDeleteSession(item.id)}
-                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer"
-                              title="Delete Session Item"
+                              onClick={() => handleDeleteLiveSession(s.id, 'excel')}
+                              className="text-red-500 hover:text-red-700 cursor-pointer p-1"
+                              title="Delete from Student LMS"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -1334,433 +1283,322 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
           )}
 
           {/* ========================================================= */}
-          {/* TAB 3: ASSIGNMENT EVALUATION (AssignmentApproval.aspx)    */}
+          {/* VIEW 3: REGISTRATION (Reg.aspx)                           */}
           {/* ========================================================= */}
-          {activeMenu === 'assignment' && (
+          {activeMenu === 'reg' && (
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-lg border border-slate-200">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                    <FileSpreadsheet className="w-5 h-5 text-teal-600" />
-                    <span>Assignment Evaluation & Approvals (AssignmentApproval.aspx)</span>
-                  </h2>
-                  <p className="text-xs text-slate-500">
-                    Review student homework submissions, grade, and approve.
-                  </p>
+                  <h3 className="font-bold text-sm text-slate-800">Registration Form (Reg.aspx)</h3>
+                  <p className="text-xs text-slate-500">Student admissions registry and batch allocations</p>
                 </div>
-              </div>
-
-              <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-[#2A3F54] text-white font-semibold">
-                        <th className="py-3 px-3">Student Name</th>
-                        <th className="py-3 px-3">Roll No</th>
-                        <th className="py-3 px-3">Subject & Task</th>
-                        <th className="py-3 px-3">Submitted File</th>
-                        <th className="py-3 px-3">Date</th>
-                        <th className="py-3 px-3">Status</th>
-                        <th className="py-3 px-3 text-center">Evaluate</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {assignmentsApprovalList.map(item => (
-                        <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="py-3 px-3 font-bold text-slate-800">{item.studentName}</td>
-                          <td className="py-3 px-3 font-mono text-slate-600">{item.rollNo}</td>
-                          <td className="py-3 px-3">
-                            <span className="font-semibold text-slate-800 block">{item.title}</span>
-                            <span className="text-[10px] text-slate-400">{item.subject}</span>
-                          </td>
-                          <td className="py-3 px-3">
-                            <button
-                              onClick={() => {
-                                downloadFile(item.submittedFile);
-                                showToast(`Downloading student solution: ${item.submittedFile}`);
-                              }}
-                              className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono text-[11px] cursor-pointer"
-                            >
-                              <Download className="w-3 h-3 text-blue-500" />
-                              <span>{item.submittedFile}</span>
-                            </button>
-                          </td>
-                          <td className="py-3 px-3 font-mono text-slate-500">{item.submittedDate}</td>
-                          <td className="py-3 px-3">
-                            {item.status === 'Approved' ? (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                Approved ({item.score})
-                              </span>
-                            ) : (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 animate-pulse">
-                                Pending Evaluation
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-3 px-3 text-center">
-                            <button
-                              onClick={() => {
-                                setReviewModalItem(item);
-                                setReviewScore("95");
-                                setReviewFeedback("Formulas and problem cases verified accurately.");
-                              }}
-                              className="px-3 py-1 rounded-md bg-[#26B99A] hover:bg-[#209e83] text-white font-bold text-[11px] cursor-pointer"
-                            >
-                              Grade / Review
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ========================================================= */}
-          {/* TAB 4: DASHBOARD OVERVIEW                                  */}
-          {/* ========================================================= */}
-          {activeMenu === 'dashboard' && (
-            <div className="space-y-6">
-              {/* Top KPI Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Enrolled</span>
-                      <h3 className="text-2xl font-black text-slate-800 mt-1">1,482</h3>
-                      <span className="text-[11px] text-emerald-600 font-semibold">↑ +18 this month</span>
-                    </div>
-                    <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
-                      <Users className="w-6 h-6" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Monthly Collection</span>
-                      <h3 className="text-2xl font-black text-slate-800 mt-1">₹42,80,000</h3>
-                      <span className="text-[11px] text-emerald-600 font-semibold">94% On-time Fee</span>
-                    </div>
-                    <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                      <DollarSign className="w-6 h-6" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Live Sessions</span>
-                      <h3 className="text-2xl font-black text-slate-800 mt-1">312</h3>
-                      <span className="text-[11px] text-slate-500 font-semibold">VdoCipher & Drive DRM</span>
-                    </div>
-                    <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                      <Video className="w-6 h-6" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Active Batches</span>
-                      <h3 className="text-2xl font-black text-slate-800 mt-1">24</h3>
-                      <span className="text-[11px] text-indigo-600 font-semibold">APIDS & APIDA 2026</span>
-                    </div>
-                    <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                      <Layers className="w-6 h-6" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Actions Panel */}
-              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-2xs space-y-4">
-                <h3 className="font-bold text-sm text-slate-800">Direct Operations Shortcuts</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="flex gap-2">
                   <button
-                    onClick={() => setActiveMenu('reg')}
-                    className="p-4 rounded-xl border border-teal-200 bg-teal-50/50 hover:bg-teal-50 text-left transition-all cursor-pointer group"
+                    onClick={() => setCreateRegOpen(true)}
+                    className="bg-[#26B99A] hover:bg-[#209e83] text-white font-bold text-xs px-4 py-2 rounded shadow-xs cursor-pointer flex items-center gap-1.5"
                   >
-                    <Users className="w-5 h-5 text-teal-600 mb-2 group-hover:scale-110 transition-transform" />
-                    <div className="font-bold text-sm text-slate-800">Register New Student</div>
-                    <p className="text-xs text-slate-500 mt-0.5">Admissions form (Reg.aspx) & batch assignment</p>
+                    <Plus className="w-4 h-4" />
+                    <span>Create Registration</span>
                   </button>
-
                   <button
-                    onClick={() => setActiveMenu('session')}
-                    className="p-4 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 text-left transition-all cursor-pointer group"
+                    onClick={() => {
+                      generateAndDownloadExcel(studentsList, "Registered_Students.xlsx");
+                      showToast("Exported students to Excel!");
+                    }}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-3 py-2 rounded cursor-pointer flex items-center gap-1"
                   >
-                    <Video className="w-5 h-5 text-blue-600 mb-2 group-hover:scale-110 transition-transform" />
-                    <div className="font-bold text-sm text-slate-800">Upload Live Session Lecture</div>
-                    <p className="text-xs text-slate-500 mt-0.5">Session.aspx video, zip raw datasets & tasks</p>
-                  </button>
-
-                  <button
-                    onClick={() => setActiveMenu('assignment')}
-                    className="p-4 rounded-xl border border-amber-200 bg-amber-50/50 hover:bg-amber-50 text-left transition-all cursor-pointer group"
-                  >
-                    <FileSpreadsheet className="w-5 h-5 text-amber-600 mb-2 group-hover:scale-110 transition-transform" />
-                    <div className="font-bold text-sm text-slate-800">Review Student Homework</div>
-                    <p className="text-xs text-slate-500 mt-0.5">AssignmentApproval.aspx submissions</p>
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Export</span>
                   </button>
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* ========================================================= */}
-          {/* TAB 5: FEE & REPORTS                                      */}
-          {/* ========================================================= */}
-          {(activeMenu === 'fee' || activeMenu === 'batch' || activeMenu === 'reports') && (
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-2xs space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="font-bold text-sm text-slate-800">
-                  {activeMenu === 'fee' && "Fee Ledger & Collection Statements (Fee.aspx)"}
-                  {activeMenu === 'batch' && "Batch Master & Mentor Assignment"}
-                  {activeMenu === 'reports' && "Comprehensive LMS Export Reports"}
-                </h3>
-                <button
-                  onClick={() => {
-                    generateAndDownloadExcel(
-                      students.map(s => ({
-                        "Roll No": s.rollNo,
-                        "Name": s.name,
-                        "Batch": s.batch,
-                        "Course": s.course,
-                        "Total Fee": s.totalFee,
-                        "Paid": s.paidFee,
-                        "Due": s.dueFee
-                      })),
-                      `DV_Analytics_${activeMenu}_Report.xlsx`
-                    );
-                    showToast(`Exported ${activeMenu} report to Excel!`);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Download Excel Report</span>
-                </button>
-              </div>
-
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Full enterprise data access synchronized with DV Analytics cloud database server (<code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[11px]">edu.dvanalyticsmds.com</code>).
-              </p>
-            </div>
-          )}
-        </main>
-      </div>
-
-      {/* ========================================================= */}
-      {/* MODAL 1: CREATE REGISTRATION MODAL (Reg.aspx - btncreate) */}
-      {/* ========================================================= */}
-      {createRegOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200">
-            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
-                  <Users className="w-4 h-4" />
-                </div>
+              {/* Filter */}
+              <div className="bg-white p-4 rounded-lg border border-slate-200 grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
                 <div>
-                  <h3 className="font-bold text-sm text-slate-800">Create Student Registration</h3>
-                  <p className="text-[11px] text-slate-500">Reg.aspx Registration Form</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setCreateRegOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateStudent} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Student Full Name *</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. SK ABDUL SAJID"
-                    value={newStudent.name}
-                    onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
-                    className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-teal-500 focus:outline-none"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Mobile Phone Number *</label>
-                  <input
-                    type="tel"
-                    placeholder="+91 98765 43210"
-                    value={newStudent.phone}
-                    onChange={(e) => setNewStudent({ ...newStudent, phone: e.target.value })}
-                    className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-teal-500 focus:outline-none"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
-                  <input
-                    type="email"
-                    placeholder="student@example.com"
-                    value={newStudent.email}
-                    onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
-                    className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-teal-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Gender</label>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Course ID</label>
                   <select
-                    value={newStudent.gender}
-                    onChange={(e) => setNewStudent({ ...newStudent, gender: e.target.value })}
-                    className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white"
+                    value={regFilterCourse}
+                    onChange={(e) => setRegFilterCourse(e.target.value)}
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded bg-white"
                   >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
+                    <option value="">All Course</option>
+                    <option value="APIDS">APIDS</option>
+                    <option value="APIDA">APIDA</option>
+                    <option value="MPGA">MPGA</option>
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Course Allocation *</label>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Batch ID</label>
                   <select
-                    value={newStudent.course}
-                    onChange={(e) => setNewStudent({ ...newStudent, course: e.target.value })}
-                    className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white font-semibold"
+                    value={regFilterBatch}
+                    onChange={(e) => setRegFilterBatch(e.target.value)}
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded bg-white"
                   >
-                    <option value="APIDS">APIDS (Advanced Program in Data Science)</option>
-                    <option value="APIDA">APIDA (Data Analytics)</option>
-                    <option value="MPGA">MPGA (GenAI & Machine Learning)</option>
-                    <option value="AIML">AIML Engineering</option>
-                    <option value="BASIC PACK">BASIC PACK</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Batch Assignment *</label>
-                  <select
-                    value={newStudent.batch}
-                    onChange={(e) => setNewStudent({ ...newStudent, batch: e.target.value })}
-                    className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white font-mono"
-                  >
+                    <option value="">All Batch</option>
                     {batchesList.map(b => (
                       <option key={b} value={b}>{b}</option>
                     ))}
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">College / University</label>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Search Keyword</label>
                   <input
                     type="text"
-                    placeholder="e.g. BPUT / KIIT / ITER"
-                    value={newStudent.college}
-                    onChange={(e) => setNewStudent({ ...newStudent, college: e.target.value })}
-                    className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg"
+                    placeholder="Search by name, roll no, college..."
+                    value={regSearchKeyword}
+                    onChange={(e) => setRegSearchKeyword(e.target.value)}
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded"
                   />
                 </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Location / City</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Bhubaneswar / Kolkata"
-                    value={newStudent.location}
-                    onChange={(e) => setNewStudent({ ...newStudent, location: e.target.value })}
-                    className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Total Course Fee (₹)</label>
-                  <input
-                    type="number"
-                    value={newStudent.totalFee}
-                    onChange={(e) => setNewStudent({ ...newStudent, totalFee: e.target.value })}
-                    className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Initial Paid Amount (₹)</label>
-                  <input
-                    type="number"
-                    value={newStudent.paidFee}
-                    onChange={(e) => setNewStudent({ ...newStudent, paidFee: e.target.value })}
-                    className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg font-mono text-emerald-700 font-bold"
-                  />
+                <div className="flex items-end">
+                  <button
+                    onClick={() => showToast("Search query refreshed.")}
+                    className="w-full bg-[#337ab7] hover:bg-[#286090] text-white font-bold py-1.5 px-3 rounded shadow-xs"
+                  >
+                    Search (btngo)
+                  </button>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setCreateRegOpen(false)}
-                  className="px-4 py-2 border border-slate-300 text-slate-600 hover:bg-slate-100 rounded-lg text-xs font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-[#26B99A] hover:bg-[#209e83] text-white rounded-lg text-xs font-bold shadow-sm"
-                >
-                  Save & Register Student (btnAdd)
-                </button>
+              {/* Students Grid */}
+              <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead className="bg-[#2A3F54] text-white">
+                    <tr>
+                      <th className="py-2.5 px-3">Roll No</th>
+                      <th className="py-2.5 px-3">Student Name</th>
+                      <th className="py-2.5 px-3">Course</th>
+                      <th className="py-2.5 px-3">Batch</th>
+                      <th className="py-2.5 px-3">Phone</th>
+                      <th className="py-2.5 px-3">Fee Status</th>
+                      <th className="py-2.5 px-3 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {studentsList
+                      .filter(s => !regSearchKeyword || s.name.toLowerCase().includes(regSearchKeyword.toLowerCase()) || s.phone.includes(regSearchKeyword))
+                      .map((st, i) => (
+                        <tr key={i} className="hover:bg-slate-50">
+                          <td className="py-2.5 px-3 font-mono font-bold text-teal-700">{st.rollNo}</td>
+                          <td className="py-2.5 px-3 font-bold text-slate-800">{st.name}</td>
+                          <td className="py-2.5 px-3 font-semibold text-blue-700">{st.course}</td>
+                          <td className="py-2.5 px-3 font-mono">{st.batch}</td>
+                          <td className="py-2.5 px-3 font-mono">{st.phone}</td>
+                          <td className="py-2.5 px-3">
+                            <span className="font-mono font-bold">{st.paidFee}</span> / <span className="text-slate-500 font-mono">{st.totalFee}</span>
+                          </td>
+                          <td className="py-2.5 px-3 text-center">
+                            <button
+                              onClick={() => {
+                                setPasswordModalStudent(st);
+                                setNewPasswordVal("");
+                              }}
+                              className="p-1 text-slate-500 hover:text-amber-600 cursor-pointer"
+                              title="Change Password"
+                            >
+                              <Key className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* VIEW 4: ASSIGNMENT EVALUATION                             */}
+          {/* ========================================================= */}
+          {activeMenu === 'assignment' && (
+            <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm space-y-4">
+              <h3 className="font-bold text-sm text-slate-800">Assignment Approval & Review</h3>
+              <div className="overflow-x-auto border border-slate-200 rounded">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead className="bg-[#2A3F54] text-white">
+                    <tr>
+                      <th className="py-2 px-3">Student Name</th>
+                      <th className="py-2 px-3">Task Title</th>
+                      <th className="py-2 px-3">Submitted File</th>
+                      <th className="py-2 px-3">Date</th>
+                      <th className="py-2 px-3">Status</th>
+                      <th className="py-2 px-3 text-center">Evaluate</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {assignmentsApprovalList.map(a => (
+                      <tr key={a.id} className="hover:bg-slate-50">
+                        <td className="py-2.5 px-3 font-bold text-slate-800">{a.studentName}</td>
+                        <td className="py-2.5 px-3">{a.title}</td>
+                        <td className="py-2.5 px-3">
+                          <button
+                            onClick={() => {
+                              downloadFile(a.submittedFile);
+                              showToast(`Downloading: ${a.submittedFile}`);
+                            }}
+                            className="text-blue-600 hover:underline flex items-center gap-1 font-mono text-[11px] cursor-pointer"
+                          >
+                            <Download className="w-3 h-3" />
+                            <span>{a.submittedFile}</span>
+                          </button>
+                        </td>
+                        <td className="py-2.5 px-3 font-mono">{a.submittedDate}</td>
+                        <td className="py-2.5 px-3">
+                          {a.status === 'Approved' ? (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                              Approved ({a.score})
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
+                              Pending Evaluation
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
+                          <button
+                            onClick={() => setReviewModalItem(a)}
+                            className="bg-[#26B99A] hover:bg-[#209e83] text-white font-bold text-[11px] px-3 py-1 rounded cursor-pointer"
+                          >
+                            Evaluate
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* VIEW 5: DASHBOARD OVERVIEW                                */}
+          {/* ========================================================= */}
+          {activeMenu === 'dashboard' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+                  <span className="text-[11px] font-bold uppercase text-slate-400">Total Registered</span>
+                  <div className="text-2xl font-black text-slate-800 mt-1">{studentsList.length} Students</div>
+                </div>
+                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+                  <span className="text-[11px] font-bold uppercase text-slate-400">Monthly Collection</span>
+                  <div className="text-2xl font-black text-emerald-700 mt-1">₹42,80,000</div>
+                </div>
+                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+                  <span className="text-[11px] font-bold uppercase text-slate-400">Live Sessions</span>
+                  <div className="text-2xl font-black text-blue-700 mt-1">{(storedSessions.excel || []).length} Folders</div>
+                </div>
+                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+                  <span className="text-[11px] font-bold uppercase text-slate-400">Pending Reviews</span>
+                  <div className="text-2xl font-black text-amber-600 mt-1">1 Assignment</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* CREATE REGISTRATION MODAL */}
+      {createRegOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div className="flex items-center justify-between border-b pb-2">
+              <h4 className="font-bold text-sm text-slate-800">Create Registration</h4>
+              <button onClick={() => setCreateRegOpen(false)}><X className="w-5 h-5 text-slate-400" /></button>
+            </div>
+            <form onSubmit={handleCreateStudentSubmit} className="space-y-3 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold mb-1">Student Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newStudentForm.name}
+                    onChange={(e) => setNewStudentForm({ ...newStudentForm, name: e.target.value })}
+                    className="w-full border px-2.5 py-1.5 rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">Phone Number *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={newStudentForm.phone}
+                    onChange={(e) => setNewStudentForm({ ...newStudentForm, phone: e.target.value })}
+                    className="w-full border px-2.5 py-1.5 rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">Course Allocation</label>
+                  <select
+                    value={newStudentForm.course}
+                    onChange={(e) => setNewStudentForm({ ...newStudentForm, course: e.target.value })}
+                    className="w-full border px-2.5 py-1.5 rounded bg-white"
+                  >
+                    <option value="APIDS">APIDS</option>
+                    <option value="APIDA">APIDA</option>
+                    <option value="MPGA">MPGA</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">Batch</label>
+                  <select
+                    value={newStudentForm.batch}
+                    onChange={(e) => setNewStudentForm({ ...newStudentForm, batch: e.target.value })}
+                    className="w-full border px-2.5 py-1.5 rounded bg-white"
+                  >
+                    {batchesList.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">Total Fee (₹)</label>
+                  <input
+                    type="number"
+                    value={newStudentForm.totalFee}
+                    onChange={(e) => setNewStudentForm({ ...newStudentForm, totalFee: e.target.value })}
+                    className="w-full border px-2.5 py-1.5 rounded font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">Paid Amount (₹)</label>
+                  <input
+                    type="number"
+                    value={newStudentForm.paidFee}
+                    onChange={(e) => setNewStudentForm({ ...newStudentForm, paidFee: e.target.value })}
+                    className="w-full border px-2.5 py-1.5 rounded font-mono font-bold text-emerald-700"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-3 border-t">
+                <button type="button" onClick={() => setCreateRegOpen(false)} className="px-3 py-1.5 border rounded">Cancel</button>
+                <button type="submit" className="px-5 py-1.5 bg-[#26B99A] text-white rounded font-bold">Register Student</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* MODAL 2: CHANGE PASSWORD MODAL (Reg.aspx)                 */}
-      {/* ========================================================= */}
+      {/* PASSWORD RESET MODAL */}
       {passwordModalStudent && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-                <Key className="w-4 h-4 text-amber-500" />
-                <span>Change Student Password</span>
-              </h4>
-              <button onClick={() => setPasswordModalStudent(null)} className="text-slate-400 hover:text-slate-600">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-600">
-              Reset password for <strong>{passwordModalStudent.name}</strong> ({passwordModalStudent.rollNo}).
-            </p>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">New Password *</label>
-              <input
-                type="text"
-                value={newPasswordValue}
-                onChange={(e) => setNewPasswordValue(e.target.value)}
-                placeholder="Enter new password"
-                className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500"
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-sm w-full p-6 space-y-4 text-xs">
+            <h4 className="font-bold text-sm">Change Password for {passwordModalStudent.name}</h4>
+            <input
+              type="text"
+              placeholder="Enter new password"
+              value={newPasswordVal}
+              onChange={(e) => setNewPasswordVal(e.target.value)}
+              className="w-full border px-3 py-2 rounded"
+            />
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setPasswordModalStudent(null)} className="px-3 py-1 border rounded">Close</button>
               <button
-                onClick={() => setPasswordModalStudent(null)}
-                className="px-3 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-600"
-              >
-                Close
-              </button>
-              <button
-                onClick={handleChangePassword}
-                className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold"
+                onClick={() => {
+                  showToast(`Password updated for ${passwordModalStudent.name}`);
+                  setPasswordModalStudent(null);
+                }}
+                className="px-4 py-1 bg-amber-500 text-white rounded font-bold"
               >
                 Update Password
               </button>
@@ -1769,61 +1607,32 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* MODAL 3: ASSIGNMENT REVIEW & GRADING MODAL                */}
-      {/* ========================================================= */}
+      {/* ASSIGNMENT REVIEW MODAL */}
       {reviewModalItem && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-                <Award className="w-4 h-4 text-teal-600" />
-                <span>Evaluate Assignment Submission</span>
-              </h4>
-              <button onClick={() => setReviewModalItem(null)} className="text-slate-400 hover:text-slate-600">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="text-xs space-y-1 bg-slate-50 p-3 rounded-xl border border-slate-100">
-              <div><strong>Student:</strong> {reviewModalItem.studentName} ({reviewModalItem.rollNo})</div>
-              <div><strong>Task:</strong> {reviewModalItem.title}</div>
-              <div><strong>File:</strong> {reviewModalItem.submittedFile}</div>
-            </div>
-
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6 space-y-4 text-xs">
+            <h4 className="font-bold text-sm">Evaluate Assignment for {reviewModalItem.studentName}</h4>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Score (Out of 100) *</label>
+              <label className="block font-bold mb-1">Score (out of 100)</label>
               <input
                 type="number"
                 value={reviewScore}
                 onChange={(e) => setReviewScore(e.target.value)}
-                className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg font-mono font-bold"
+                className="w-full border px-3 py-1.5 rounded font-mono font-bold"
               />
             </div>
-
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Faculty Feedback & Remarks</label>
+              <label className="block font-bold mb-1">Feedback</label>
               <textarea
+                rows={3}
                 value={reviewFeedback}
                 onChange={(e) => setReviewFeedback(e.target.value)}
-                rows={3}
-                className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg"
+                className="w-full border px-3 py-1.5 rounded"
               />
             </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                onClick={handleRejectAssignment}
-                className="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-xs font-bold"
-              >
-                Request Revision
-              </button>
-              <button
-                onClick={handleApproveAssignment}
-                className="px-4 py-1.5 bg-[#26B99A] hover:bg-[#209e83] text-white rounded-lg text-xs font-bold"
-              >
-                Approve & Publish Score
-              </button>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setReviewModalItem(null)} className="px-3 py-1.5 border rounded">Cancel</button>
+              <button onClick={handleApproveAssignment} className="px-4 py-1.5 bg-[#26B99A] text-white font-bold rounded">Approve & Publish Score</button>
             </div>
           </div>
         </div>

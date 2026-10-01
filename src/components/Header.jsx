@@ -13,8 +13,7 @@ import {
   Settings, 
   ExternalLink,
   HelpCircle,
-  Sparkles,
-  ShieldCheck
+  Sparkles
 } from 'lucide-react';
 import Logo from './Logo';
 
@@ -26,7 +25,6 @@ export default function Header({
   onOpenSchedule, 
   onOpenSupport,
   onOpenChat,
-  onOpenAdmin,
   selectedBatch,
   setSelectedBatch
 }) {
@@ -99,16 +97,6 @@ export default function Header({
           </span>
         </button>
 
-        {/* Admin Portal Switch Button */}
-        <button
-          onClick={onOpenAdmin}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
-          title="Switch to DV Analytics Admin Portal (Reg.aspx)"
-        >
-          <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-          <span className="hidden sm:inline">Admin Portal</span>
-        </button>
-
         {/* Divider */}
         <div className="h-6 w-px bg-slate-200 hidden sm:block"></div>
 
@@ -144,15 +132,6 @@ export default function Header({
               </div>
 
               <div className="py-1 text-xs text-slate-700">
-                <button 
-                  onClick={() => {
-                    setProfileOpen(false);
-                    onOpenAdmin();
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-amber-50 text-amber-900 font-bold flex items-center gap-2.5 cursor-pointer"
-                >
-                  <ShieldCheck className="w-4 h-4 text-amber-600" /> Admin Portal (Reg.aspx)
-                </button>
                 <button className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2.5">
                   <User className="w-4 h-4 text-slate-400" /> My Profile & Enrollment
                 </button>

@@ -25,6 +25,7 @@ import {
   Send
 } from 'lucide-react';
 import { getSubjectSessions, studentProfile, excelMasterDriveFolder, sqlMasterDriveFolder, pythonMasterDriveFolder } from '../data/mockData';
+import { getSubjectStoredSessions } from '../utils/lmsStorage';
 import { downloadFile, generateAndDownloadExcel } from '../utils/excelHelper';
 
 export default function SessionPage({ 
@@ -37,8 +38,24 @@ export default function SessionPage({
   // View mode: 'sessions' (Session.aspx) vs 'videos' (SessionVideo.aspx)
   const [viewMode, setViewMode] = useState('sessions');
   
-  // Current subject sessions
-  const sessions = getSubjectSessions(subjectName);
+  // Live synchronized subject sessions
+  const [sessions, setSessions] = useState(() => getSubjectStoredSessions(subjectName));
+
+  useEffect(() => {
+    setSessions(getSubjectStoredSessions(subjectName));
+  }, [subjectName]);
+
+  useEffect(() => {
+    const handleDataUpdate = () => {
+      setSessions(getSubjectStoredSessions(subjectName));
+    };
+    window.addEventListener('dva_data_updated', handleDataUpdate);
+    window.addEventListener('storage', handleDataUpdate);
+    return () => {
+      window.removeEventListener('dva_data_updated', handleDataUpdate);
+      window.removeEventListener('storage', handleDataUpdate);
+    };
+  }, [subjectName]);
   
   // Selected session for SessionVideo.aspx
   const [selectedSession, setSelectedSession] = useState(() => sessions[1] || sessions[0]);
