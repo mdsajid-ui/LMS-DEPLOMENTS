@@ -71,7 +71,11 @@ import {
   UploadResumeView,
   InterviewKitView,
   NonLiveSessionView,
-  AssignStudentNonLiveView
+  AssignStudentNonLiveView,
+  ReleaseUserView,
+  ExeUsersView,
+  AssignBatchView,
+  MockInterviewFeedbackView
 } from '../components/AdminMasterViews';
 import collectionData from '../data/collectionReportData.json';
 import { 
@@ -152,6 +156,10 @@ export default function AdminPortalPage() {
     if (url.includes('uploadresume') || url.includes('resume')) return 'resume';
     if (url.includes('interviewkit')) return 'interview-kit';
     if (url.includes('others_access') || url.includes('othersaccess')) return 'assign-non-live';
+    if (url.includes('users_exe') || url.includes('usersexe')) return 'exe-users';
+    if (url.includes('users.aspx') || url.includes('releaseuser')) return 'release-user';
+    if (url.includes('assignbatch')) return 'assign-batch';
+    if (url.includes('mockinterview')) return 'mock-interview';
     if (url.includes('dashboard')) return 'monthly-collection';
     if (url.includes('master')) return 'user-master';
     return 'user-master'; // Default to User Master (Screenshot 1)
@@ -184,6 +192,10 @@ export default function AdminPortalPage() {
     else if (menuKey === 'interview-kit') window.location.hash = '/admin/interviewkit.aspx';
     else if (menuKey === 'non-live-session') window.location.hash = '/admin/Sessionsp.aspx';
     else if (menuKey === 'assign-non-live') window.location.hash = '/admin/Others_Access.aspx';
+    else if (menuKey === 'release-user') window.location.hash = '/admin/users.aspx';
+    else if (menuKey === 'exe-users') window.location.hash = '/admin/users_exe.aspx';
+    else if (menuKey === 'assign-batch') window.location.hash = '/admin/AssignBatch.aspx';
+    else if (menuKey === 'mock-interview') window.location.hash = '/admin/MockinterviewFeedback.aspx';
     else if (menuKey === 'daily-collection') window.location.hash = '/admin/DailyCollection.aspx';
     else if (menuKey === 'monthly-collection') window.location.hash = '/admin/MonthlyCollection.aspx';
     else if (menuKey === 'dashboard') window.location.hash = '/admin/dashboard.aspx';
@@ -897,14 +909,38 @@ export default function AdminPortalPage() {
                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'assign-non-live' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
                   <span>Assign Student for Non live sessions</span>
                 </button>
+                <button
+                  onClick={() => handleSelectMenu('release-user')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'release-user' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'release-user' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>Release User</span>
+                </button>
+                <button
+                  onClick={() => handleSelectMenu('exe-users')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'exe-users' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'exe-users' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>EXE Users</span>
+                </button>
+                <button
+                  onClick={() => handleSelectMenu('assign-batch')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'assign-batch' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'assign-batch' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>Assign Students for Batch</span>
+                </button>
+                <button
+                  onClick={() => handleSelectMenu('mock-interview')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'mock-interview' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'mock-interview' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>Mock Interview</span>
+                </button>
                 {[
                   "Discussion Forum", 
-                  "Release User", 
-                  "EXE Users", 
                   "App Users", 
                   "Class", 
-                  "Assign Students for Batch", 
-                  "Mock Interview", 
                   "Import Lead", 
                   "Batch Completion", 
                   "Assign Batch For Collection", 
@@ -1098,6 +1134,10 @@ export default function AdminPortalPage() {
                 {activeMenu === 'interview-kit' && "Interview Prepration Kit"}
                 {activeMenu === 'non-live-session' && "Class Materials - Others"}
                 {activeMenu === 'assign-non-live' && "Assign student for non live sessions"}
+                {activeMenu === 'release-user' && "Release User"}
+                {activeMenu === 'exe-users' && "Release User"}
+                {activeMenu === 'assign-batch' && "Assign Batch"}
+                {activeMenu === 'mock-interview' && "Mock Interview Feedback"}
                 {activeMenu === 'monthly-collection' && "Monthly Collection"}
                 {activeMenu === 'daily-collection' && "Daily Collection"}
                 {activeMenu === 'dashboard' && "Monthly Collection"}
@@ -1267,6 +1307,34 @@ export default function AdminPortalPage() {
           {/* ========================================================= */}
           {activeMenu === 'assign-non-live' && (
             <AssignStudentNonLiveView showToast={showToast} />
+          )}
+
+          {/* ========================================================= */}
+          {/* VIEW 4F: RELEASE USER (users.aspx) - Matches Screenshot 1 */}
+          {/* ========================================================= */}
+          {activeMenu === 'release-user' && (
+            <ReleaseUserView showToast={showToast} />
+          )}
+
+          {/* ========================================================= */}
+          {/* VIEW 4G: EXE USERS (users_exe.aspx) - Matches Screenshot 2 */}
+          {/* ========================================================= */}
+          {activeMenu === 'exe-users' && (
+            <ExeUsersView showToast={showToast} />
+          )}
+
+          {/* ========================================================= */}
+          {/* VIEW 4H: ASSIGN STUDENTS FOR BATCH (AssignBatch.aspx) - Matches Screenshot 3 */}
+          {/* ========================================================= */}
+          {activeMenu === 'assign-batch' && (
+            <AssignBatchView showToast={showToast} />
+          )}
+
+          {/* ========================================================= */}
+          {/* VIEW 4I: MOCK INTERVIEW FEEDBACK (MockinterviewFeedback.aspx) - Matches Screenshot 4 */}
+          {/* ========================================================= */}
+          {activeMenu === 'mock-interview' && (
+            <MockInterviewFeedbackView showToast={showToast} />
           )}
 
           {/* ========================================================= */}

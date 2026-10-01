@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { generateAndDownloadExcel } from '../utils/excelHelper';
 import { 
   initialUsersMaster, 
   initialBranchesMaster, 
@@ -5747,6 +5748,869 @@ export function AssignStudentNonLiveView({ showToast }) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// =========================================================================
+// 20. RELEASE USER VIEW (Screenshot 1: edu.dvanalyticsmds.com/admin/users.aspx)
+// =========================================================================
+const initialActiveLoggedInUsers = [
+  { id: 1, name: "SHRADHA SANSKRITI", batch: "DV BATCH 202609", course: "APIDS", loggedInTime: "01.10.2026 12:46PM" },
+  { id: 2, name: "ARKA SARATHI DAS", batch: "DV BATCH 202604", course: "APIDS", loggedInTime: "01.10.2026 12:42PM" },
+  { id: 3, name: "MD SAHFAISHAL QUASMI", batch: "DV BATCH 202604", course: "DA", loggedInTime: "01.10.2026 12:39PM" },
+  { id: 4, name: "PRIYANKA BAIJU PARAMBAT", batch: "Self Study Batch", course: "APIDS", loggedInTime: "01.10.2026 12:37PM" },
+  { id: 5, name: "SACHIDANANDA PATNAIK", batch: "BATCH 202604", course: "APIDS", loggedInTime: "01.10.2026 12:35PM" },
+  { id: 6, name: "PRAMUKH K G", batch: "DV BATCH 202510", course: "APIDS", loggedInTime: "01.10.2026 12:35PM" },
+  { id: 7, name: "KATAPALLY SUCHITHRA", batch: "Self Study Batch", course: "APIDS", loggedInTime: "01.10.2026 12:33PM" },
+  { id: 8, name: "PRITESH KUMAR", batch: "DV BATCH 202609", course: "APIDS", loggedInTime: "01.10.2026 12:33PM" },
+  { id: 9, name: "SIDHI PRANGYA SWAIN", batch: "DV BATCH 202607", course: "APIDS", loggedInTime: "01.10.2026 12:33PM" },
+  { id: 10, name: "STITA PALO", batch: "Self Study Batch", course: "APIDS", loggedInTime: "01.10.2026 12:31PM" },
+  { id: 11, name: "SOUVIK SWAIN", batch: "Batch 202209", course: "APIDA", loggedInTime: "01.10.2026 12:28PM" },
+  { id: 12, name: "PRIYANKA MISHRA", batch: "BATCH 202606", course: "APIDS", loggedInTime: "01.10.2026 12:25PM" },
+  { id: 13, name: "SK ABDUL SAJID", batch: "BATCH 202606", course: "APIDS", loggedInTime: "01.10.2026 12:20PM" },
+  { id: 14, name: "ANANYA MOHANTY", batch: "Batch 202301", course: "APIDS", loggedInTime: "01.10.2026 12:15PM" },
+  { id: 15, name: "DEBENDRA DAS", batch: "BATCH 202603", course: "APIDS", loggedInTime: "01.10.2026 12:10PM" }
+];
+
+export function ReleaseUserView({ showToast }) {
+  const [users, setUsers] = useState(() => {
+    try {
+      const raw = localStorage.getItem('dva_logged_in_users_v1');
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return initialActiveLoggedInUsers;
+  });
+
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+
+  const filtered = useMemo(() => {
+    return users.filter(u => 
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.batch.toLowerCase().includes(search.toLowerCase()) ||
+      u.course.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [users, search]);
+
+  const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+  const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handleRelease = (id, name) => {
+    if (window.confirm(`Release active login session for ${name}?`)) {
+      const updated = users.filter(u => u.id !== id);
+      setUsers(updated);
+      try {
+        localStorage.setItem('dva_logged_in_users_v1', JSON.stringify(updated));
+      } catch (e) {}
+      showToast(`Login session for ${name} released successfully.`);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded border border-slate-200 shadow-xs p-6 space-y-4 text-xs font-sans">
+      {/* Table Controls matching Screenshot 1 */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-slate-700">
+        <div className="flex items-center gap-1.5">
+          <span>Show</span>
+          <select
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="border border-slate-300 rounded px-2 py-1 bg-white focus:outline-none cursor-pointer"
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+          <span>entries</span>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <span>Search:</span>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="border border-slate-300 rounded px-2.5 py-1 text-xs focus:outline-none focus:border-teal-500"
+          />
+        </div>
+      </div>
+
+      {/* Data Table */}
+      <div className="overflow-x-auto border border-slate-200 rounded">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead className="bg-[#2A3F54] text-white">
+            <tr>
+              <th className="py-2.5 px-3 text-center whitespace-nowrap">
+                <div className="flex items-center justify-center gap-1">
+                  <span>S.No</span>
+                  <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                </div>
+              </th>
+              <th className="py-2.5 px-3 whitespace-nowrap">
+                <div className="flex items-center gap-1">
+                  <span>Student Name</span>
+                  <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                </div>
+              </th>
+              <th className="py-2.5 px-3 whitespace-nowrap">
+                <div className="flex items-center gap-1">
+                  <span>Batch</span>
+                  <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                </div>
+              </th>
+              <th className="py-2.5 px-3 whitespace-nowrap">
+                <div className="flex items-center gap-1">
+                  <span>Course</span>
+                  <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                </div>
+              </th>
+              <th className="py-2.5 px-3 whitespace-nowrap">
+                <div className="flex items-center gap-1">
+                  <span>Loggedin Time</span>
+                  <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                </div>
+              </th>
+              <th className="py-2.5 px-3 text-center whitespace-nowrap">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Action</span>
+                  <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {paginated.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="py-6 text-center text-slate-400">
+                  No active logged in user sessions found.
+                </td>
+              </tr>
+            ) : (
+              paginated.map((u, idx) => (
+                <tr key={u.id} className="hover:bg-slate-50">
+                  <td className="py-2.5 px-3 font-mono text-center text-slate-600">
+                    {(currentPage - 1) * pageSize + idx + 1}
+                  </td>
+                  <td className="py-2.5 px-3 font-bold text-slate-800">{u.name}</td>
+                  <td className="py-2.5 px-3 font-mono text-slate-700">{u.batch}</td>
+                  <td className="py-2.5 px-3 font-semibold text-blue-700">{u.course}</td>
+                  <td className="py-2.5 px-3 font-mono text-slate-600">{u.loggedInTime}</td>
+                  <td className="py-2.5 px-3 text-center">
+                    <button
+                      onClick={() => handleRelease(u.id, u.name)}
+                      className="bg-[#d9534f] hover:bg-[#c9302c] text-white px-2.5 py-0.5 rounded-[3px] border border-[#d43f3a] text-[11px] font-medium cursor-pointer shadow-2xs transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Footer matching Screenshot 1: Showing 1 to 10 of 15 entries */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-600 pt-1">
+        <div>
+          Showing {filtered.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to {Math.min(currentPage * pageSize, filtered.length)} of {filtered.length} entries
+        </div>
+
+        <div className="flex items-center gap-1">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            className="px-2.5 py-1 border border-slate-300 rounded text-slate-600 hover:bg-slate-100 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+            <button
+              key={p}
+              onClick={() => setCurrentPage(p)}
+              className={`px-2.5 py-1 border rounded cursor-pointer ${currentPage === p ? 'bg-[#337ab7] border-[#337ab7] text-white font-bold' : 'border-slate-300 text-slate-700 hover:bg-slate-100'}`}
+            >
+              {p}
+            </button>
+          ))}
+          <button
+            disabled={currentPage >= totalPages}
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            className="px-2.5 py-1 border border-slate-300 rounded text-slate-600 hover:bg-slate-100 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =========================================================================
+// 21. EXE USERS VIEW (Screenshot 2: edu.dvanalyticsmds.com/admin/users_exe.aspx)
+// =========================================================================
+const initialExeUsers = [
+  { id: 1, name: "BISHNU KUNDU", batch: "SELF PAGE", course: "APIDS" },
+  { id: 2, name: "SK ABDUL SAJID", batch: "BATCH 202606", course: "APIDS" },
+  { id: 3, name: "DEBENDRA DEBADUTTA DAS", batch: "BATCH 202603", course: "APIDS" },
+  { id: 4, name: "PAYAL UDHWANI", batch: "SELF PAGE", course: "APIDS" },
+  { id: 5, name: "PONUGUPATI SAI PRAKASH PATTABI", batch: "SELF PAGE", course: "APIDA" },
+  { id: 6, name: "CHANDANI KUMARI", batch: "BATCH 202211", course: "APIDS" },
+  { id: 7, name: "SHALINEE S", batch: "SELF PAGE", course: "APIDS" },
+  { id: 8, name: "RAKESH KUMAR BEHERA", batch: "DV3 202608", course: "APIDS" },
+  { id: 9, name: "SANTI SWARUP SAHOO", batch: "SELF PAGE", course: "APIDS" },
+  { id: 10, name: "ARYAN RAJPUT", batch: "SELF PAGE", course: "APIDA" },
+  { id: 11, name: "PRIYANKA MISHRA", batch: "BATCH 202606", course: "APIDS" },
+  { id: 12, name: "SOUVIK SWAIN", batch: "Batch 202209", course: "APIDA" },
+  { id: 13, name: "SWATILEKHA SETHI", batch: "Batch 202209", course: "APIDS" }
+];
+
+export function ExeUsersView({ showToast }) {
+  const [users, setUsers] = useState(() => {
+    try {
+      const raw = localStorage.getItem('dva_exe_users_v1');
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return initialExeUsers;
+  });
+
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+
+  const filtered = useMemo(() => {
+    return users.filter(u => 
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.batch.toLowerCase().includes(search.toLowerCase()) ||
+      u.course.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [users, search]);
+
+  const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+  const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handleDelete = (id, name) => {
+    if (window.confirm(`Revoke desktop EXE player access for ${name}?`)) {
+      const updated = users.filter(u => u.id !== id);
+      setUsers(updated);
+      try {
+        localStorage.setItem('dva_exe_users_v1', JSON.stringify(updated));
+      } catch (e) {}
+      showToast(`EXE player access for ${name} released.`);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded border border-slate-200 shadow-xs p-6 space-y-4 text-xs font-sans">
+      {/* Table Controls matching Screenshot 2 */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-slate-700">
+        <div className="flex items-center gap-1.5">
+          <span>Show</span>
+          <select
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="border border-slate-300 rounded px-2 py-1 bg-white focus:outline-none cursor-pointer"
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+          <span>entries</span>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <span>Search:</span>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="border border-slate-300 rounded px-2.5 py-1 text-xs focus:outline-none focus:border-teal-500"
+          />
+        </div>
+      </div>
+
+      {/* Data Table */}
+      <div className="overflow-x-auto border border-slate-200 rounded">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead className="bg-[#2A3F54] text-white">
+            <tr>
+              <th className="py-2.5 px-3 text-center whitespace-nowrap">
+                <div className="flex items-center justify-center gap-1">
+                  <span>S.No</span>
+                  <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                </div>
+              </th>
+              <th className="py-2.5 px-3 whitespace-nowrap">
+                <div className="flex items-center gap-1">
+                  <span>Student Name</span>
+                  <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                </div>
+              </th>
+              <th className="py-2.5 px-3 whitespace-nowrap">
+                <div className="flex items-center gap-1">
+                  <span>Batch</span>
+                  <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                </div>
+              </th>
+              <th className="py-2.5 px-3 whitespace-nowrap">
+                <div className="flex items-center gap-1">
+                  <span>Course</span>
+                  <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                </div>
+              </th>
+              <th className="py-2.5 px-3 text-center whitespace-nowrap">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Action</span>
+                  <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {paginated.map((u, idx) => (
+              <tr key={u.id} className="hover:bg-slate-50">
+                <td className="py-2.5 px-3 font-mono text-center text-slate-600">
+                  {(currentPage - 1) * pageSize + idx + 1}
+                </td>
+                <td className="py-2.5 px-3 font-bold text-slate-800">{u.name}</td>
+                <td className="py-2.5 px-3 font-mono text-slate-700">{u.batch}</td>
+                <td className="py-2.5 px-3 font-semibold text-blue-700">{u.course}</td>
+                <td className="py-2.5 px-3 text-center">
+                  <button
+                    onClick={() => handleDelete(u.id, u.name)}
+                    className="bg-[#d9534f] hover:bg-[#c9302c] text-white px-2.5 py-0.5 rounded-[3px] border border-[#d43f3a] text-[11px] font-medium cursor-pointer shadow-2xs transition-colors"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Footer matching Screenshot 2: Showing 1 to 10 of 2,009 entries */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-600 pt-1">
+        <div>
+          Showing {Math.min(1, filtered.length)} to {Math.min(paginated.length, filtered.length)} of 2,009 entries
+        </div>
+
+        <div className="flex items-center gap-1">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            className="px-2.5 py-1 border border-slate-300 rounded text-slate-600 hover:bg-slate-100 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          {[1, 2, 3, 4, 5].map(p => (
+            <button
+              key={p}
+              onClick={() => setCurrentPage(p)}
+              className={`px-2.5 py-1 border rounded cursor-pointer ${currentPage === p ? 'bg-[#337ab7] border-[#337ab7] text-white font-bold' : 'border-slate-300 text-slate-700 hover:bg-slate-100'}`}
+            >
+              {p}
+            </button>
+          ))}
+          <span className="px-1 text-slate-400">...</span>
+          <button
+            onClick={() => setCurrentPage(201)}
+            className={`px-2.5 py-1 border rounded cursor-pointer ${currentPage === 201 ? 'bg-[#337ab7] border-[#337ab7] text-white font-bold' : 'border-slate-300 text-slate-700 hover:bg-slate-100'}`}
+          >
+            201
+          </button>
+          <button
+            disabled={currentPage >= 201}
+            onClick={() => setCurrentPage(p => p + 1)}
+            className="px-2.5 py-1 border border-slate-300 rounded text-slate-600 hover:bg-slate-100 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =========================================================================
+// 22. ASSIGN BATCH VIEW (Screenshot 3: edu.dvanalyticsmds.com/admin/AssignBatch.aspx)
+// =========================================================================
+const initialAssignedBatches = [
+  { id: 1, date: "09.02.2023", originBatch: "SELF PAGE", studentId: "BLR202212219", studentName: "Jaganath Dutta", mobile: "9735555744", email: "jaganath0247@gmail.com", batch: "Batch 202210", createdBy: "sajid" },
+  { id: 2, date: "10.02.2023", originBatch: "SELF PAGE", studentId: "BLR202212340", studentName: "DEEPAK KUMAR PATRA", mobile: "9937963076", email: "dhans2930@gmail.com", batch: "Batch 202210", createdBy: "sajid" },
+  { id: 3, date: "11.02.2023", originBatch: "SELF PAGE", studentId: "BLR202212105", studentName: "Sanjog Bal", mobile: "9845094919", email: "Sanjog.bal@gmail.com", batch: "PYTHON MPIDS 202302", createdBy: "sajid" },
+  { id: 4, date: "11.02.2023", originBatch: "DV Batch 202209", studentId: "BLR202212110", studentName: "M Sankar Rao", mobile: "9019902771", email: "imsankar@gmail.com", batch: "PYTHON MPIDS 202302", createdBy: "sajid" },
+  { id: 5, date: "11.02.2023", originBatch: "SELF PAGE", studentId: "BLR202212142", studentName: "Kuldeep shahi", mobile: "9111275218", email: "shahikuldeep11@gmail.com", batch: "PYTHON MPIDS 202302", createdBy: "sajid" },
+  { id: 6, date: "11.02.2023", originBatch: "DV Batch 202209", studentId: "BLR202212146", studentName: "Tusar Tarai", mobile: "7540903502", email: "tusartarai999@gmail.com", batch: "PYTHON MPIDS 202302", createdBy: "sajid" },
+  { id: 7, date: "11.02.2023", originBatch: "SELF PAGE", studentId: "BLR202212158", studentName: "Rittick Shaw", mobile: "9665960727", email: "rittickshaw99@gmail.com", batch: "PYTHON MPIDS 202302", createdBy: "sajid" }
+];
+
+export function AssignBatchView({ showToast }) {
+  const [list, setList] = useState(() => {
+    try {
+      const raw = localStorage.getItem('dva_assigned_batches_v1');
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return initialAssignedBatches;
+  });
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState({
+    studentId: "BLR202212219",
+    studentName: "Jaganath Dutta",
+    originBatch: "SELF PAGE",
+    batch: "Batch 202210",
+    email: "jaganath0247@gmail.com",
+    mobile: "9735555744"
+  });
+
+  const handleDelete = (id, name) => {
+    if (window.confirm(`Delete batch allocation for ${name}?`)) {
+      const updated = list.filter(i => i.id !== id);
+      setList(updated);
+      try {
+        localStorage.setItem('dva_assigned_batches_v1', JSON.stringify(updated));
+      } catch (e) {}
+      showToast(`Batch allocation for ${name} removed.`);
+    }
+  };
+
+  const handleModalSubmit = (e) => {
+    e.preventDefault();
+    const created = {
+      id: Date.now(),
+      date: new Date().toLocaleDateString('en-GB').replace(/\//g, '.'),
+      originBatch: form.originBatch,
+      studentId: form.studentId,
+      studentName: form.studentName,
+      mobile: form.mobile,
+      email: form.email,
+      batch: form.batch,
+      createdBy: "sajid"
+    };
+    const updated = [created, ...list];
+    setList(updated);
+    try {
+      localStorage.setItem('dva_assigned_batches_v1', JSON.stringify(updated));
+    } catch (e) {}
+    setModalOpen(false);
+    showToast(`Batch assigned to ${form.studentName}!`);
+  };
+
+  const handleExport = () => {
+    generateAndDownloadExcel(list, "Assigned_Batches_Report.xlsx");
+    showToast("Downloaded Assigned Batches report!");
+  };
+
+  return (
+    <div className="bg-white rounded border border-slate-200 shadow-xs p-6 space-y-5 text-xs font-sans">
+      {/* Top Controls matching Screenshot 3: Assign Batch on left + Download on right */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => setModalOpen(true)}
+          className="bg-[#26b99a] hover:bg-[#1f967d] text-white font-medium text-xs px-3.5 py-1.5 rounded-[3px] shadow-2xs cursor-pointer transition-colors"
+        >
+          Assign Batch
+        </button>
+
+        <button
+          onClick={handleExport}
+          className="bg-[#d9534f] hover:bg-[#c9302c] text-white font-medium text-xs px-4 py-1.5 rounded-[3px] shadow-2xs cursor-pointer transition-colors"
+        >
+          Download
+        </button>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto border border-slate-200 rounded">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead className="bg-[#2A3F54] text-white">
+            <tr>
+              <th className="py-2.5 px-3">S.No</th>
+              <th className="py-2.5 px-3">Date</th>
+              <th className="py-2.5 px-3">Orgin Batch</th>
+              <th className="py-2.5 px-3">Student ID</th>
+              <th className="py-2.5 px-3">Student Name</th>
+              <th className="py-2.5 px-3">Mobile</th>
+              <th className="py-2.5 px-3">Email</th>
+              <th className="py-2.5 px-3">Batch</th>
+              <th className="py-2.5 px-3 text-center">Created By</th>
+              <th className="py-2.5 px-3 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {list.map((it, idx) => (
+              <tr key={it.id} className="hover:bg-slate-50">
+                <td className="py-2.5 px-3 font-mono text-center text-slate-600">{idx + 1}</td>
+                <td className="py-2.5 px-3 font-mono">{it.date}</td>
+                <td className="py-2.5 px-3 font-mono text-slate-600">{it.originBatch}</td>
+                <td className="py-2.5 px-3 font-mono font-bold text-teal-700">{it.studentId}</td>
+                <td className="py-2.5 px-3 font-bold text-slate-800">{it.studentName}</td>
+                <td className="py-2.5 px-3 font-mono">{it.mobile}</td>
+                <td className="py-2.5 px-3 text-blue-600 truncate max-w-[160px]">{it.email}</td>
+                <td className="py-2.5 px-3 font-mono font-medium text-slate-900">{it.batch}</td>
+                <td className="py-2.5 px-3 text-center font-mono text-slate-600">{it.createdBy}</td>
+                <td className="py-2.5 px-3 text-center">
+                  <button
+                    onClick={() => handleDelete(it.id, it.studentName)}
+                    className="bg-[#d9534f] hover:bg-[#c9302c] text-white px-2.5 py-0.5 rounded-[3px] border border-[#d43f3a] text-[11px] font-medium cursor-pointer shadow-2xs"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ASSIGN BATCH MODAL */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded shadow-2xl max-w-sm w-full p-5 space-y-4 text-xs font-sans border border-slate-300">
+            <div className="flex items-center justify-between border-b pb-2">
+              <h3 className="font-semibold text-sm text-slate-800">Assign Student to Batch</h3>
+              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">×</button>
+            </div>
+            <form onSubmit={handleModalSubmit} className="space-y-3">
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Student ID*</label>
+                <input
+                  type="text"
+                  required
+                  value={form.studentId}
+                  onChange={(e) => setForm({ ...form, studentId: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-2.5 py-1.5 focus:outline-none font-mono"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Student Name*</label>
+                <input
+                  type="text"
+                  required
+                  value={form.studentName}
+                  onChange={(e) => setForm({ ...form, studentName: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-2.5 py-1.5 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Origin Batch*</label>
+                <select
+                  value={form.originBatch}
+                  onChange={(e) => setForm({ ...form, originBatch: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-2.5 py-1.5 focus:outline-none bg-white"
+                >
+                  <option value="SELF PAGE">SELF PAGE</option>
+                  <option value="DV Batch 202209">DV Batch 202209</option>
+                  <option value="Batch 202210">Batch 202210</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">New Target Batch*</label>
+                <select
+                  value={form.batch}
+                  onChange={(e) => setForm({ ...form, batch: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-2.5 py-1.5 focus:outline-none bg-white font-medium"
+                >
+                  <option value="PYTHON MPIDS 202302">PYTHON MPIDS 202302</option>
+                  <option value="Batch 202210">Batch 202210</option>
+                  <option value="BATCH 202606">BATCH 202606</option>
+                  <option value="DV BATCH 202609">DV BATCH 202609</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Mobile*</label>
+                <input
+                  type="text"
+                  required
+                  value={form.mobile}
+                  onChange={(e) => setForm({ ...form, mobile: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-2.5 py-1.5 focus:outline-none font-mono"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2 border-t">
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  className="px-3 py-1.5 border border-slate-300 rounded hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-[#26b99a] text-white rounded font-bold hover:bg-[#1f967d]"
+                >
+                  Assign Batch
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =========================================================================
+// 23. MOCK INTERVIEW FEEDBACK VIEW (Screenshot 4: edu.dvanalyticsmds.com/admin/MockinterviewFeedback.aspx)
+// =========================================================================
+const initialMockFeedbacks = [
+  { id: 1, application: "SQL SERVER", reqDate: "12.01.2023", studentName: "SREERAM T S", batch: "Batch 202210" },
+  { id: 2, application: "EXCEL BASE AND ADVANCED", reqDate: "10.02.2025", studentName: "SREERAM T S", batch: "Batch 202210" },
+  { id: 3, application: "EXCEL BASE AND ADVANCED", reqDate: "10.02.2025", studentName: "SREERAM T S", batch: "Batch 202210" },
+  { id: 4, application: "EXCEL BASE AND ADVANCED", reqDate: "10.02.2025", studentName: "SREERAM T S", batch: "Batch 202210" },
+  { id: 5, application: "EXCEL BASE AND ADVANCED", reqDate: "10.02.2025", studentName: "SREERAM T S", batch: "Batch 202210" },
+  { id: 6, application: "EXCEL BASE AND ADVANCED", reqDate: "10.02.2025", studentName: "SREERAM T S", batch: "Batch 202210" },
+  { id: 7, application: "EXCEL BASE AND ADVANCED", reqDate: "10.02.2025", studentName: "SREERAM T S", batch: "Batch 202210" },
+  { id: 8, application: "EXCEL BASE AND ADVANCED", reqDate: "11.02.2025", studentName: "SREERAM T S", batch: "Batch 202210" },
+  { id: 9, application: "SQL SERVER", reqDate: "11.02.2025", studentName: "SREERAM T S", batch: "Batch 202210" },
+  { id: 10, application: "ALTERYX", reqDate: "11.02.2025", studentName: "SREERAM T S", batch: "Batch 202210" },
+  { id: 11, application: "POWER BI", reqDate: "12.02.2025", studentName: "SREERAM T S", batch: "Batch 202210" },
+  { id: 12, application: "PYTHON PROGRAMMING", reqDate: "15.02.2025", studentName: "SWATILEKHA SETHI", batch: "Batch 202209" },
+  { id: 13, application: "MACHINE LEARNING AND AI", reqDate: "18.02.2025", studentName: "SOUVIK SWAIN", batch: "Batch 202209" },
+  { id: 14, application: "DEEP LEARNING AND AI", reqDate: "20.02.2025", studentName: "PRIYANKA MISHRA", batch: "BATCH 202606" }
+];
+
+export function MockInterviewFeedbackView({ showToast }) {
+  const [items, setItems] = useState(() => {
+    try {
+      const raw = localStorage.getItem('dva_mock_feedbacks_v1');
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return initialMockFeedbacks;
+  });
+
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [modalItem, setModalItem] = useState(null);
+
+  const [feedbackForm, setFeedbackForm] = useState({
+    score: "8.5 / 10",
+    readiness: "Job Ready",
+    strengths: "Excellent query writing, subquery optimization, and index explanations.",
+    improvements: "Need practice on advanced window functions & CTE performance."
+  });
+
+  const filtered = useMemo(() => {
+    return items.filter(it => 
+      it.studentName.toLowerCase().includes(search.toLowerCase()) ||
+      it.application.toLowerCase().includes(search.toLowerCase()) ||
+      it.batch.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [items, search]);
+
+  const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+  const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handleFeedbackSubmit = (e) => {
+    e.preventDefault();
+    if (!modalItem) return;
+    showToast(`Feedback submitted for ${modalItem.studentName} on ${modalItem.application}!`);
+    setModalItem(null);
+  };
+
+  return (
+    <div className="bg-white rounded border border-slate-200 shadow-xs p-6 space-y-4 text-xs font-sans">
+      {/* Table Controls matching Screenshot 4 */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-slate-700">
+        <div className="flex items-center gap-1.5">
+          <span>Show</span>
+          <select
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="border border-slate-300 rounded px-2 py-1 bg-white focus:outline-none cursor-pointer"
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+          <span>entries</span>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <span>Search:</span>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="border border-slate-300 rounded px-2.5 py-1 text-xs focus:outline-none focus:border-teal-500"
+          />
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto border border-slate-200 rounded">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead className="bg-[#2A3F54] text-white">
+            <tr>
+              <th className="py-2.5 px-3">S.No</th>
+              <th className="py-2.5 px-3">Application</th>
+              <th className="py-2.5 px-3">Req Date</th>
+              <th className="py-2.5 px-3">Student Name</th>
+              <th className="py-2.5 px-3">Batch</th>
+              <th className="py-2.5 px-3 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {paginated.map((it, idx) => (
+              <tr key={it.id} className="hover:bg-slate-50">
+                <td className="py-2.5 px-3 font-mono text-center text-slate-600">
+                  {(currentPage - 1) * pageSize + idx + 1}
+                </td>
+                <td className="py-2.5 px-3 font-bold text-slate-800">{it.application}</td>
+                <td className="py-2.5 px-3 font-mono">{it.reqDate}</td>
+                <td className="py-2.5 px-3 font-medium text-slate-900">{it.studentName}</td>
+                <td className="py-2.5 px-3 font-mono text-teal-700">{it.batch}</td>
+                <td className="py-2.5 px-3 text-center">
+                  <button
+                    onClick={() => setModalItem(it)}
+                    className="bg-[#337ab7] hover:bg-[#286090] text-white px-3 py-1 rounded-[3px] text-[11px] font-medium cursor-pointer shadow-2xs transition-colors"
+                  >
+                    Feedback
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Footer matching Screenshot 4: Showing 1 to 10 of 14 entries */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-600 pt-1">
+        <div>
+          Showing {filtered.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to {Math.min(currentPage * pageSize, filtered.length)} of {filtered.length} entries
+        </div>
+
+        <div className="flex items-center gap-1">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            className="px-2.5 py-1 border border-slate-300 rounded text-slate-600 hover:bg-slate-100 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+            <button
+              key={p}
+              onClick={() => setCurrentPage(p)}
+              className={`px-2.5 py-1 border rounded cursor-pointer ${currentPage === p ? 'bg-[#337ab7] border-[#337ab7] text-white font-bold' : 'border-slate-300 text-slate-700 hover:bg-slate-100'}`}
+            >
+              {p}
+            </button>
+          ))}
+          <button
+            disabled={currentPage >= totalPages}
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            className="px-2.5 py-1 border border-slate-300 rounded text-slate-600 hover:bg-slate-100 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
+      {/* Feedback Modal */}
+      {modalItem && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded shadow-2xl max-w-md w-full p-5 space-y-4 text-xs font-sans border border-slate-300">
+            <div className="flex items-center justify-between border-b pb-2">
+              <h3 className="font-semibold text-sm text-slate-800">
+                Mock Interview Feedback - {modalItem.application}
+              </h3>
+              <button onClick={() => setModalItem(null)} className="text-slate-400 hover:text-slate-600 font-bold">×</button>
+            </div>
+            <form onSubmit={handleFeedbackSubmit} className="space-y-3">
+              <div>
+                <span className="block text-slate-500 font-medium">Candidate Name</span>
+                <span className="font-bold text-slate-800">{modalItem.studentName} ({modalItem.batch})</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Score</label>
+                  <select
+                    value={feedbackForm.score}
+                    onChange={(e) => setFeedbackForm({ ...feedbackForm, score: e.target.value })}
+                    className="w-full border border-slate-300 rounded px-2.5 py-1.5 focus:outline-none font-bold"
+                  >
+                    <option value="9.5 / 10">9.5 / 10 (Exceptional)</option>
+                    <option value="8.5 / 10">8.5 / 10 (Very Good)</option>
+                    <option value="7.0 / 10">7.0 / 10 (Average)</option>
+                    <option value="5.5 / 10">5.5 / 10 (Needs Re-Mock)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Readiness</label>
+                  <select
+                    value={feedbackForm.readiness}
+                    onChange={(e) => setFeedbackForm({ ...feedbackForm, readiness: e.target.value })}
+                    className="w-full border border-slate-300 rounded px-2.5 py-1.5 focus:outline-none"
+                  >
+                    <option value="Job Ready">Job Ready</option>
+                    <option value="Needs 1 More Mock">Needs 1 More Mock</option>
+                    <option value="Under Preparation">Under Preparation</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Strengths Observed</label>
+                <textarea
+                  rows={2}
+                  value={feedbackForm.strengths}
+                  onChange={(e) => setFeedbackForm({ ...feedbackForm, strengths: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-2.5 py-1.5 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Improvement Guidance</label>
+                <textarea
+                  rows={2}
+                  value={feedbackForm.improvements}
+                  onChange={(e) => setFeedbackForm({ ...feedbackForm, improvements: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-2.5 py-1.5 focus:outline-none"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2 border-t">
+                <button
+                  type="button"
+                  onClick={() => setModalItem(null)}
+                  className="px-3 py-1.5 border border-slate-300 rounded hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-[#26b99a] text-white rounded font-bold hover:bg-[#1f967d]"
+                >
+                  Submit Evaluation
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
