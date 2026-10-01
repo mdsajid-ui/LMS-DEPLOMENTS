@@ -52,6 +52,13 @@ import {
 } from 'lucide-react';
 import { downloadFile, generateAndDownloadExcel } from '../utils/excelHelper';
 import Logo from '../components/Logo';
+import { 
+  UserMasterView, 
+  BranchMasterView, 
+  SkillMasterView, 
+  AppMasterView, 
+  CourseMasterView 
+} from '../components/AdminMasterViews';
 import collectionData from '../data/collectionReportData.json';
 import { 
   saveAdminSession, 
@@ -82,13 +89,17 @@ export default function AdminPortalPage() {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
   // Sidebar Accordion State (Exact structure from screenshots media_1790833890610.png to media_1790833925679.png)
-  const [openAccordions, setOpenAccordions] = useState({
-    dashboard: true,
-    master: false,
-    approval: false,
-    transaction: true,
-    applicationTest: false,
-    reports: false
+  const [openAccordions, setOpenAccordions] = useState(() => {
+    const url = (window.location.hash + window.location.pathname).toLowerCase();
+    const isMaster = url.includes('master') || url.includes('department') || url.includes('designation');
+    return {
+      dashboard: !isMaster,
+      master: isMaster,
+      approval: false,
+      transaction: !isMaster,
+      applicationTest: false,
+      reports: false
+    };
   });
 
   const toggleAccordion = (section) => {
@@ -101,15 +112,26 @@ export default function AdminPortalPage() {
   // URL Hash Navigation Detection
   const getInitialMenu = () => {
     const url = (window.location.hash + window.location.pathname).toLowerCase();
+    if (url.includes('usermaster')) return 'user-master';
+    if (url.includes('branchmaster')) return 'branch-master';
+    if (url.includes('skillmaster')) return 'skill-master';
+    if (url.includes('appmaster')) return 'app-master';
+    if (url.includes('coursemaster')) return 'course-master';
+    if (url.includes('batchmaster')) return 'batch-master';
+    if (url.includes('mentormaster')) return 'mentor-master';
+    if (url.includes('nonlivetraining')) return 'non-live-master';
+    if (url.includes('telecallermaster')) return 'telecaller-master';
+    if (url.includes('department')) return 'department-master';
+    if (url.includes('designation')) return 'designation-master';
     if (url.includes('dailycollection') || url.includes('daily-collection')) return 'daily-collection';
     if (url.includes('monthlycollection') || url.includes('monthly-collection')) return 'monthly-collection';
     if (url.includes('fee')) return 'fee';
     if (url.includes('session')) return 'session';
     if (url.includes('reg')) return 'reg';
     if (url.includes('assignment')) return 'assignment';
-    if (url.includes('master')) return 'master';
     if (url.includes('dashboard')) return 'monthly-collection';
-    return 'monthly-collection'; // Default to monthly collection dashboard
+    if (url.includes('master')) return 'user-master';
+    return 'user-master'; // Default to User Master (Screenshot 1)
   };
 
   const [activeMenu, setActiveMenu] = useState(() => getInitialMenu());
@@ -117,7 +139,18 @@ export default function AdminPortalPage() {
 
   const handleSelectMenu = (menuKey) => {
     setActiveMenu(menuKey);
-    if (menuKey === 'fee') window.location.hash = '/admin/Fee.aspx';
+    if (menuKey === 'user-master') window.location.hash = '/admin/usermaster.aspx';
+    else if (menuKey === 'branch-master') window.location.hash = '/admin/BranchMaster.aspx';
+    else if (menuKey === 'skill-master') window.location.hash = '/admin/skillMaster.aspx';
+    else if (menuKey === 'app-master') window.location.hash = '/admin/AppMaster.aspx';
+    else if (menuKey === 'course-master') window.location.hash = '/admin/CourseMaster.aspx';
+    else if (menuKey === 'batch-master') window.location.hash = '/admin/BatchMaster.aspx';
+    else if (menuKey === 'mentor-master') window.location.hash = '/admin/MentorMaster.aspx';
+    else if (menuKey === 'non-live-master') window.location.hash = '/admin/NonLiveTraining.aspx';
+    else if (menuKey === 'telecaller-master') window.location.hash = '/admin/TeleCallerMaster.aspx';
+    else if (menuKey === 'department-master') window.location.hash = '/admin/Department.aspx';
+    else if (menuKey === 'designation-master') window.location.hash = '/admin/Designation.aspx';
+    else if (menuKey === 'fee') window.location.hash = '/admin/Fee.aspx';
     else if (menuKey === 'session') window.location.hash = '/admin/Session.aspx';
     else if (menuKey === 'reg') window.location.hash = '/admin/Reg.aspx';
     else if (menuKey === 'assignment') window.location.hash = '/admin/AssignmentApproval.aspx';
@@ -674,17 +707,32 @@ export default function AdminPortalPage() {
             </button>
             {sidebarOpen && openAccordions.master && (
               <div className="relative pl-5 py-1 text-[11px] bg-[#202d3d] before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-teal-500/30">
-                {["User Master", "Branch Master", "Skill Master", "Application Master", "Course Master", "Batch Master", "Mentor Master", "Non Live Training", "TeleCaller Master", "Department", "Designation"].map(m => (
+                {[
+                  { key: 'user-master', name: 'User Master' },
+                  { key: 'branch-master', name: 'Branch Master' },
+                  { key: 'skill-master', name: 'Skill Master' },
+                  { key: 'app-master', name: 'Application Master' },
+                  { key: 'course-master', name: 'Course Master' },
+                  { key: 'batch-master', name: 'Batch Master' },
+                  { key: 'mentor-master', name: 'Mentor Master' },
+                  { key: 'non-live-master', name: 'Non Live Training' },
+                  { key: 'telecaller-master', name: 'TeleCaller Master' },
+                  { key: 'department-master', name: 'Department' },
+                  { key: 'designation-master', name: 'Designation' }
+                ].map(m => (
                   <button
-                    key={m}
-                    onClick={() => {
-                      handleSelectMenu('master');
-                      showToast(`Opened ${m}`);
-                    }}
-                    className="w-full flex items-center gap-2.5 py-1.5 px-3 rounded text-slate-300 hover:text-white hover:bg-[#1f2b37] transition-colors text-left group cursor-pointer"
+                    key={m.key}
+                    onClick={() => handleSelectMenu(m.key)}
+                    className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${
+                      activeMenu === m.key 
+                        ? 'text-teal-300 font-bold bg-[#1abb9c]/20' 
+                        : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'
+                    }`}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-500 group-hover:bg-[#1abb9c] shrink-0 -ml-1 transition-colors" />
-                    <span>{m}</span>
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 transition-colors ${
+                      activeMenu === m.key ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'
+                    }`} />
+                    <span>{m.name}</span>
                   </button>
                 ))}
               </div>
@@ -952,6 +1000,17 @@ export default function AdminPortalPage() {
               <Edit3 className="w-4 h-4 text-slate-400" />
               <span>/</span>
               <span className="text-slate-800 font-bold">
+                {activeMenu === 'user-master' && "User Master"}
+                {activeMenu === 'branch-master' && "Branch Master"}
+                {activeMenu === 'skill-master' && "Skill Master"}
+                {activeMenu === 'app-master' && "Application Master"}
+                {activeMenu === 'course-master' && "Course Master"}
+                {activeMenu === 'batch-master' && "Batch Master"}
+                {activeMenu === 'mentor-master' && "Mentor Master"}
+                {activeMenu === 'non-live-master' && "Non Live Training"}
+                {activeMenu === 'telecaller-master' && "TeleCaller Master"}
+                {activeMenu === 'department-master' && "Department"}
+                {activeMenu === 'designation-master' && "Designation"}
                 {activeMenu === 'fee' && "Fee"}
                 {activeMenu === 'session' && "Live Session"}
                 {activeMenu === 'reg' && "Registration"}
@@ -966,6 +1025,114 @@ export default function AdminPortalPage() {
               <Logo />
             </div>
           </div>
+
+          {/* ========================================================= */}
+          {/* MASTER VIEWS - Matches Screenshots 1 to 5                 */}
+          {/* ========================================================= */}
+          {activeMenu === 'user-master' && (
+            <UserMasterView showToast={showToast} />
+          )}
+
+          {activeMenu === 'branch-master' && (
+            <BranchMasterView showToast={showToast} />
+          )}
+
+          {activeMenu === 'skill-master' && (
+            <SkillMasterView showToast={showToast} />
+          )}
+
+          {activeMenu === 'app-master' && (
+            <AppMasterView showToast={showToast} />
+          )}
+
+          {activeMenu === 'course-master' && (
+            <CourseMasterView showToast={showToast} />
+          )}
+
+          {activeMenu === 'batch-master' && (
+            <div className="bg-white p-6 rounded border border-slate-200 text-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-sm text-slate-800">Batch Master</h3>
+                <button onClick={() => showToast("Create Batch clicked")} className="bg-[#26B99A] text-white px-3 py-1.5 rounded text-xs font-semibold">Create Batch</button>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {batchesList.map(b => (
+                  <div key={b} className="p-3 border rounded bg-slate-50 font-semibold text-slate-800 flex items-center justify-between">
+                    <span>{b}</span>
+                    <button onClick={() => showToast(`Edit ${b}`)} className="text-[11px] bg-[#d9534f] text-white px-2 py-0.5 rounded">Edit</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeMenu === 'mentor-master' && (
+            <div className="bg-white p-6 rounded border border-slate-200 text-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-sm text-slate-800">Mentor Master</h3>
+                <button onClick={() => showToast("Create Mentor clicked")} className="bg-[#26B99A] text-white px-3 py-1.5 rounded text-xs font-semibold">Create Mentor</button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {mentorsList.map(m => (
+                  <div key={m} className="p-3 border rounded bg-slate-50 font-semibold text-slate-800 flex items-center justify-between">
+                    <span>{m}</span>
+                    <button onClick={() => showToast(`Edit ${m}`)} className="text-[11px] bg-[#d9534f] text-white px-2 py-0.5 rounded">Edit</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeMenu === 'telecaller-master' && (
+            <div className="bg-white p-6 rounded border border-slate-200 text-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-sm text-slate-800">TeleCaller Master</h3>
+                <button onClick={() => showToast("Create TeleCaller clicked")} className="bg-[#26B99A] text-white px-3 py-1.5 rounded text-xs font-semibold">Create TeleCaller</button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {["PRIYANKA MISHRA", "PRABHAT KUMAR SAHOO", "SANGHAMITRA PARIDA", "ROHIT VERMA", "POOJA ACHARYA", "PALLAVI DASH", "DIPAK BEHERA", "SNEHA PRADHAN", "RUNU BALA NAYAK"].map(tc => (
+                  <div key={tc} className="p-3 border rounded bg-slate-50 font-semibold text-slate-800 flex items-center justify-between">
+                    <span>{tc}</span>
+                    <button onClick={() => showToast(`Edit ${tc}`)} className="text-[11px] bg-[#d9534f] text-white px-2 py-0.5 rounded">Edit</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeMenu === 'department-master' && (
+            <div className="bg-white p-6 rounded border border-slate-200 text-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-sm text-slate-800">Department Master</h3>
+                <button onClick={() => showToast("Create Department clicked")} className="bg-[#26B99A] text-white px-3 py-1.5 rounded text-xs font-semibold">Create Department</button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {["DATA SCIENCE & AI", "DATA ENGINEERING", "CYBER SECURITY", "BUSINESS INTELLIGENCE", "FULL STACK WEB", "CORPORATE TRAINING", "ADMIN & OPERATIONS", "ACCOUNTS & FINANCE"].map(dep => (
+                  <div key={dep} className="p-3 border rounded bg-slate-50 font-semibold text-slate-800 flex items-center justify-between">
+                    <span>{dep}</span>
+                    <button onClick={() => showToast(`Edit ${dep}`)} className="text-[11px] bg-[#d9534f] text-white px-2 py-0.5 rounded">Edit</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeMenu === 'designation-master' && (
+            <div className="bg-white p-6 rounded border border-slate-200 text-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-sm text-slate-800">Designation Master</h3>
+                <button onClick={() => showToast("Create Designation clicked")} className="bg-[#26B99A] text-white px-3 py-1.5 rounded text-xs font-semibold">Create Designation</button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {["SUPER ADMIN", "DIRECTOR", "ADMINISTRATOR", "SENIOR MENTOR", "MENTOR", "L&D LEAD", "PAYROLL ADMIN", "ACCOUNTS MANAGER", "ACCOUNTS EXECUTIVE", "SENIOR COUNSELOR", "TELECALLER", "PLACEMENT HEAD"].map(des => (
+                  <div key={des} className="p-3 border rounded bg-slate-50 font-semibold text-slate-800 flex items-center justify-between">
+                    <span>{des}</span>
+                    <button onClick={() => showToast(`Edit ${des}`)} className="text-[11px] bg-[#d9534f] text-white px-2 py-0.5 rounded">Edit</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* ========================================================= */}
           {/* VIEW 1: FEE MANAGEMENT (Fee.aspx) - Matches Screenshot 1 */}
