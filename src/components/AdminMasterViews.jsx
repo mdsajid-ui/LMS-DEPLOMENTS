@@ -4,9 +4,14 @@ import {
   initialBranchesMaster, 
   initialSkillsMaster, 
   initialApplicationsMaster, 
-  initialCoursesMaster 
+  initialCoursesMaster,
+  initialBatchesMaster,
+  initialMentorsMaster,
+  initialSelfPaceMaster,
+  initialPaymentApprovals,
+  initialRegistrationLinks
 } from '../data/adminMasterData';
-import { ArrowUpDown, X, Plus, Edit2, Lock, CheckCircle2 } from 'lucide-react';
+import { ArrowUpDown, X, Plus, Edit2, Lock, CheckCircle2, Eye, Check, Trash2, Send } from 'lucide-react';
 
 // Common Table Top Controls
 function TableControls({ pageSize, setPageSize, search, setSearch, onPageReset }) {
@@ -1562,3 +1567,1231 @@ export function CourseMasterView({ showToast }) {
     </div>
   );
 }
+
+// =========================================================================
+// 6. BATCH MASTER VIEW (Matching Screenshot 1: edu.dvanalyticsmds.com/admin/BatchMaster.aspx)
+// =========================================================================
+export function BatchMasterView({ showToast }) {
+  const [batches, setBatches] = useState(initialBatchesMaster);
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editModalItem, setEditModalItem] = useState(null);
+
+  const [newBatch, setNewBatch] = useState({
+    batchName: "",
+    startDate: new Date().toLocaleDateString('en-GB').replace(/\//g, '.'),
+    endDate: "31.12.2026"
+  });
+
+  const filteredBatches = useMemo(() => {
+    return batches.filter(b => 
+      b.batchName.toLowerCase().includes(search.toLowerCase()) ||
+      b.startDate.includes(search) ||
+      b.endDate.includes(search)
+    );
+  }, [batches, search]);
+
+  const totalPages = Math.ceil(filteredBatches.length / pageSize) || 1;
+  const paginatedBatches = filteredBatches.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handleCreateSubmit = (e) => {
+    e.preventDefault();
+    if (!newBatch.batchName.trim()) return;
+    const created = {
+      id: Date.now(),
+      batchName: newBatch.batchName.trim().toUpperCase(),
+      startDate: newBatch.startDate,
+      endDate: newBatch.endDate
+    };
+    setBatches([...batches, created]);
+    setCreateModalOpen(false);
+    setNewBatch({ batchName: "", startDate: new Date().toLocaleDateString('en-GB').replace(/\//g, '.'), endDate: "31.12.2026" });
+    showToast(`Batch ${created.batchName} created successfully!`);
+  };
+
+  const handleEditSubmit = (e) => {
+    e.preventDefault();
+    setBatches(prev => prev.map(b => b.id === editModalItem.id ? editModalItem : b));
+    showToast(`Batch updated successfully!`);
+    setEditModalItem(null);
+  };
+
+  return (
+    <div className="space-y-4 font-sans">
+      <div>
+        <button
+          onClick={() => setCreateModalOpen(true)}
+          className="bg-[#26B99A] hover:bg-[#1f967d] text-white text-xs font-semibold px-3 py-1.5 rounded-[3px] shadow-2xs cursor-pointer inline-flex items-center gap-1 transition-colors"
+        >
+          Create Batch
+        </button>
+      </div>
+
+      <TableControls
+        pageSize={pageSize}
+        setPageSize={setPageSize}
+        search={search}
+        setSearch={setSearch}
+        onPageReset={() => setCurrentPage(1)}
+      />
+
+      <div className="overflow-x-auto border border-slate-200 bg-white">
+        <table className="w-full text-xs text-left border-collapse">
+          <thead>
+            <tr className="border-b border-slate-300 bg-white">
+              <th className="border border-slate-200 px-3 py-2.5 font-bold text-slate-800 text-center select-none w-16">
+                <div className="flex items-center justify-center gap-1">
+                  <span>S.No</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Batch Name</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Batch Start Date</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Batch End Date</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none w-24">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Action</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedBatches.map((b, idx) => (
+              <tr key={b.id} className="hover:bg-slate-50 border-b border-slate-200 transition-colors">
+                <td className="border border-slate-200 px-3 py-2 text-center text-slate-700">
+                  {(currentPage - 1) * pageSize + idx + 1}
+                </td>
+                <td className="border border-slate-200 px-4 py-2 text-center text-slate-800 font-medium">
+                  {b.batchName}
+                </td>
+                <td className="border border-slate-200 px-4 py-2 text-center text-slate-700">
+                  {b.startDate}
+                </td>
+                <td className="border border-slate-200 px-4 py-2 text-center text-slate-700">
+                  {b.endDate}
+                </td>
+                <td className="border border-slate-200 px-3 py-2 text-center whitespace-nowrap">
+                  <button
+                    onClick={() => setEditModalItem({ ...b })}
+                    className="bg-[#d9534f] hover:bg-[#c9302c] text-white px-3 py-0.5 rounded-[3px] border border-[#d43f3a] text-[11px] font-medium cursor-pointer shadow-2xs"
+                  >
+                    Edit
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalEntries={filteredBatches.length}
+        pageSize={pageSize}
+        setPage={setCurrentPage}
+      />
+
+      {/* CREATE MODAL */}
+      {createModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 space-y-4 text-xs font-sans">
+            <div className="flex items-center justify-between border-b pb-2">
+              <h3 className="font-bold text-sm text-slate-800">Create Batch</h3>
+              <button onClick={() => setCreateModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateSubmit} className="space-y-3">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Batch Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. BATCH 202610"
+                  value={newBatch.batchName}
+                  onChange={(e) => setNewBatch({ ...newBatch, batchName: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Start Date</label>
+                <input
+                  type="text"
+                  value={newBatch.startDate}
+                  onChange={(e) => setNewBatch({ ...newBatch, startDate: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">End Date</label>
+                <input
+                  type="text"
+                  value={newBatch.endDate}
+                  onChange={(e) => setNewBatch({ ...newBatch, endDate: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setCreateModalOpen(false)}
+                  className="px-3 py-1.5 border border-slate-300 rounded hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-[#26B99A] text-white rounded font-bold hover:bg-[#1f967d]"
+                >
+                  Save Batch
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT MODAL */}
+      {editModalItem && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 space-y-4 text-xs font-sans">
+            <div className="flex items-center justify-between border-b pb-2">
+              <h3 className="font-bold text-sm text-slate-800">Edit Batch</h3>
+              <button onClick={() => setEditModalItem(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleEditSubmit} className="space-y-3">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Batch Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editModalItem.batchName}
+                  onChange={(e) => setEditModalItem({ ...editModalItem, batchName: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Start Date</label>
+                <input
+                  type="text"
+                  value={editModalItem.startDate}
+                  onChange={(e) => setEditModalItem({ ...editModalItem, startDate: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">End Date</label>
+                <input
+                  type="text"
+                  value={editModalItem.endDate}
+                  onChange={(e) => setEditModalItem({ ...editModalItem, endDate: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setEditModalItem(null)}
+                  className="px-3 py-1.5 border border-slate-300 rounded hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-[#d9534f] text-white rounded font-bold hover:bg-[#c9302c]"
+                >
+                  Update Batch
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =========================================================================
+// 7. MENTOR MASTER VIEW (Matching Screenshot 2: edu.dvanalyticsmds.com/admin/MentorMaster.aspx)
+// =========================================================================
+export function MentorMasterView({ showToast }) {
+  const [mentors, setMentors] = useState(initialMentorsMaster);
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editModalItem, setEditModalItem] = useState(null);
+
+  const [newMentor, setNewMentor] = useState({
+    name: "",
+    regDate: new Date().toLocaleDateString('en-GB')
+  });
+
+  const filteredMentors = useMemo(() => {
+    return mentors.filter(m => 
+      m.name.toLowerCase().includes(search.toLowerCase()) ||
+      m.regDate.includes(search)
+    );
+  }, [mentors, search]);
+
+  const totalPages = Math.ceil(filteredMentors.length / pageSize) || 1;
+  const paginatedMentors = filteredMentors.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handleToggleStatus = (id) => {
+    setMentors(prev => prev.map(m => {
+      if (m.id === id) {
+        const next = m.status === 'Active' ? 'Inactive' : 'Active';
+        showToast(`Mentor ${m.name} marked ${next}`);
+        return { ...m, status: next };
+      }
+      return m;
+    }));
+  };
+
+  const handleCreateSubmit = (e) => {
+    e.preventDefault();
+    if (!newMentor.name.trim()) return;
+    const created = {
+      id: Date.now(),
+      name: newMentor.name.trim().toUpperCase(),
+      regDate: newMentor.regDate,
+      status: "Active"
+    };
+    setMentors([...mentors, created]);
+    setCreateModalOpen(false);
+    setNewMentor({ name: "", regDate: new Date().toLocaleDateString('en-GB') });
+    showToast(`Mentor ${created.name} added successfully!`);
+  };
+
+  const handleEditSubmit = (e) => {
+    e.preventDefault();
+    setMentors(prev => prev.map(m => m.id === editModalItem.id ? editModalItem : m));
+    showToast(`Mentor updated successfully!`);
+    setEditModalItem(null);
+  };
+
+  return (
+    <div className="space-y-4 font-sans">
+      <div>
+        <button
+          onClick={() => setCreateModalOpen(true)}
+          className="bg-[#26B99A] hover:bg-[#1f967d] text-white text-xs font-semibold px-3 py-1.5 rounded-[3px] shadow-2xs cursor-pointer inline-flex items-center gap-1 transition-colors"
+        >
+          Create Mentor
+        </button>
+      </div>
+
+      <TableControls
+        pageSize={pageSize}
+        setPageSize={setPageSize}
+        search={search}
+        setSearch={setSearch}
+        onPageReset={() => setCurrentPage(1)}
+      />
+
+      <div className="overflow-x-auto border border-slate-200 bg-white">
+        <table className="w-full text-xs text-left border-collapse">
+          <thead>
+            <tr className="border-b border-slate-300 bg-white">
+              <th className="border border-slate-200 px-3 py-2.5 font-bold text-slate-800 text-center select-none w-16">
+                <div className="flex items-center justify-center gap-1">
+                  <span>S.No</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Registration Date</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Mentor Name</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none w-44">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Action</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedMentors.map((m, idx) => (
+              <tr key={m.id} className="hover:bg-slate-50 border-b border-slate-200 transition-colors">
+                <td className="border border-slate-200 px-3 py-2 text-center text-slate-700">
+                  {(currentPage - 1) * pageSize + idx + 1}
+                </td>
+                <td className="border border-slate-200 px-4 py-2 text-center text-slate-700">
+                  {m.regDate}
+                </td>
+                <td className="border border-slate-200 px-4 py-2 text-center text-slate-800 font-medium">
+                  {m.name}
+                </td>
+                <td className="border border-slate-200 px-3 py-2 text-center whitespace-nowrap">
+                  <div className="flex items-center justify-center gap-1.5">
+                    <button
+                      onClick={() => setEditModalItem({ ...m })}
+                      className="bg-[#337ab7] hover:bg-[#286090] text-white px-2.5 py-0.5 rounded-[3px] border border-[#2e6da4] text-[11px] font-medium cursor-pointer shadow-2xs"
+                    >
+                      Edit
+                    </button>
+                    {m.status === 'Active' ? (
+                      <button
+                        onClick={() => handleToggleStatus(m.id)}
+                        className="bg-[#26b99a] hover:bg-[#209e83] text-white px-2.5 py-0.5 rounded-[3px] border border-[#209e83] text-[11px] font-medium cursor-pointer shadow-2xs"
+                      >
+                        Make Inactive
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleToggleStatus(m.id)}
+                        className="bg-[#d9534f] hover:bg-[#c9302c] text-white px-2.5 py-0.5 rounded-[3px] border border-[#d43f3a] text-[11px] font-medium cursor-pointer shadow-2xs"
+                      >
+                        Make Active
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalEntries={filteredMentors.length}
+        pageSize={pageSize}
+        setPage={setCurrentPage}
+      />
+
+      {/* CREATE MODAL */}
+      {createModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 space-y-4 text-xs font-sans">
+            <div className="flex items-center justify-between border-b pb-2">
+              <h3 className="font-bold text-sm text-slate-800">Create Mentor</h3>
+              <button onClick={() => setCreateModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateSubmit} className="space-y-3">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Mentor Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. PRIYANKA MISHRA"
+                  value={newMentor.name}
+                  onChange={(e) => setNewMentor({ ...newMentor, name: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Registration Date</label>
+                <input
+                  type="text"
+                  value={newMentor.regDate}
+                  onChange={(e) => setNewMentor({ ...newMentor, regDate: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setCreateModalOpen(false)}
+                  className="px-3 py-1.5 border border-slate-300 rounded hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-[#26B99A] text-white rounded font-bold hover:bg-[#1f967d]"
+                >
+                  Save Mentor
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT MODAL */}
+      {editModalItem && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 space-y-4 text-xs font-sans">
+            <div className="flex items-center justify-between border-b pb-2">
+              <h3 className="font-bold text-sm text-slate-800">Edit Mentor</h3>
+              <button onClick={() => setEditModalItem(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleEditSubmit} className="space-y-3">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Mentor Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editModalItem.name}
+                  onChange={(e) => setEditModalItem({ ...editModalItem, name: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Registration Date</label>
+                <input
+                  type="text"
+                  value={editModalItem.regDate}
+                  onChange={(e) => setEditModalItem({ ...editModalItem, regDate: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setEditModalItem(null)}
+                  className="px-3 py-1.5 border border-slate-300 rounded hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-[#337ab7] text-white rounded font-bold hover:bg-[#286090]"
+                >
+                  Update Mentor
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =========================================================================
+// 8. SELF PACED MASTER VIEW / Non Live Training (Screenshot 3: SelfPaceMaster.aspx)
+// =========================================================================
+export function SelfPaceMasterView({ showToast }) {
+  const [selfPaces, setSelfPaces] = useState(initialSelfPaceMaster);
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editModalItem, setEditModalItem] = useState(null);
+  const [newDesc, setNewDesc] = useState("");
+
+  const filteredPaces = useMemo(() => {
+    return selfPaces.filter(p => p.description.toLowerCase().includes(search.toLowerCase()));
+  }, [selfPaces, search]);
+
+  const totalPages = Math.ceil(filteredPaces.length / pageSize) || 1;
+  const paginatedPaces = filteredPaces.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handleCreateSubmit = (e) => {
+    e.preventDefault();
+    if (!newDesc.trim()) return;
+    const created = {
+      id: Date.now(),
+      description: newDesc.trim()
+    };
+    setSelfPaces([...selfPaces, created]);
+    setCreateModalOpen(false);
+    setNewDesc("");
+    showToast(`Self Paced Module added successfully!`);
+  };
+
+  const handleEditSubmit = (e) => {
+    e.preventDefault();
+    setSelfPaces(prev => prev.map(p => p.id === editModalItem.id ? editModalItem : p));
+    showToast(`Updated successfully!`);
+    setEditModalItem(null);
+  };
+
+  return (
+    <div className="space-y-4 font-sans">
+      <div>
+        <button
+          onClick={() => setCreateModalOpen(true)}
+          className="bg-[#26B99A] hover:bg-[#1f967d] text-white text-xs font-semibold px-3 py-1.5 rounded-[3px] shadow-2xs cursor-pointer inline-flex items-center gap-1 transition-colors"
+        >
+          Create New
+        </button>
+      </div>
+
+      <TableControls
+        pageSize={pageSize}
+        setPageSize={setPageSize}
+        search={search}
+        setSearch={setSearch}
+        onPageReset={() => setCurrentPage(1)}
+      />
+
+      <div className="overflow-x-auto border border-slate-200 bg-white">
+        <table className="w-full text-xs text-left border-collapse">
+          <thead>
+            <tr className="border-b border-slate-300 bg-white">
+              <th className="border border-slate-200 px-3 py-2.5 font-bold text-slate-800 text-center select-none w-16">
+                <div className="flex items-center justify-center gap-1">
+                  <span>S.No</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Description</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none w-24">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Action</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedPaces.map((p, idx) => (
+              <tr key={p.id} className="hover:bg-slate-50 border-b border-slate-200 transition-colors">
+                <td className="border border-slate-200 px-3 py-2 text-center text-slate-700">
+                  {(currentPage - 1) * pageSize + idx + 1}
+                </td>
+                <td className="border border-slate-200 px-4 py-2 text-center text-slate-800 font-medium">
+                  {p.description}
+                </td>
+                <td className="border border-slate-200 px-3 py-2 text-center whitespace-nowrap">
+                  <button
+                    onClick={() => setEditModalItem({ ...p })}
+                    className="bg-[#d9534f] hover:bg-[#c9302c] text-white px-3 py-0.5 rounded-[3px] border border-[#d43f3a] text-[11px] font-medium cursor-pointer shadow-2xs"
+                  >
+                    Edit
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalEntries={filteredPaces.length}
+        pageSize={pageSize}
+        setPage={setCurrentPage}
+      />
+
+      {/* CREATE MODAL */}
+      {createModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 space-y-4 text-xs font-sans">
+            <div className="flex items-center justify-between border-b pb-2">
+              <h3 className="font-bold text-sm text-slate-800">Create Self Paced Item</h3>
+              <button onClick={() => setCreateModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateSubmit} className="space-y-3">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Description *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Mini Module 5"
+                  value={newDesc}
+                  onChange={(e) => setNewDesc(e.target.value)}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setCreateModalOpen(false)}
+                  className="px-3 py-1.5 border border-slate-300 rounded hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-[#26B99A] text-white rounded font-bold hover:bg-[#1f967d]"
+                >
+                  Save Item
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT MODAL */}
+      {editModalItem && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 space-y-4 text-xs font-sans">
+            <div className="flex items-center justify-between border-b pb-2">
+              <h3 className="font-bold text-sm text-slate-800">Edit Self Paced Item</h3>
+              <button onClick={() => setEditModalItem(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleEditSubmit} className="space-y-3">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Description</label>
+                <input
+                  type="text"
+                  required
+                  value={editModalItem.description}
+                  onChange={(e) => setEditModalItem({ ...editModalItem, description: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setEditModalItem(null)}
+                  className="px-3 py-1.5 border border-slate-300 rounded hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-[#d9534f] text-white rounded font-bold hover:bg-[#c9302c]"
+                >
+                  Update Item
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =========================================================================
+// 9. PAYMENT APPROVAL VIEW (Screenshot 4: PayApproval.aspx)
+// =========================================================================
+export function PaymentApprovalView({ showToast }) {
+  const [approvals, setApprovals] = useState(initialPaymentApprovals);
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [viewDetailItem, setViewDetailItem] = useState(null);
+
+  const filteredApprovals = useMemo(() => {
+    return approvals.filter(a => 
+      a.studentName.toLowerCase().includes(search.toLowerCase()) ||
+      a.studentId.toLowerCase().includes(search.toLowerCase()) ||
+      a.refNo.includes(search) ||
+      a.date.includes(search)
+    );
+  }, [approvals, search]);
+
+  const totalPages = Math.ceil(filteredApprovals.length / pageSize) || 1;
+  const paginatedApprovals = filteredApprovals.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handleApprove = (id, studentName) => {
+    setApprovals(prev => prev.filter(a => a.id !== id));
+    showToast(`Payment of ₹68,000 for ${studentName} Approved & Reconciled!`);
+  };
+
+  const handleReject = (id, studentName) => {
+    setApprovals(prev => prev.filter(a => a.id !== id));
+    showToast(`Payment for ${studentName} Rejected.`);
+  };
+
+  return (
+    <div className="space-y-4 font-sans">
+      <TableControls
+        pageSize={pageSize}
+        setPageSize={setPageSize}
+        search={search}
+        setSearch={setSearch}
+        onPageReset={() => setCurrentPage(1)}
+      />
+
+      <div className="overflow-x-auto border border-slate-200 bg-white">
+        <table className="w-full text-xs text-left border-collapse">
+          <thead>
+            <tr className="border-b border-slate-300 bg-white">
+              <th className="border border-slate-200 px-3 py-2.5 font-bold text-slate-800 text-center select-none w-14">
+                <div className="flex items-center justify-center gap-1">
+                  <span>S.No</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-3 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Date</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Student Name</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Student ID</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Amount</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Mode Of Pay</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Ref. No</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Amount</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none w-48">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Action</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedApprovals.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="text-center py-6 text-slate-500">All payments approved and reconciled!</td>
+              </tr>
+            ) : (
+              paginatedApprovals.map((a, idx) => (
+                <tr key={a.id} className="hover:bg-slate-50 border-b border-slate-200 transition-colors">
+                  <td className="border border-slate-200 px-3 py-2 text-center text-slate-700">
+                    {(currentPage - 1) * pageSize + idx + 1}
+                  </td>
+                  <td className="border border-slate-200 px-3 py-2 text-center text-slate-700">
+                    {a.date}
+                  </td>
+                  <td className="border border-slate-200 px-4 py-2 text-center text-slate-800 font-medium">
+                    {a.studentName}
+                  </td>
+                  <td className="border border-slate-200 px-4 py-2 text-center text-slate-700 font-mono">
+                    {a.studentId}
+                  </td>
+                  <td className="border border-slate-200 px-4 py-2 text-center text-slate-700 font-mono">
+                    {a.amount}
+                  </td>
+                  <td className="border border-slate-200 px-4 py-2 text-center text-slate-700">
+                    {a.modeOfPay}
+                  </td>
+                  <td className="border border-slate-200 px-4 py-2 text-center text-slate-700 font-mono">
+                    {a.refNo}
+                  </td>
+                  <td className="border border-slate-200 px-4 py-2 text-center text-slate-700 font-mono">
+                    {a.totalAmount}
+                  </td>
+                  <td className="border border-slate-200 px-3 py-2 text-center whitespace-nowrap">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <button
+                        onClick={() => setViewDetailItem(a)}
+                        className="bg-[#337ab7] hover:bg-[#286090] text-white px-2.5 py-0.5 rounded-[3px] border border-[#2e6da4] text-[11px] font-medium cursor-pointer shadow-2xs"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => handleApprove(a.id, a.studentName)}
+                        className="bg-[#26b99a] hover:bg-[#209e83] text-white px-2.5 py-0.5 rounded-[3px] border border-[#209e83] text-[11px] font-medium cursor-pointer shadow-2xs"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleReject(a.id, a.studentName)}
+                        className="bg-[#d9534f] hover:bg-[#c9302c] text-white px-2.5 py-0.5 rounded-[3px] border border-[#d43f3a] text-[11px] font-medium cursor-pointer shadow-2xs"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalEntries={filteredApprovals.length}
+        pageSize={pageSize}
+        setPage={setCurrentPage}
+      />
+
+      {/* DETAIL MODAL */}
+      {viewDetailItem && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 space-y-4 text-xs font-sans">
+            <div className="flex items-center justify-between border-b pb-2">
+              <h3 className="font-bold text-sm text-slate-800">Payment Verification Details</h3>
+              <button onClick={() => setViewDetailItem(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="space-y-2 text-slate-700">
+              <div className="flex justify-between border-b pb-1">
+                <span className="font-bold">Student Name:</span>
+                <span>{viewDetailItem.studentName}</span>
+              </div>
+              <div className="flex justify-between border-b pb-1">
+                <span className="font-bold">Student ID:</span>
+                <span className="font-mono">{viewDetailItem.studentId}</span>
+              </div>
+              <div className="flex justify-between border-b pb-1">
+                <span className="font-bold">Amount:</span>
+                <span className="font-bold text-emerald-600 font-mono">₹{viewDetailItem.amount.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between border-b pb-1">
+                <span className="font-bold">Payment Mode:</span>
+                <span>{viewDetailItem.modeOfPay}</span>
+              </div>
+              <div className="flex justify-between border-b pb-1">
+                <span className="font-bold">Reference / UTR:</span>
+                <span className="font-mono">{viewDetailItem.refNo}</span>
+              </div>
+              <div className="flex justify-between border-b pb-1">
+                <span className="font-bold">Transaction Date:</span>
+                <span>{viewDetailItem.date}</span>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-3 border-t">
+              <button
+                type="button"
+                onClick={() => setViewDetailItem(null)}
+                className="px-3 py-1.5 border border-slate-300 rounded hover:bg-slate-100"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleApprove(viewDetailItem.id, viewDetailItem.studentName);
+                  setViewDetailItem(null);
+                }}
+                className="px-4 py-1.5 bg-[#26B99A] text-white rounded font-bold hover:bg-[#1f967d]"
+              >
+                Approve Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =========================================================================
+// 10. REGISTRATION LINK VIEW (Screenshot 5: external_link.aspx)
+// =========================================================================
+export function RegistrationLinkView({ showToast }) {
+  const [links, setLinks] = useState(initialRegistrationLinks);
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    mobile: ""
+  });
+
+  const filteredLinks = useMemo(() => {
+    return links.filter(l => 
+      l.firstName.toLowerCase().includes(search.toLowerCase()) ||
+      l.lastName.toLowerCase().includes(search.toLowerCase()) ||
+      l.email.toLowerCase().includes(search.toLowerCase()) ||
+      l.mobile.includes(search)
+    );
+  }, [links, search]);
+
+  const totalPages = Math.ceil(filteredLinks.length / pageSize) || 1;
+  const paginatedLinks = filteredLinks.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handleDelete = (id, name) => {
+    if (window.confirm(`Are you sure you want to delete registration link for ${name}?`)) {
+      setLinks(prev => prev.filter(l => l.id !== id));
+      showToast(`Link for ${name} deleted.`);
+    }
+  };
+
+  const handleResend = (email, mobile) => {
+    showToast(`Registration invite re-sent to ${email} & ${mobile}!`);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.firstName || !form.lastName || !form.email || !form.mobile) {
+      alert("Please fill all required fields");
+      return;
+    }
+    const created = {
+      id: Date.now(),
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email,
+      mobile: form.mobile,
+      createdOn: new Date().toLocaleDateString('en-GB').replace(/\//g, '.')
+    };
+    setLinks([created, ...links]);
+    setCreateModalOpen(false);
+    setForm({ firstName: "", lastName: "", email: "", mobile: "" });
+    showToast(`Registration link generated & dispatched to ${created.email}!`);
+  };
+
+  return (
+    <div className="space-y-4 font-sans relative">
+      <div>
+        <button
+          onClick={() => setCreateModalOpen(true)}
+          className="bg-[#204d74] hover:bg-[#1a3d5c] text-white text-xs font-semibold px-3 py-1.5 rounded-[3px] shadow-2xs cursor-pointer inline-flex items-center gap-1 transition-colors"
+        >
+          Create Link
+        </button>
+      </div>
+
+      <TableControls
+        pageSize={pageSize}
+        setPageSize={setPageSize}
+        search={search}
+        setSearch={setSearch}
+        onPageReset={() => setCurrentPage(1)}
+      />
+
+      <div className="overflow-x-auto border border-slate-200 bg-white">
+        <table className="w-full text-xs text-left border-collapse">
+          <thead>
+            <tr className="border-b border-slate-300 bg-white">
+              <th className="border border-slate-200 px-3 py-2.5 font-bold text-slate-800 text-center select-none w-14">
+                <div className="flex items-center justify-center gap-1">
+                  <span>S.No</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>First Name</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Last Name</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Email ID</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Mobile No.</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Created On</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+              <th className="border border-slate-200 px-4 py-2.5 font-bold text-slate-800 text-center select-none w-36">
+                <div className="flex items-center justify-center gap-1">
+                  <span>Action</span>
+                  <span className="text-slate-400 text-[10px]">⇅</span>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedLinks.map((l, idx) => (
+              <tr key={l.id} className="hover:bg-slate-50 border-b border-slate-200 transition-colors">
+                <td className="border border-slate-200 px-3 py-2 text-center text-slate-700">
+                  {(currentPage - 1) * pageSize + idx + 1}
+                </td>
+                <td className="border border-slate-200 px-4 py-2 text-center text-slate-800 font-medium">
+                  {l.firstName}
+                </td>
+                <td className="border border-slate-200 px-4 py-2 text-center text-slate-800 font-medium">
+                  {l.lastName}
+                </td>
+                <td className="border border-slate-200 px-4 py-2 text-center text-slate-700">
+                  {l.email}
+                </td>
+                <td className="border border-slate-200 px-4 py-2 text-center text-slate-700 font-mono">
+                  {l.mobile}
+                </td>
+                <td className="border border-slate-200 px-4 py-2 text-center text-slate-700">
+                  {l.createdOn}
+                </td>
+                <td className="border border-slate-200 px-3 py-2 text-center whitespace-nowrap">
+                  <div className="flex items-center justify-center gap-1.5">
+                    <button
+                      onClick={() => handleDelete(l.id, `${l.firstName} ${l.lastName}`)}
+                      className="bg-[#d9534f] hover:bg-[#c9302c] text-white px-2.5 py-0.5 rounded-[3px] border border-[#d43f3a] text-[11px] font-medium cursor-pointer shadow-2xs"
+                    >
+                      Delete
+                    </button>
+                    <button
+                      onClick={() => handleResend(l.email, l.mobile)}
+                      className="bg-[#26b99a] hover:bg-[#209e83] text-white px-2.5 py-0.5 rounded-[3px] border border-[#209e83] text-[11px] font-medium cursor-pointer shadow-2xs"
+                    >
+                      Re-Send
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalEntries={filteredLinks.length}
+        pageSize={pageSize}
+        setPage={setCurrentPage}
+      />
+
+      {/* CREATE LINK MODAL - Exact match for Screenshot 5 */}
+      {createModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded shadow-2xl max-w-sm w-full p-5 space-y-4 text-xs font-sans border border-slate-300 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b pb-2">
+              <h3 className="font-semibold text-sm text-slate-800">Create Link</h3>
+              <button 
+                onClick={() => setCreateModalOpen(false)} 
+                className="text-slate-400 hover:text-slate-600 text-base font-bold leading-none cursor-pointer"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-3 pt-1">
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  First Name<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={form.firstName}
+                  onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-2.5 py-1.5 focus:outline-none focus:border-teal-500 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  Last Name<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={form.lastName}
+                  onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-2.5 py-1.5 focus:outline-none focus:border-teal-500 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  Email ID<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-2.5 py-1.5 focus:outline-none focus:border-teal-500 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  Mobile No.<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={form.mobile}
+                  onChange={(e) => setForm({ ...form, mobile: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-2.5 py-1.5 focus:outline-none focus:border-teal-500 bg-white"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setCreateModalOpen(false)}
+                  className="px-4 py-1.5 border border-slate-300 rounded hover:bg-slate-100 text-slate-700 cursor-pointer font-medium"
+                >
+                  Close
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-[#26b99a] hover:bg-[#1f967d] text-white rounded font-bold cursor-pointer transition-colors shadow-2xs"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+

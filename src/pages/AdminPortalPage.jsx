@@ -57,7 +57,12 @@ import {
   BranchMasterView, 
   SkillMasterView, 
   AppMasterView, 
-  CourseMasterView 
+  CourseMasterView,
+  BatchMasterView,
+  MentorMasterView,
+  SelfPaceMasterView,
+  PaymentApprovalView,
+  RegistrationLinkView
 } from '../components/AdminMasterViews';
 import collectionData from '../data/collectionReportData.json';
 import { 
@@ -91,12 +96,14 @@ export default function AdminPortalPage() {
   // Sidebar Accordion State (Exact structure from screenshots media_1790833890610.png to media_1790833925679.png)
   const [openAccordions, setOpenAccordions] = useState(() => {
     const url = (window.location.hash + window.location.pathname).toLowerCase();
-    const isMaster = url.includes('master') || url.includes('department') || url.includes('designation');
+    const isMaster = url.includes('master') || url.includes('department') || url.includes('designation') || url.includes('selfpace');
+    const isApproval = url.includes('approval');
+    const isTransaction = url.includes('external_link') || url.includes('reg') || url.includes('fee') || url.includes('session') || url.includes('assignment');
     return {
-      dashboard: !isMaster,
+      dashboard: !isMaster && !isApproval && !isTransaction,
       master: isMaster,
-      approval: false,
-      transaction: !isMaster,
+      approval: isApproval,
+      transaction: isTransaction || (!isMaster && !isApproval),
       applicationTest: false,
       reports: false
     };
@@ -119,10 +126,12 @@ export default function AdminPortalPage() {
     if (url.includes('coursemaster')) return 'course-master';
     if (url.includes('batchmaster')) return 'batch-master';
     if (url.includes('mentormaster')) return 'mentor-master';
-    if (url.includes('nonlivetraining')) return 'non-live-master';
+    if (url.includes('selfpace') || url.includes('nonlivetraining')) return 'non-live-master';
     if (url.includes('telecallermaster')) return 'telecaller-master';
     if (url.includes('department')) return 'department-master';
     if (url.includes('designation')) return 'designation-master';
+    if (url.includes('payapproval') || url.includes('paymentapproval')) return 'pay-approval';
+    if (url.includes('external_link') || url.includes('registrationlink')) return 'external-link';
     if (url.includes('dailycollection') || url.includes('daily-collection')) return 'daily-collection';
     if (url.includes('monthlycollection') || url.includes('monthly-collection')) return 'monthly-collection';
     if (url.includes('fee')) return 'fee';
@@ -146,10 +155,12 @@ export default function AdminPortalPage() {
     else if (menuKey === 'course-master') window.location.hash = '/admin/CourseMaster.aspx';
     else if (menuKey === 'batch-master') window.location.hash = '/admin/BatchMaster.aspx';
     else if (menuKey === 'mentor-master') window.location.hash = '/admin/MentorMaster.aspx';
-    else if (menuKey === 'non-live-master') window.location.hash = '/admin/NonLiveTraining.aspx';
+    else if (menuKey === 'non-live-master') window.location.hash = '/admin/SelfPaceMaster.aspx';
     else if (menuKey === 'telecaller-master') window.location.hash = '/admin/TeleCallerMaster.aspx';
     else if (menuKey === 'department-master') window.location.hash = '/admin/Department.aspx';
     else if (menuKey === 'designation-master') window.location.hash = '/admin/Designation.aspx';
+    else if (menuKey === 'pay-approval') window.location.hash = '/admin/PayApproval.aspx';
+    else if (menuKey === 'external-link') window.location.hash = '/admin/external_link.aspx';
     else if (menuKey === 'fee') window.location.hash = '/admin/Fee.aspx';
     else if (menuKey === 'session') window.location.hash = '/admin/Session.aspx';
     else if (menuKey === 'reg') window.location.hash = '/admin/Reg.aspx';
@@ -755,17 +766,26 @@ export default function AdminPortalPage() {
             </button>
             {sidebarOpen && openAccordions.approval && (
               <div className="relative pl-5 py-1 text-[11px] bg-[#202d3d] before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-teal-500/30">
-                {["Payment Approval", "Registration Approval", "Employee Approval", "Expense Approval", "Appraisal Approval"].map(a => (
+                {[
+                  { key: 'pay-approval', name: 'Payment Approval' },
+                  { key: 'reg-approval', name: 'Registration Approval' },
+                  { key: 'emp-approval', name: 'Employee Approval' },
+                  { key: 'exp-approval', name: 'Expense Approval' },
+                  { key: 'app-approval', name: 'Appraisal Approval' }
+                ].map(a => (
                   <button
-                    key={a}
-                    onClick={() => {
-                      handleSelectMenu('approval');
-                      showToast(`Viewing ${a}`);
-                    }}
-                    className="w-full flex items-center gap-2.5 py-1.5 px-3 rounded text-slate-300 hover:text-white hover:bg-[#1f2b37] transition-colors text-left group cursor-pointer"
+                    key={a.key}
+                    onClick={() => handleSelectMenu(a.key)}
+                    className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${
+                      activeMenu === a.key 
+                        ? 'text-teal-300 font-bold bg-[#1abb9c]/20' 
+                        : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'
+                    }`}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-500 group-hover:bg-[#1abb9c] shrink-0 -ml-1 transition-colors" />
-                    <span>{a}</span>
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 transition-colors ${
+                      activeMenu === a.key ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'
+                    }`} />
+                    <span>{a.name}</span>
                   </button>
                 ))}
               </div>
@@ -788,6 +808,13 @@ export default function AdminPortalPage() {
             </button>
             {sidebarOpen && openAccordions.transaction && (
               <div className="relative pl-5 py-1 text-[11px] bg-[#202d3d] before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-teal-500/30">
+                <button
+                  onClick={() => handleSelectMenu('external-link')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'external-link' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'external-link' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>Registration Web Link</span>
+                </button>
                 <button
                   onClick={() => handleSelectMenu('reg')}
                   className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'reg' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
@@ -1007,10 +1034,12 @@ export default function AdminPortalPage() {
                 {activeMenu === 'course-master' && "Course Master"}
                 {activeMenu === 'batch-master' && "Batch Master"}
                 {activeMenu === 'mentor-master' && "Mentor Master"}
-                {activeMenu === 'non-live-master' && "Non Live Training"}
+                {activeMenu === 'non-live-master' && "Self Paced Master"}
                 {activeMenu === 'telecaller-master' && "TeleCaller Master"}
                 {activeMenu === 'department-master' && "Department"}
                 {activeMenu === 'designation-master' && "Designation"}
+                {activeMenu === 'pay-approval' && "Payment Approval"}
+                {activeMenu === 'external-link' && "Registration Link"}
                 {activeMenu === 'fee' && "Fee"}
                 {activeMenu === 'session' && "Live Session"}
                 {activeMenu === 'reg' && "Registration"}
@@ -1027,7 +1056,7 @@ export default function AdminPortalPage() {
           </div>
 
           {/* ========================================================= */}
-          {/* MASTER VIEWS - Matches Screenshots 1 to 5                 */}
+          {/* MASTER & APPROVAL & TRANSACTION VIEWS                      */}
           {/* ========================================================= */}
           {activeMenu === 'user-master' && (
             <UserMasterView showToast={showToast} />
@@ -1050,37 +1079,23 @@ export default function AdminPortalPage() {
           )}
 
           {activeMenu === 'batch-master' && (
-            <div className="bg-white p-6 rounded border border-slate-200 text-xs space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-bold text-sm text-slate-800">Batch Master</h3>
-                <button onClick={() => showToast("Create Batch clicked")} className="bg-[#26B99A] text-white px-3 py-1.5 rounded text-xs font-semibold">Create Batch</button>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {batchesList.map(b => (
-                  <div key={b} className="p-3 border rounded bg-slate-50 font-semibold text-slate-800 flex items-center justify-between">
-                    <span>{b}</span>
-                    <button onClick={() => showToast(`Edit ${b}`)} className="text-[11px] bg-[#d9534f] text-white px-2 py-0.5 rounded">Edit</button>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <BatchMasterView showToast={showToast} />
           )}
 
           {activeMenu === 'mentor-master' && (
-            <div className="bg-white p-6 rounded border border-slate-200 text-xs space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-bold text-sm text-slate-800">Mentor Master</h3>
-                <button onClick={() => showToast("Create Mentor clicked")} className="bg-[#26B99A] text-white px-3 py-1.5 rounded text-xs font-semibold">Create Mentor</button>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {mentorsList.map(m => (
-                  <div key={m} className="p-3 border rounded bg-slate-50 font-semibold text-slate-800 flex items-center justify-between">
-                    <span>{m}</span>
-                    <button onClick={() => showToast(`Edit ${m}`)} className="text-[11px] bg-[#d9534f] text-white px-2 py-0.5 rounded">Edit</button>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <MentorMasterView showToast={showToast} />
+          )}
+
+          {activeMenu === 'non-live-master' && (
+            <SelfPaceMasterView showToast={showToast} />
+          )}
+
+          {activeMenu === 'pay-approval' && (
+            <PaymentApprovalView showToast={showToast} />
+          )}
+
+          {activeMenu === 'external-link' && (
+            <RegistrationLinkView showToast={showToast} />
           )}
 
           {activeMenu === 'telecaller-master' && (

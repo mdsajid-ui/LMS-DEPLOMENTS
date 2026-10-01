@@ -175,3 +175,56 @@ export const initialCoursesMaster = [
   { id: 11, courseName: "ADVANCED ML & GEN AI", courseFee: "175000" },
   { id: 12, courseName: "CYBERSECURITY MASTER", courseFee: "185000" }
 ];
+
+export const initialBatchesMaster = [
+  { id: 1, batchName: "DV Batch 202209", startDate: "01.07.2022", endDate: "31.12.2022" },
+  { id: 2, batchName: "Batch 202209", startDate: "01.10.2022", endDate: "31.03.2023" },
+  { id: 3, batchName: "BATCH 202211", startDate: "13.11.2022", endDate: "19.11.2022" },
+  { id: 4, batchName: "Batch 202210", startDate: "01.10.2022", endDate: "28.10.2022" },
+  { id: 5, batchName: "DV BATCH 202210", startDate: "01.10.2022", endDate: "01.10.2022" },
+  { id: 6, batchName: "DV BATCH 202211", startDate: "26.11.2022", endDate: "26.11.2022" },
+  { id: 7, batchName: "Batch 202212", startDate: "17.12.2022", endDate: "17.12.2022" },
+  { id: 8, batchName: "BATCH 202201", startDate: "01.01.2022", endDate: "19.12.2022" },
+  { id: 9, batchName: "BATCH 202208", startDate: "19.12.2022", endDate: "18.12.2022" },
+  { id: 10, batchName: "DV BATCH 202208", startDate: "19.12.2022", endDate: "19.12.2022" },
+  { id: 11, batchName: "BATCH 202606", startDate: "01.06.2026", endDate: "31.12.2026" }
+];
+
+export const initialMentorsMaster = [
+  { id: 1, regDate: "01/11/2022", name: "GANESH KKUMAR", status: "Active" },
+  { id: 2, regDate: "15/07/2022", name: "LAXMI NR", status: "Active" },
+  { id: 3, regDate: "17/11/2022", name: "DEBENDRA DEBADUTTADAS", status: "Active" },
+  { id: 4, regDate: "04/07/2022", name: "AYUSHKANT PANDA", status: "Active" },
+  { id: 5, regDate: "02/02/1991", name: "GANESH RATH", status: "Active" },
+  { id: 6, regDate: "21/11/1998", name: "BABU SIR", status: "Active" },
+  { id: 7, regDate: "07/02/1998", name: "UNMESH PANIGRAHI", status: "Active" },
+  { id: 8, regDate: "07/02/1998", name: "VENKATA REDDY", status: "Active" },
+  { id: 9, regDate: "14/10/1999", name: "ARJUN RAJENDRAN", status: "Active" },
+  { id: 10, regDate: "15/06/2023", name: "MANOJ SWAIN", status: "Active" }
+];
+
+export const initialSelfPaceMaster = [
+  { id: 1, description: "Crash Course" },
+  { id: 2, description: "Self Learning" },
+  { id: 3, description: "Industry Real-Time Data Science Projects" },
+  { id: 4, description: "Mini Module 2" },
+  { id: 5, description: "Mini Module 3" },
+  { id: 6, description: "Mini Module 4" }
+];
+
+export const initialPaymentApprovals = [
+  { id: 1, date: "30.09.2026", studentName: "SOUVIK SWAIN", studentId: "BBS202604005", amount: 68000, modeOfPay: "UPI", refNo: "8428", totalAmount: 68000, status: "Pending" },
+  { id: 2, date: "30.09.2026", studentName: "SWATILEKHA SETHI", studentId: "BBS202605012", amount: 60000, modeOfPay: "UPI", refNo: "9642", totalAmount: 60000, status: "Pending" },
+  { id: 3, date: "30.09.2026", studentName: "KUSUMANJALI JENA", studentId: "BBS202606027", amount: 80000, modeOfPay: "UPI", refNo: "8084", totalAmount: 8084, status: "Pending" },
+  { id: 4, date: "28.09.2026", studentName: "SRIKANTA JENA", studentId: "BBS202608014", amount: 50000, modeOfPay: "UPI", refNo: "8511", totalAmount: 50000, status: "Pending" }
+];
+
+export const initialRegistrationLinks = [
+  { id: 1, firstName: "Sumit", lastName: "Panda", email: "sumit.panda@gmail.com", mobile: "7381626698", createdOn: "27.09.2026" },
+  { id: 2, firstName: "KV", lastName: "SHASANK", email: "shasank.kv@gmail.com", mobile: "9348411035", createdOn: "13.09.2026" },
+  { id: 3, firstName: "Durga", lastName: "M", email: "durga.m@gmail.com", mobile: "7978274707", createdOn: "13.09.2026" },
+  { id: 4, firstName: "abhinandan", lastName: "rout", email: "abhinandan.rout@gmail.com", mobile: "7855810849", createdOn: "27.09.2026" },
+  { id: 5, firstName: "Harshala Ashish", lastName: "Patil", email: "harshalachitte171@gmail.com", mobile: "8999951162", createdOn: "27.09.2026" },
+  { id: 6, firstName: "Prayas", lastName: "mohanty", email: "prayasm456@gmail.com", mobile: "8056204394", createdOn: "28.09.2026" }
+];
+
