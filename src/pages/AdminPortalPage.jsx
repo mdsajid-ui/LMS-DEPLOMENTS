@@ -100,13 +100,15 @@ export default function AdminPortalPage() {
   // URL Hash Navigation Detection
   const getInitialMenu = () => {
     const url = (window.location.hash + window.location.pathname).toLowerCase();
+    if (url.includes('dailycollection') || url.includes('daily-collection')) return 'daily-collection';
+    if (url.includes('monthlycollection') || url.includes('monthly-collection')) return 'monthly-collection';
     if (url.includes('fee')) return 'fee';
     if (url.includes('session')) return 'session';
     if (url.includes('reg')) return 'reg';
     if (url.includes('assignment')) return 'assignment';
     if (url.includes('master')) return 'master';
-    if (url.includes('dashboard')) return 'dashboard';
-    return 'fee'; // Default matching user's active screenshot Fee.aspx
+    if (url.includes('dashboard')) return 'monthly-collection';
+    return 'monthly-collection'; // Default to monthly collection dashboard
   };
 
   const [activeMenu, setActiveMenu] = useState(() => getInitialMenu());
@@ -118,6 +120,9 @@ export default function AdminPortalPage() {
     else if (menuKey === 'session') window.location.hash = '/admin/Session.aspx';
     else if (menuKey === 'reg') window.location.hash = '/admin/Reg.aspx';
     else if (menuKey === 'assignment') window.location.hash = '/admin/AssignmentApproval.aspx';
+    else if (menuKey === 'daily-collection') window.location.hash = '/admin/DailyCollection.aspx';
+    else if (menuKey === 'monthly-collection') window.location.hash = '/admin/MonthlyCollection.aspx';
+    else if (menuKey === 'dashboard') window.location.hash = '/admin/dashboard.aspx';
     else window.location.hash = `/admin/${menuKey}.aspx`;
   };
 
@@ -588,17 +593,17 @@ export default function AdminPortalPage() {
             {sidebarOpen && openAccordions.dashboard && (
               <div className="relative pl-5 py-1 text-[11px] bg-[#202d3d] before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-teal-500/30">
                 <button
-                  onClick={() => handleSelectMenu('dashboard')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'dashboard' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  onClick={() => handleSelectMenu('monthly-collection')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'monthly-collection' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500 group-hover:bg-[#1abb9c] shrink-0 -ml-1 transition-colors" />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'monthly-collection' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
                   <span>Monthly Collection</span>
                 </button>
                 <button
-                  onClick={() => handleSelectMenu('dashboard')}
-                  className="w-full flex items-center gap-2.5 py-1.5 px-3 rounded text-slate-300 hover:text-white hover:bg-[#1f2b37] transition-colors text-left group cursor-pointer"
+                  onClick={() => handleSelectMenu('daily-collection')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'daily-collection' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500 group-hover:bg-[#1abb9c] shrink-0 -ml-1 transition-colors" />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'daily-collection' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
                   <span>Daily Collection</span>
                 </button>
               </div>
@@ -821,7 +826,12 @@ export default function AdminPortalPage() {
                   <button
                     key={r.name}
                     onClick={() => {
-                      showToast(`Viewing Report: ${r.name} (${r.url})`);
+                      if (r.name === 'Collection' || r.name === 'Collection Summary') {
+                        handleSelectMenu('daily-collection');
+                        showToast(`Opened ${r.name} Report`);
+                      } else {
+                        showToast(`Viewing Report: ${r.name} (${r.url})`);
+                      }
                     }}
                     title={`https://edu.dvanalyticsmds.com/admin/${r.url}`}
                     className="w-full flex items-center gap-2.5 py-1.5 px-3 rounded text-slate-300 hover:text-white hover:bg-[#1f2b37] transition-colors text-left group cursor-pointer"
@@ -898,7 +908,9 @@ export default function AdminPortalPage() {
                 {activeMenu === 'session' && "Live Session"}
                 {activeMenu === 'reg' && "Registration"}
                 {activeMenu === 'assignment' && "Assignment"}
-                {activeMenu === 'dashboard' && "Dashboard"}
+                {activeMenu === 'monthly-collection' && "Dashboard / Monthly Collection"}
+                {activeMenu === 'daily-collection' && "Dashboard / Daily Collection"}
+                {activeMenu === 'dashboard' && "Dashboard / Collection Intelligence"}
               </span>
             </div>
 
@@ -1533,27 +1545,112 @@ export default function AdminPortalPage() {
           )}
 
           {/* ========================================================= */}
-          {/* VIEW 5: DASHBOARD OVERVIEW                                */}
+          {/* VIEW 5: DAILY & MONTHLY COLLECTION INTELLIGENCE DASHBOARD */}
           {/* ========================================================= */}
-          {activeMenu === 'dashboard' && (
+          {(activeMenu === 'monthly-collection' || activeMenu === 'daily-collection' || activeMenu === 'dashboard') && (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
-                  <span className="text-[11px] font-bold uppercase text-slate-400">Total Registered</span>
-                  <div className="text-2xl font-black text-slate-800 mt-1">{studentsList.length} Students</div>
+              {/* Executive Summary Metrics (Derived from 6,230 records in Daily Collection repo) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs hover:border-teal-500/50 transition-all">
+                  <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
+                    <span>{activeMenu === 'daily-collection' ? "Total Repository Collection" : "Total Collection (All-Time)"}</span>
+                    <DollarSign className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <div className="text-2xl font-black text-emerald-700 mt-1">₹37,11,46,721</div>
+                  <div className="text-[11px] text-slate-500 mt-1 font-mono flex items-center gap-1">
+                    <span className="font-bold text-emerald-600">6,230</span> verified transactions
+                  </div>
                 </div>
-                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
-                  <span className="text-[11px] font-bold uppercase text-slate-400">Monthly Collection</span>
-                  <div className="text-2xl font-black text-emerald-700 mt-1">₹42,80,000</div>
+
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs hover:border-teal-500/50 transition-all">
+                  <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
+                    <span>{activeMenu === 'daily-collection' ? "Daily Run Rate (Avg)" : "Monthly Run Rate"}</span>
+                    <TrendingUp className="w-4 h-4 text-teal-500" />
+                  </div>
+                  <div className="text-2xl font-black text-slate-800 mt-1">
+                    {activeMenu === 'daily-collection' ? "₹59,574" : "₹42,80,000"}
+                  </div>
+                  <div className="text-[11px] text-slate-500 mt-1 font-mono">
+                    {activeMenu === 'daily-collection' ? "Avg Ticket / Transaction" : "Current Collection Cycle"}
+                  </div>
                 </div>
-                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
-                  <span className="text-[11px] font-bold uppercase text-slate-400">Live Sessions</span>
-                  <div className="text-2xl font-black text-blue-700 mt-1">{(storedSessions.excel || []).length} Folders</div>
+
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs hover:border-teal-500/50 transition-all">
+                  <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
+                    <span>BBSR Branch Collection</span>
+                    <Building className="w-4 h-4 text-blue-500" />
+                  </div>
+                  <div className="text-2xl font-black text-blue-700 mt-1">₹24,85,12,450</div>
+                  <div className="text-[11px] text-slate-500 mt-1 font-mono">
+                    67% total share • 4,180 records
+                  </div>
                 </div>
-                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
-                  <span className="text-[11px] font-bold uppercase text-slate-400">Pending Reviews</span>
-                  <div className="text-2xl font-black text-amber-600 mt-1">1 Assignment</div>
+
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs hover:border-teal-500/50 transition-all">
+                  <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
+                    <span>BLR Branch Collection</span>
+                    <Building className="w-4 h-4 text-indigo-500" />
+                  </div>
+                  <div className="text-2xl font-black text-indigo-700 mt-1">₹12,26,34,271</div>
+                  <div className="text-[11px] text-slate-500 mt-1 font-mono">
+                    33% total share • 2,050 records
+                  </div>
                 </div>
+              </div>
+
+              {/* Action Bar & Quick Tooling */}
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-50 text-teal-800 border border-teal-200 font-bold text-xs">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-600" />
+                    <span>{activeMenu === 'daily-collection' ? "Daily Collection Intelligence Hub" : "Monthly Collection Intelligence Hub"}</span>
+                  </div>
+                  <span className="text-xs text-slate-400">
+                    Source: <span className="font-mono text-slate-600">DAILY COLLECTION 060222023 DV ANALYTICS</span>
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <a
+                    href="./DAILY-COLLECTION-DV-ANALYTICS.xlsx"
+                    download="DAILY-COLLECTION-DV-ANALYTICS.xlsx"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download Excel Sheet (.xlsx)</span>
+                  </a>
+
+                  <a
+                    href="./daily-collection.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Open Standalone Dashboard</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Embedded Interactive Daily Collection Intelligence Dashboard */}
+              <div className="bg-[#090c16] rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
+                <div className="bg-[#0f1423] px-4 py-2.5 border-b border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="font-bold text-slate-200">Interactive Intelligence Engine Active</span>
+                    <span className="text-slate-500">•</span>
+                    <span className="text-slate-400">Integrated from Daily-Collection-report</span>
+                  </div>
+                  <div className="text-[11px] font-mono text-slate-400">
+                    6,230 Transactions Loaded
+                  </div>
+                </div>
+
+                <iframe
+                  src="./daily-collection.html"
+                  className="w-full h-[920px] border-0 block bg-[#090c16]"
+                  title="Daily Collection Report Dashboard"
+                />
               </div>
             </div>
           )}
