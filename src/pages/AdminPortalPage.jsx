@@ -68,7 +68,10 @@ import {
   LiveSessionView,
   LiveSessionDeleteView,
   AssignmentApprovalView,
-  UploadResumeView
+  UploadResumeView,
+  InterviewKitView,
+  NonLiveSessionView,
+  AssignStudentNonLiveView
 } from '../components/AdminMasterViews';
 import collectionData from '../data/collectionReportData.json';
 import { 
@@ -142,10 +145,13 @@ export default function AdminPortalPage() {
     if (url.includes('monthlycollection') || url.includes('monthly-collection')) return 'monthly-collection';
     if (url.includes('fee')) return 'fee';
     if (url.includes('sessiondelete')) return 'session-delete';
+    if (url.includes('sessionsp')) return 'non-live-session';
     if (url.includes('session')) return 'session';
     if (url.includes('reg')) return 'reg';
     if (url.includes('assignmentapproval') || url.includes('assignment')) return 'assignment';
     if (url.includes('uploadresume') || url.includes('resume')) return 'resume';
+    if (url.includes('interviewkit')) return 'interview-kit';
+    if (url.includes('others_access') || url.includes('othersaccess')) return 'assign-non-live';
     if (url.includes('dashboard')) return 'monthly-collection';
     if (url.includes('master')) return 'user-master';
     return 'user-master'; // Default to User Master (Screenshot 1)
@@ -175,6 +181,9 @@ export default function AdminPortalPage() {
     else if (menuKey === 'reg') window.location.hash = '/admin/Reg.aspx';
     else if (menuKey === 'assignment') window.location.hash = '/admin/AssignmentApproval.aspx';
     else if (menuKey === 'resume') window.location.hash = '/admin/UploadResume.aspx';
+    else if (menuKey === 'interview-kit') window.location.hash = '/admin/interviewkit.aspx';
+    else if (menuKey === 'non-live-session') window.location.hash = '/admin/Sessionsp.aspx';
+    else if (menuKey === 'assign-non-live') window.location.hash = '/admin/Others_Access.aspx';
     else if (menuKey === 'daily-collection') window.location.hash = '/admin/DailyCollection.aspx';
     else if (menuKey === 'monthly-collection') window.location.hash = '/admin/MonthlyCollection.aspx';
     else if (menuKey === 'dashboard') window.location.hash = '/admin/dashboard.aspx';
@@ -867,10 +876,28 @@ export default function AdminPortalPage() {
                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'resume' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
                   <span>Resume</span>
                 </button>
+                <button
+                  onClick={() => handleSelectMenu('interview-kit')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'interview-kit' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'interview-kit' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>My Interview Kit</span>
+                </button>
+                <button
+                  onClick={() => handleSelectMenu('non-live-session')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'non-live-session' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'non-live-session' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>Non Live Session</span>
+                </button>
+                <button
+                  onClick={() => handleSelectMenu('assign-non-live')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'assign-non-live' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'assign-non-live' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>Assign Student for Non live sessions</span>
+                </button>
                 {[
-                  "My Interview Kit", 
-                  "Non Live Session", 
-                  "Assign Student for Non live sessions", 
                   "Discussion Forum", 
                   "Release User", 
                   "EXE Users", 
@@ -1068,6 +1095,9 @@ export default function AdminPortalPage() {
                 {activeMenu === 'reg' && "Registration Form"}
                 {activeMenu === 'assignment' && "Assignment Approval"}
                 {activeMenu === 'resume' && "Upload Resume"}
+                {activeMenu === 'interview-kit' && "Interview Prepration Kit"}
+                {activeMenu === 'non-live-session' && "Class Materials - Others"}
+                {activeMenu === 'assign-non-live' && "Assign student for non live sessions"}
                 {activeMenu === 'monthly-collection' && "Monthly Collection"}
                 {activeMenu === 'daily-collection' && "Daily Collection"}
                 {activeMenu === 'dashboard' && "Monthly Collection"}
@@ -1216,6 +1246,27 @@ export default function AdminPortalPage() {
               showToast={showToast} 
               onBack={() => handleSelectMenu('user-master')} 
             />
+          )}
+
+          {/* ========================================================= */}
+          {/* VIEW 4C: INTERVIEW PREPARATION KIT (interviewkit.aspx) - Matches Screenshot 1 */}
+          {/* ========================================================= */}
+          {activeMenu === 'interview-kit' && (
+            <InterviewKitView showToast={showToast} />
+          )}
+
+          {/* ========================================================= */}
+          {/* VIEW 4D: NON LIVE SESSION (Sessionsp.aspx) - Matches Screenshot 2 */}
+          {/* ========================================================= */}
+          {activeMenu === 'non-live-session' && (
+            <NonLiveSessionView showToast={showToast} />
+          )}
+
+          {/* ========================================================= */}
+          {/* VIEW 4E: ASSIGN STUDENT NON LIVE (Others_Access.aspx) - Matches Screenshots 3 & 4 */}
+          {/* ========================================================= */}
+          {activeMenu === 'assign-non-live' && (
+            <AssignStudentNonLiveView showToast={showToast} />
           )}
 
           {/* ========================================================= */}
