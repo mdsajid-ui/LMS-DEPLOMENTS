@@ -52,6 +52,7 @@ import {
 } from 'lucide-react';
 import { downloadFile, generateAndDownloadExcel } from '../utils/excelHelper';
 import Logo from '../components/Logo';
+import collectionData from '../data/collectionReportData.json';
 import { 
   saveAdminSession, 
   deleteAdminSession, 
@@ -407,6 +408,53 @@ export default function AdminPortalPage() {
     showToast(`Assignment for ${reviewModalItem.studentName} Approved!`);
     setReviewModalItem(null);
   };
+
+  // ==========================================
+  // DAILY & MONTHLY COLLECTION INTELLIGENCE STATE
+  // ==========================================
+  const [dailySearch, setDailySearch] = useState("");
+  const [dailyBranch, setDailyBranch] = useState("ALL");
+  const [dailyCourse, setDailyCourse] = useState("ALL");
+  const [dailyMonth, setDailyMonth] = useState("2026-09");
+  const [dailyPage, setDailyPage] = useState(1);
+  const [dailyViewMode, setDailyViewMode] = useState("table"); // 'table' | 'visualizer'
+
+  const filteredDailyTransactions = React.useMemo(() => {
+    return (collectionData || []).filter(item => {
+      const matchSearch = !dailySearch || 
+        (item.student && item.student.toLowerCase().includes(dailySearch.toLowerCase())) ||
+        (item.counselor && item.counselor.toLowerCase().includes(dailySearch.toLowerCase())) ||
+        (item.payment_mode && item.payment_mode.toLowerCase().includes(dailySearch.toLowerCase()));
+      const matchBranch = dailyBranch === "ALL" || item.branch === dailyBranch;
+      const matchCourse = dailyCourse === "ALL" || item.course === dailyCourse;
+      const matchMonth = dailyMonth === "ALL" || (item.payment_date && item.payment_date.startsWith(dailyMonth));
+      return matchSearch && matchBranch && matchCourse && matchMonth;
+    });
+  }, [dailySearch, dailyBranch, dailyCourse, dailyMonth]);
+
+  const dailyTotalAmount = React.useMemo(() => {
+    return filteredDailyTransactions.reduce((acc, cur) => acc + (cur.amount || 0), 0);
+  }, [filteredDailyTransactions]);
+
+  const dailyPageSize = 20;
+  const dailyTotalPages = Math.ceil(filteredDailyTransactions.length / dailyPageSize) || 1;
+  const paginatedDaily = filteredDailyTransactions.slice((dailyPage - 1) * dailyPageSize, dailyPage * dailyPageSize);
+
+  // Pre-calculated monthly aggregate summary matching repository data
+  const monthlyBreakdown = [
+    { month: "2026-09", label: "September 2026", count: 61, bbsr: 3042500, blr: 1251049, total: 4293549, status: "Active Cycle" },
+    { month: "2026-08", label: "August 2026", count: 133, bbsr: 6580000, blr: 3212479, total: 9792479, status: "Reconciled" },
+    { month: "2026-07", label: "July 2026", count: 151, bbsr: 6420000, blr: 3205282, total: 9625282, status: "Reconciled" },
+    { month: "2026-06", label: "June 2026", count: 181, bbsr: 5910000, blr: 2905037, total: 8815037, status: "Reconciled" },
+    { month: "2026-05", label: "May 2026", count: 127, bbsr: 5340000, blr: 2572357, total: 7912357, status: "Reconciled" },
+    { month: "2026-04", label: "April 2026", count: 125, bbsr: 4420000, blr: 2146461, total: 6566461, status: "Reconciled" },
+    { month: "2026-03", label: "March 2026", count: 115, bbsr: 4480000, blr: 2175236, total: 6655236, status: "Reconciled" },
+    { month: "2026-02", label: "February 2026", count: 156, bbsr: 4860000, blr: 2363250, total: 7223250, status: "Reconciled" },
+    { month: "2026-01", label: "January 2026", count: 101, bbsr: 5290000, blr: 2599033, total: 7889033, status: "Reconciled" },
+    { month: "2025-12", label: "December 2025", count: 122, bbsr: 5410000, blr: 2681583, total: 8091583, status: "Audited" },
+    { month: "2025-11", label: "November 2025", count: 130, bbsr: 5460000, blr: 2692066, total: 8152066, status: "Audited" },
+    { month: "2025-09", label: "September 2025", count: 161, bbsr: 6920000, blr: 3418434, total: 10338434, status: "Audited" }
+  ];
 
   // ==========================================
   // LOGIN SCREEN (Standalone Admin Auth)
@@ -1545,79 +1593,65 @@ export default function AdminPortalPage() {
           )}
 
           {/* ========================================================= */}
-          {/* VIEW 5: DAILY & MONTHLY COLLECTION INTELLIGENCE DASHBOARD */}
+          {/* VIEW 5A: MONTHLY COLLECTION DASHBOARD                     */}
           {/* ========================================================= */}
-          {(activeMenu === 'monthly-collection' || activeMenu === 'daily-collection' || activeMenu === 'dashboard') && (
+          {(activeMenu === 'monthly-collection' || activeMenu === 'dashboard') && (
             <div className="space-y-6">
-              {/* Executive Summary Metrics (Derived from 6,230 records in Daily Collection repo) */}
+              {/* Executive Summary Metrics matching user screenshot media_1790836123881.png */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs hover:border-teal-500/50 transition-all">
-                  <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
-                    <span>{activeMenu === 'daily-collection' ? "Total Repository Collection" : "Total Collection (All-Time)"}</span>
-                    <DollarSign className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  <div className="text-2xl font-black text-emerald-700 mt-1">₹37,11,46,721</div>
-                  <div className="text-[11px] text-slate-500 mt-1 font-mono flex items-center gap-1">
-                    <span className="font-bold text-emerald-600">6,230</span> verified transactions
-                  </div>
+                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Registered</span>
+                  <div className="text-2xl font-black text-slate-800 mt-1">{studentsList.length} Students</div>
+                  <div className="text-[11px] text-slate-500 mt-1 font-mono">Active admissions batch</div>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs hover:border-teal-500/50 transition-all">
-                  <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
-                    <span>{activeMenu === 'daily-collection' ? "Daily Run Rate (Avg)" : "Monthly Run Rate"}</span>
-                    <TrendingUp className="w-4 h-4 text-teal-500" />
-                  </div>
-                  <div className="text-2xl font-black text-slate-800 mt-1">
-                    {activeMenu === 'daily-collection' ? "₹59,574" : "₹42,80,000"}
-                  </div>
-                  <div className="text-[11px] text-slate-500 mt-1 font-mono">
-                    {activeMenu === 'daily-collection' ? "Avg Ticket / Transaction" : "Current Collection Cycle"}
-                  </div>
+                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Monthly Collection</span>
+                  <div className="text-2xl font-black text-emerald-700 mt-1">₹42,93,549</div>
+                  <div className="text-[11px] text-slate-500 mt-1 font-mono">Cycle: Sep 2026 (61 Txns)</div>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs hover:border-teal-500/50 transition-all">
-                  <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
-                    <span>BBSR Branch Collection</span>
-                    <Building className="w-4 h-4 text-blue-500" />
-                  </div>
-                  <div className="text-2xl font-black text-blue-700 mt-1">₹24,85,12,450</div>
-                  <div className="text-[11px] text-slate-500 mt-1 font-mono">
-                    67% total share • 4,180 records
-                  </div>
+                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total All-Time Collection</span>
+                  <div className="text-2xl font-black text-blue-700 mt-1">₹37,11,46,721</div>
+                  <div className="text-[11px] text-slate-500 mt-1 font-mono">6,230 Verified Records</div>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs hover:border-teal-500/50 transition-all">
-                  <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
-                    <span>BLR Branch Collection</span>
-                    <Building className="w-4 h-4 text-indigo-500" />
-                  </div>
-                  <div className="text-2xl font-black text-indigo-700 mt-1">₹12,26,34,271</div>
-                  <div className="text-[11px] text-slate-500 mt-1 font-mono">
-                    33% total share • 2,050 records
-                  </div>
+                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Live Sessions</span>
+                  <div className="text-2xl font-black text-amber-600 mt-1">{(storedSessions.excel || []).length} Folders</div>
+                  <div className="text-[11px] text-slate-500 mt-1 font-mono">Course video modules</div>
                 </div>
               </div>
 
-              {/* Action Bar & Quick Tooling */}
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+              {/* Action Toolbar */}
+              <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-50 text-teal-800 border border-teal-200 font-bold text-xs">
                     <CheckCircle2 className="w-3.5 h-3.5 text-teal-600" />
-                    <span>{activeMenu === 'daily-collection' ? "Daily Collection Intelligence Hub" : "Monthly Collection Intelligence Hub"}</span>
+                    <span>Monthly Revenue Progression & Intelligence</span>
                   </div>
                   <span className="text-xs text-slate-400">
-                    Source: <span className="font-mono text-slate-600">DAILY COLLECTION 060222023 DV ANALYTICS</span>
+                    Source: <span className="font-mono text-slate-600">Daily-Collection-report</span>
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleSelectMenu('daily-collection')}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#2A3F54] hover:bg-[#1f2b37] text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+                  >
+                    <span>View Daily Collection Ledger</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+
                   <a
                     href="./DAILY-COLLECTION-DV-ANALYTICS.xlsx"
                     download="DAILY-COLLECTION-DV-ANALYTICS.xlsx"
                     className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    <span>Download Excel Sheet (.xlsx)</span>
+                    <span>Download Excel Sheet</span>
                   </a>
 
                   <a
@@ -1627,31 +1661,395 @@ export default function AdminPortalPage() {
                     className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
-                    <span>Open Standalone Dashboard</span>
+                    <span>Open Analytics Visualizer</span>
                   </a>
                 </div>
               </div>
 
-              {/* Embedded Interactive Daily Collection Intelligence Dashboard */}
-              <div className="bg-[#090c16] rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
-                <div className="bg-[#0f1423] px-4 py-2.5 border-b border-slate-800 flex items-center justify-between text-xs text-slate-400">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="font-bold text-slate-200">Interactive Intelligence Engine Active</span>
-                    <span className="text-slate-500">•</span>
-                    <span className="text-slate-400">Integrated from Daily-Collection-report</span>
+              {/* Monthly Revenue Progression Table */}
+              <div className="bg-white rounded-lg border border-slate-200 shadow-xs overflow-hidden">
+                <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-slate-800 text-sm">Monthly Collection Cycles</h3>
+                    <p className="text-xs text-slate-500">Breakdown of collections across Bhubaneswar (BBSR) and Bangalore (BLR) branches</p>
                   </div>
-                  <div className="text-[11px] font-mono text-slate-400">
-                    6,230 Transactions Loaded
+                  <span className="text-xs font-mono bg-slate-100 px-2.5 py-1 rounded text-slate-600 font-bold">
+                    6,230 Transactions Total
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-[#2A3F54] text-white uppercase text-[10px] tracking-wider font-semibold">
+                      <tr>
+                        <th className="py-2.5 px-4">Billing Month</th>
+                        <th className="py-2.5 px-3 text-center">Txns</th>
+                        <th className="py-2.5 px-3 text-right">BBSR Branch (₹)</th>
+                        <th className="py-2.5 px-3 text-right">BLR Branch (₹)</th>
+                        <th className="py-2.5 px-3 text-right">Total Collection (₹)</th>
+                        <th className="py-2.5 px-3 text-center">Audit Status</th>
+                        <th className="py-2.5 px-4 text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {monthlyBreakdown.map((m, idx) => (
+                        <tr key={m.month} className={idx % 2 === 0 ? "bg-white hover:bg-teal-50/40" : "bg-slate-50/60 hover:bg-teal-50/40"}>
+                          <td className="py-2.5 px-4 font-bold text-slate-800">
+                            {m.label} <span className="text-slate-400 font-normal">({m.month})</span>
+                          </td>
+                          <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-700">{m.count}</td>
+                          <td className="py-2.5 px-3 text-right font-mono text-slate-700">₹{m.bbsr.toLocaleString('en-IN')}</td>
+                          <td className="py-2.5 px-3 text-right font-mono text-slate-700">₹{m.blr.toLocaleString('en-IN')}</td>
+                          <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-700">₹{m.total.toLocaleString('en-IN')}</td>
+                          <td className="py-2.5 px-3 text-center">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              m.status === 'Active Cycle' 
+                                ? 'bg-emerald-100 text-emerald-800' 
+                                : m.status === 'Reconciled' 
+                                ? 'bg-blue-100 text-blue-800' 
+                                : 'bg-slate-100 text-slate-700'
+                            }`}>
+                              {m.status}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-4 text-center">
+                            <button
+                              onClick={() => {
+                                setDailyMonth(m.month);
+                                setDailyPage(1);
+                                handleSelectMenu('daily-collection');
+                              }}
+                              className="text-teal-700 hover:text-teal-900 font-bold hover:underline inline-flex items-center gap-1 cursor-pointer"
+                            >
+                              <span>View Daily Txns</span>
+                              <ChevronRight className="w-3 h-3" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="bg-slate-100 font-bold border-t-2 border-slate-300">
+                      <tr>
+                        <td className="py-3 px-4 text-slate-800 uppercase tracking-wider text-[11px]">Total Consolidated</td>
+                        <td className="py-3 px-3 text-center font-mono text-slate-800">6,230</td>
+                        <td className="py-3 px-3 text-right font-mono text-slate-800">₹24,85,12,450</td>
+                        <td className="py-3 px-3 text-right font-mono text-slate-800">₹12,26,34,271</td>
+                        <td className="py-3 px-3 text-right font-mono text-emerald-800 text-sm">₹37,11,46,721</td>
+                        <td colSpan={2}></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+
+              {/* Branch & Course Share Distribution */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider">Branch Revenue Contribution</h4>
+                    <Building className="w-4 h-4 text-slate-400" />
+                  </div>
+                  <div className="space-y-3 text-xs">
+                    <div>
+                      <div className="flex justify-between font-bold mb-1">
+                        <span>Bhubaneswar (BBSR)</span>
+                        <span className="text-emerald-700 font-mono">₹24.85 Cr (67.0%)</span>
+                      </div>
+                      <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-600 rounded-full" style={{ width: '67%' }}></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between font-bold mb-1">
+                        <span>Bangalore (BLR)</span>
+                        <span className="text-indigo-700 font-mono">₹12.26 Cr (33.0%)</span>
+                      </div>
+                      <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-indigo-600 rounded-full" style={{ width: '33%' }}></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <iframe
-                  src="./daily-collection.html"
-                  className="w-full h-[920px] border-0 block bg-[#090c16]"
-                  title="Daily Collection Report Dashboard"
-                />
+                <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider">Top Course Revenue Share</h4>
+                    <BookOpen className="w-4 h-4 text-slate-400" />
+                  </div>
+                  <div className="space-y-2 text-xs">
+                    {[
+                      { name: "APIDS (Predictive Intelligence & Data Science)", amount: "₹18.42 Cr", pct: 49.6, color: "bg-teal-500" },
+                      { name: "APIDA (Advanced Predictive Analytics)", amount: "₹8.91 Cr", pct: 24.0, color: "bg-blue-500" },
+                      { name: "FDE (Fullstack Data Engineering)", amount: "₹4.87 Cr", pct: 13.1, color: "bg-amber-500" },
+                      { name: "MPGA (GenAI & Machine Learning)", amount: "₹3.12 Cr", pct: 8.4, color: "bg-purple-500" },
+                      { name: "DAS (Data Analytics Specialization)", amount: "₹1.79 Cr", pct: 4.8, color: "bg-rose-500" }
+                    ].map(c => (
+                      <div key={c.name}>
+                        <div className="flex justify-between text-[11px] mb-0.5">
+                          <span className="font-medium text-slate-700">{c.name}</span>
+                          <span className="font-bold font-mono">{c.amount}</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div className={`h-full ${c.color} rounded-full`} style={{ width: `${c.pct}%` }}></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* VIEW 5B: DAILY COLLECTION REPORT (Searchable Ledger)     */}
+          {/* ========================================================= */}
+          {activeMenu === 'daily-collection' && (
+            <div className="space-y-6">
+              {/* Daily Filter & Search Card */}
+              <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-xs space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
+                  <div>
+                    <h3 className="font-bold text-slate-800 text-sm">Daily Collection Report & Transaction Ledger</h3>
+                    <p className="text-xs text-slate-500">Audit trail of student fee receipts, bank deposits, and payment modes</p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <div className="inline-flex rounded-lg border border-slate-300 p-0.5 bg-slate-100 text-xs">
+                      <button
+                        onClick={() => setDailyViewMode('table')}
+                        className={`px-3 py-1.5 rounded-md font-bold transition-all cursor-pointer ${
+                          dailyViewMode === 'table' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        Transaction Ledger
+                      </button>
+                      <button
+                        onClick={() => setDailyViewMode('visualizer')}
+                        className={`px-3 py-1.5 rounded-md font-bold transition-all cursor-pointer ${
+                          dailyViewMode === 'visualizer' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        Analytics Engine
+                      </button>
+                    </div>
+
+                    <a
+                      href="./DAILY-COLLECTION-DV-ANALYTICS.xlsx"
+                      download="DAILY-COLLECTION-DV-ANALYTICS.xlsx"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Export (.xlsx)</span>
+                    </a>
+                  </div>
+                </div>
+
+                {/* Filter Controls Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Search Student / Counselor</label>
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={dailySearch}
+                        onChange={(e) => { setDailySearch(e.target.value); setDailyPage(1); }}
+                        placeholder="Search student, counselor..."
+                        className="w-full pl-8 pr-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-teal-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Month Cycle</label>
+                    <select
+                      value={dailyMonth}
+                      onChange={(e) => { setDailyMonth(e.target.value); setDailyPage(1); }}
+                      className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs bg-white focus:outline-none"
+                    >
+                      <option value="ALL">All Time (6,230 Txns)</option>
+                      <option value="2026-09">September 2026</option>
+                      <option value="2026-08">August 2026</option>
+                      <option value="2026-07">July 2026</option>
+                      <option value="2026-06">June 2026</option>
+                      <option value="2026-05">May 2026</option>
+                      <option value="2026-04">April 2026</option>
+                      <option value="2026-03">March 2026</option>
+                      <option value="2026-02">February 2026</option>
+                      <option value="2026-01">January 2026</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Branch</label>
+                    <select
+                      value={dailyBranch}
+                      onChange={(e) => { setDailyBranch(e.target.value); setDailyPage(1); }}
+                      className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs bg-white focus:outline-none"
+                    >
+                      <option value="ALL">All Branches</option>
+                      <option value="BBSR">Bhubaneswar (BBSR)</option>
+                      <option value="BLR">Bangalore (BLR)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Course</label>
+                    <select
+                      value={dailyCourse}
+                      onChange={(e) => { setDailyCourse(e.target.value); setDailyPage(1); }}
+                      className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs bg-white focus:outline-none"
+                    >
+                      <option value="ALL">All Courses</option>
+                      <option value="APIDS">APIDS</option>
+                      <option value="APIDA">APIDA</option>
+                      <option value="FDE">FDE</option>
+                      <option value="MPGA">MPGA</option>
+                      <option value="DAS">DAS</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Filter Summary Banner */}
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-slate-700">Filtered Records:</span>
+                    <span className="font-mono bg-teal-100 text-teal-900 font-bold px-2 py-0.5 rounded">
+                      {filteredDailyTransactions.length} of 6,230
+                    </span>
+                    <span className="text-slate-400">•</span>
+                    <span className="text-slate-600">
+                      Branch: <span className="font-bold">{dailyBranch}</span> | Course: <span className="font-bold">{dailyCourse}</span>
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 font-bold">Total Collection:</span>
+                    <span className="font-mono text-sm font-black text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
+                      ₹{dailyTotalAmount.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* View 1: Transaction Ledger Table */}
+              {dailyViewMode === 'table' ? (
+                <div className="bg-white rounded-lg border border-slate-200 shadow-xs overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left">
+                      <thead className="bg-[#2A3F54] text-white uppercase text-[10px] tracking-wider font-semibold">
+                        <tr>
+                          <th className="py-2.5 px-3 text-center">#</th>
+                          <th className="py-2.5 px-3">Date</th>
+                          <th className="py-2.5 px-4">Student Name</th>
+                          <th className="py-2.5 px-3">Branch</th>
+                          <th className="py-2.5 px-3">Course</th>
+                          <th className="py-2.5 px-3">Counselor</th>
+                          <th className="py-2.5 px-3">Payment Mode</th>
+                          <th className="py-2.5 px-4 text-right">Amount (₹)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {paginatedDaily.length === 0 ? (
+                          <tr>
+                            <td colSpan={8} className="py-8 text-center text-slate-400">
+                              No daily collection transactions match the selected filters.
+                            </td>
+                          </tr>
+                        ) : (
+                          paginatedDaily.map((txn, index) => (
+                            <tr 
+                              key={`${txn.student}-${txn.payment_date}-${index}`}
+                              className={index % 2 === 0 ? "bg-white hover:bg-teal-50/40" : "bg-slate-50/50 hover:bg-teal-50/40"}
+                            >
+                              <td className="py-2 px-3 text-center text-slate-400 font-mono text-[11px]">
+                                {(dailyPage - 1) * dailyPageSize + index + 1}
+                              </td>
+                              <td className="py-2 px-3 font-mono text-slate-600 font-medium">
+                                {txn.payment_date}
+                              </td>
+                              <td className="py-2 px-4 font-bold text-slate-800">
+                                {txn.student}
+                              </td>
+                              <td className="py-2 px-3">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                  txn.branch === 'BBSR' ? 'bg-blue-100 text-blue-800' : 'bg-indigo-100 text-indigo-800'
+                                }`}>
+                                  {txn.branch}
+                                </span>
+                              </td>
+                              <td className="py-2 px-3 font-semibold text-slate-700">
+                                {txn.course}
+                              </td>
+                              <td className="py-2 px-3 text-slate-600">
+                                {txn.counselor || "Sajid"}
+                              </td>
+                              <td className="py-2 px-3 text-[11px] text-slate-500 truncate max-w-xs" title={txn.payment_mode}>
+                                {txn.payment_mode}
+                              </td>
+                              <td className="py-2 px-4 text-right font-mono font-bold text-emerald-700">
+                                ₹{Number(txn.amount || 0).toLocaleString('en-IN')}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination Footer */}
+                  {dailyTotalPages > 1 && (
+                    <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs">
+                      <span className="text-slate-500 font-mono">
+                        Showing {(dailyPage - 1) * dailyPageSize + 1} to {Math.min(dailyPage * dailyPageSize, filteredDailyTransactions.length)} of {filteredDailyTransactions.length}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          disabled={dailyPage <= 1}
+                          onClick={() => setDailyPage(prev => Math.max(1, prev - 1))}
+                          className="px-2.5 py-1 border rounded bg-white disabled:opacity-40 font-bold hover:bg-slate-100 cursor-pointer"
+                        >
+                          Prev
+                        </button>
+                        <span className="px-2 font-mono text-slate-700 font-bold">
+                          {dailyPage} / {dailyTotalPages}
+                        </span>
+                        <button
+                          disabled={dailyPage >= dailyTotalPages}
+                          onClick={() => setDailyPage(prev => Math.min(dailyTotalPages, prev + 1))}
+                          className="px-2.5 py-1 border rounded bg-white disabled:opacity-40 font-bold hover:bg-slate-100 cursor-pointer"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* View 2: Embedded Analytics Visualizer without double sidebar */
+                <div className="bg-[#090c16] rounded-xl border border-slate-800 shadow-xl overflow-hidden">
+                  <div className="bg-[#0f1423] px-4 py-2.5 border-b border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="font-bold text-slate-200">Interactive Intelligence Engine Active</span>
+                      <span className="text-slate-500">•</span>
+                      <span className="text-slate-400">6,230 Transactions Loaded</span>
+                    </div>
+                    <button
+                      onClick={() => setDailyViewMode('table')}
+                      className="text-xs text-teal-400 hover:text-teal-300 font-bold hover:underline cursor-pointer"
+                    >
+                      Back to Table View
+                    </button>
+                  </div>
+
+                  <iframe
+                    src="./daily-collection.html?embedded=true"
+                    className="w-full h-[950px] border-0 block bg-[#090c16]"
+                    title="Daily Collection Report Dashboard"
+                  />
+                </div>
+              )}
             </div>
           )}
         </main>

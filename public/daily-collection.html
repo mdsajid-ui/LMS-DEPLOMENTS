@@ -2778,6 +2778,17 @@ td.amount { font-family: var(--font-mono); color: var(--text-primary); font-weig
   background: var(--bg-deep);
 }
 
+body.embedded .sidebar, [data-embedded="true"] .sidebar {
+  display: none !important;
+}
+
+body.embedded .main-content-area, [data-embedded="true"] .main-content-area {
+  margin-left: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 12px !important;
+}
+
 .sidebar {
   width: 240px;
   min-width: 240px;
@@ -3838,6 +3849,10 @@ function groupSum(arr, keyFn) {
 /* ---------------------------------------------------------- init ---- */
 
 function init() {
+  if (window.self !== window.top || window.location.search.includes('embedded=true')) {
+    document.body.classList.add('embedded');
+    document.documentElement.setAttribute('data-embedded', 'true');
+  }
   showLoading("Reading bundled workbook…");
   loadEmbeddedData();
   populateFilterOptions();
