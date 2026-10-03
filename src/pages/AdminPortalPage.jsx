@@ -88,7 +88,6 @@ import ClassManagementView from '../components/ClassManagementView';
 import CollectionRecoveryPage from './CollectionRecoveryPage';
 import AcademicAnalyticsView from '../components/analytics/AcademicAnalyticsView';
 import StudentAnalyticsView from '../components/analytics/StudentAnalyticsView';
-import PlacementAnalyticsView from '../components/analytics/PlacementAnalyticsView';
 import ExecutiveDashboardView from '../components/analytics/ExecutiveDashboardView';
 import EnhancedDailyCollectionInsights from '../components/analytics/EnhancedDailyCollectionInsights';
 import EnhancedMonthlyCollectionInsights from '../components/analytics/EnhancedMonthlyCollectionInsights';
@@ -212,8 +211,6 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     if (url.includes('learningprogress') || url.includes('learning-progress')) return 'learning-progress';
     if (url.includes('lmsengagement') || url.includes('lms-engagement')) return 'lms-engagement';
     if (url.includes('assignmenttracking') || url.includes('assignment-tracking')) return 'assignment-tracking';
-    if (url.includes('placementdashboard') || url.includes('placement-dashboard')) return 'placement-dashboard';
-    if (url.includes('interviewtracking') || url.includes('interview-tracking')) return 'interview-tracking';
     if (url.includes('directoroverview') || url.includes('director-overview')) return 'director-overview';
     if (url.includes('revenueanalytics') || url.includes('revenue-analytics')) return 'revenue-analytics';
     if (url.includes('institutehealthscore') || url.includes('healthscore') || url.includes('health-score')) return 'institute-health-score';
@@ -269,8 +266,6 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     else if (menuKey === 'learning-progress') window.location.hash = '/admin/LearningProgress.aspx';
     else if (menuKey === 'lms-engagement') window.location.hash = '/admin/LMSEngagement.aspx';
     else if (menuKey === 'assignment-tracking') window.location.hash = '/admin/AssignmentTracking.aspx';
-    else if (menuKey === 'placement-dashboard') window.location.hash = '/admin/PlacementDashboard.aspx';
-    else if (menuKey === 'interview-tracking') window.location.hash = '/admin/InterviewTracking.aspx';
     else if (menuKey === 'director-overview') window.location.hash = '/admin/DirectorOverview.aspx';
     else if (menuKey === 'revenue-analytics') window.location.hash = '/admin/RevenueAnalytics.aspx';
     else if (menuKey === 'institute-health-score') window.location.hash = '/admin/InstituteHealthScore.aspx';
@@ -292,7 +287,6 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     'collections-recovery': true,
     'academic-analytics': true,
     'student-analytics': true,
-    'placement-analytics': true,
     'executive-dashboard': true
   });
   const toggleSubgroup = (subId) => {
@@ -340,16 +334,6 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
             { key: 'learning-progress', name: 'Learning Progress', icon: TrendingUp },
             { key: 'lms-engagement', name: 'LMS Engagement', icon: Activity, badge: 'DAU' },
             { key: 'assignment-tracking', name: 'Assignment Tracking', icon: FileCheck }
-          ]
-        },
-        {
-          id: 'placement-analytics',
-          label: 'Placement Analytics',
-          icon: Briefcase,
-          badge: '87%',
-          items: [
-            { key: 'placement-dashboard', name: 'Placement Dashboard', icon: Award, badge: '₹24.5L' },
-            { key: 'interview-tracking', name: 'Interview Tracking', icon: Target }
           ]
         },
         {
@@ -1765,16 +1749,6 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
           )}
           {activeMenu === 'assignment-tracking' && (
             <StudentAnalyticsView initialSubTab="assignment" showToast={showToast} />
-          )}
-
-          {/* ========================================================= */}
-          {/* PLACEMENT ANALYTICS DASHBOARDS                            */}
-          {/* ========================================================= */}
-          {activeMenu === 'placement-dashboard' && (
-            <PlacementAnalyticsView initialSubTab="placement" showToast={showToast} />
-          )}
-          {activeMenu === 'interview-tracking' && (
-            <PlacementAnalyticsView initialSubTab="interview" showToast={showToast} />
           )}
 
           {/* ========================================================= */}
