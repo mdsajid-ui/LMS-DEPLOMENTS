@@ -4058,6 +4058,29 @@ export function LiveSessionView({ showToast }) {
   const [filterBatch, setFilterBatch] = useState("All Batch");
   const [filterApp, setFilterApp] = useState("Select Application");
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  
+  // State for Screenshot 2 view: editingSession holds session object when inside Class Materials view
+  const [editingSession, setEditingSession] = useState(null);
+  const [previewVideoUrl, setPreviewVideoUrl] = useState(null);
+
+  // Class Materials items map keyed by session identifier
+  const [sessionMaterialsMap, setSessionMaterialsMap] = useState(() => {
+    return {
+      "default_excel_1": [
+        { id: 1, listType: "Materials", fileDescription: "Excel Session-1 Materials", link: "https://drive.google.com/drive/folders/dva-excel-s1", duration: "" },
+        { id: 2, listType: "Assignments", fileDescription: "Excel Session-1 Assignments", link: "https://drive.google.com/drive/folders/dva-excel-asn-1", duration: "" },
+        { id: 3, listType: "Class Videos", fileDescription: "Excel Session-1 Class-1 Video", link: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", duration: "00:00:01" }
+      ]
+    };
+  });
+
+  // Content Information Form state for Screenshot 2
+  const [materialForm, setMaterialForm] = useState({
+    listType: "Please Select",
+    uploadedLink: "",
+    fileDescription: "",
+    editingItemId: null
+  });
 
   // Subscribe to real-time updates from Student LMS and other tabs
   useEffect(() => {
@@ -4067,72 +4090,25 @@ export function LiveSessionView({ showToast }) {
     return () => unsub();
   }, []);
 
-  // Form matching Screenshot 2 with enhanced LMS connectivity
-  const [form, setForm] = useState({
-    date: "01-10-2026",
-    mentor: "Select Mentor",
-    batch: "BATCH 202606",
+  // Form matching Screenshot 1: Create Session Modal
+  const [createForm, setCreateForm] = useState({
+    date: "03-10-2026",
+    mentor: "DEBENDRA DEBADUTTA DAS",
+    batch: "BATCH 202608",
     application: "EXCEL BASE AND ADVANCED",
-    sessionTitle: "B1.SESSION-1",
-    sortOrder: "1",
-    uploadedLink: "",
-    topicType: "CLASS VIDEOS",
-    description: "Excel Session 1 Class 1 Video Lecture"
+    sessionNumber: "1",
+    sortOrder: "1"
   });
 
-  // Dynamic sessions list for the selected application
-  const availableExistingSessions = useMemo(() => {
-    const app = (form.application || '').toLowerCase();
-    let key = 'excel';
-    if (app.includes('sql')) key = 'sql';
-    else if (app.includes('python')) key = 'python';
-
-    const list = sessionsMap[key] || [];
-    return list.map((s, idx) => ({
-      id: s.id || `session-${idx + 1}`,
-      title: s.title || `Session ${idx + 1}`,
-      fullTitle: s.fullTitle || s.title || `Session ${idx + 1}`
-    }));
-  }, [form.application, sessionsMap]);
-
-  const handleCreateSubmit = (e) => {
-    e.preventDefault();
-    if (!form.sessionTitle.trim()) {
-      showToast("Please enter or select a session title");
-      return;
-    }
-
-    const appName = form.application === "Select Application" ? "EXCEL BASE AND ADVANCED" : form.application;
-    const streamUrl = form.uploadedLink.trim() || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
-
-    saveAdminSession({
-      date: form.date,
-      mentor: form.mentor === "Select Mentor" ? "Dr. Sandip Mukherjee" : form.mentor,
-      batch: form.batch,
-      application: appName,
-      sessionTitle: form.sessionTitle.trim(),
-      sortOrder: form.sortOrder,
-      topicType: form.topicType,
-      uploadedLink: streamUrl,
-      description: form.description || `${form.sessionTitle} Video Lecture`
-    });
-
-    setSessionsMap(getAllStoredSessions());
-    setCreateModalOpen(false);
-    showToast(`✓ LIVE SYNC: "${form.sessionTitle}" uploaded! Reflected immediately in Student LMS.`);
-    
-    setForm({
-      date: "01-10-2026",
-      mentor: "Select Mentor",
-      batch: "BATCH 202606",
-      application: "EXCEL BASE AND ADVANCED",
-      sessionTitle: "B1.SESSION-1",
-      sortOrder: "1",
-      uploadedLink: "",
-      topicType: "CLASS VIDEOS",
-      description: "Excel Session 1 Class 1 Video Lecture"
-    });
-  };
+  // Mentor options list
+  const mentorOptions = [
+    "DEBENDRA DEBADUTTA DAS",
+    "Debashish Sir (DVMENTOR4)",
+    "Dr. Sandip Mukherjee (DVMENTOR2)",
+    "Senior AI Faculty (DVMENTOR3)",
+    "Interview & Capstone Lead (DVMENTOR5)",
+    "SAJID"
+  ];
 
   // Convert sessionsMap into flat array for display
   const allSessionsList = useMemo(() => {
@@ -4143,11 +4119,12 @@ export function LiveSessionView({ showToast }) {
           id: s.id || `${subj}-${idx}`,
           subjectKey: subj,
           title: s.title || `Session ${idx + 1}`,
+          sessionNumber: s.sessionNumber || (idx + 1).toString(),
           application: subj.toUpperCase() === 'EXCEL' ? 'EXCEL BASE AND ADVANCED' : (subj.toUpperCase() === 'SQL' ? 'SQL SERVER' : 'PYTHON PROGRAMMING'),
-          batch: s.batch || 'Batch 202209',
-          date: s.recordingDate || '2026-09-15',
-          mentor: s.instructor || 'Dr. Sandip Mukherjee',
-          sortOrder: idx + 1,
+          batch: s.batch || 'BATCH 202608',
+          date: s.recordingDate || '03-10-2026',
+          mentor: s.instructor || 'DEBENDRA DEBADUTTA DAS',
+          sortOrder: s.sortOrder || (idx + 1),
           videoUrl: s.vdocipherEmbedUrl || s.videoUrl || s.driveFolderUrl || ''
         });
       });
@@ -4163,8 +4140,467 @@ export function LiveSessionView({ showToast }) {
     });
   }, [allSessionsList, filterBatch, filterApp]);
 
+  // Handle Create Session Submit (Screenshot 1)
+  const handleCreateSubmit = (e) => {
+    e.preventDefault();
+    if (!createForm.sessionNumber.trim()) {
+      showToast("Please enter session number or title");
+      return;
+    }
+
+    const appName = createForm.application === "Select Application" ? "EXCEL BASE AND ADVANCED" : createForm.application;
+    const sessionTitle = `Session ${createForm.sessionNumber.replace(/[^0-9]/g, '') || createForm.sessionNumber}`;
+
+    const newSession = {
+      date: createForm.date,
+      mentor: createForm.mentor === "Select Mentor" ? "DEBENDRA DEBADUTTA DAS" : createForm.mentor,
+      batch: createForm.batch,
+      application: appName,
+      sessionTitle: sessionTitle,
+      sessionNumber: createForm.sessionNumber,
+      sortOrder: createForm.sortOrder,
+      topicType: "CLASS VIDEOS",
+      uploadedLink: "",
+      description: `${appName} ${sessionTitle}`
+    };
+
+    saveAdminSession(newSession);
+    setSessionsMap(getAllStoredSessions());
+    setCreateModalOpen(false);
+    showToast(`✓ Session Created: ${sessionTitle} for ${createForm.batch}. Opening Class Materials upload...`);
+
+    // Immediately open Screenshot 2 view for this newly created session
+    setEditingSession({
+      id: `session-new-${Date.now()}`,
+      title: sessionTitle,
+      sessionNumber: createForm.sessionNumber,
+      mentor: newSession.mentor,
+      batch: newSession.batch,
+      application: newSession.application,
+      sortOrder: newSession.sortOrder,
+      videoUrl: ""
+    });
+  };
+
+  // Get materials for current active session
+  const currentSessionKey = editingSession ? (editingSession.id || `session-${editingSession.sessionNumber}`) : "default_excel_1";
+  const currentMaterials = sessionMaterialsMap[currentSessionKey] || sessionMaterialsMap["default_excel_1"] || [];
+
+  // Handle Add to Grid / Update in Screenshot 2
+  const handleAddMaterialToGrid = (e) => {
+    e.preventDefault();
+    if (materialForm.listType === "Please Select") {
+      showToast("Please select a List category (Materials, Assignments, or Class Videos)");
+      return;
+    }
+    if (!materialForm.uploadedLink.trim()) {
+      showToast("Please enter or paste the Uploaded File link");
+      return;
+    }
+    if (!materialForm.fileDescription.trim()) {
+      showToast("Please enter the File Description");
+      return;
+    }
+
+    const listKey = currentSessionKey;
+    const existingList = sessionMaterialsMap[listKey] || [
+      { id: 1, listType: "Materials", fileDescription: "Excel Session-1 Materials", link: "https://drive.google.com", duration: "" },
+      { id: 2, listType: "Assignments", fileDescription: "Excel Session-1 Assignments", link: "https://drive.google.com", duration: "" }
+    ];
+
+    if (materialForm.editingItemId) {
+      // Update existing item
+      const updatedList = existingList.map(item => {
+        if (item.id === materialForm.editingItemId) {
+          return {
+            ...item,
+            listType: materialForm.listType,
+            uploadedLink: materialForm.uploadedLink,
+            fileDescription: materialForm.fileDescription,
+            duration: materialForm.listType === 'Class Videos' ? (item.duration || '00:45:00') : ''
+          };
+        }
+        return item;
+      });
+      setSessionMaterialsMap(prev => ({ ...prev, [listKey]: updatedList }));
+      showToast(`✓ Updated item: ${materialForm.fileDescription}`);
+    } else {
+      // Add new item
+      const newItem = {
+        id: Date.now(),
+        listType: materialForm.listType,
+        fileDescription: materialForm.fileDescription,
+        uploadedLink: materialForm.uploadedLink,
+        duration: materialForm.listType === 'Class Videos' ? '00:00:01' : ''
+      };
+      const updatedList = [...existingList, newItem];
+      setSessionMaterialsMap(prev => ({ ...prev, [listKey]: updatedList }));
+
+      // If it is Class Videos, automatically update session video URL and sync to Student LMS!
+      if (materialForm.listType === "Class Videos" && editingSession) {
+        saveAdminSession({
+          date: editingSession.date || "03-10-2026",
+          mentor: editingSession.mentor,
+          batch: editingSession.batch,
+          application: editingSession.application,
+          sessionTitle: editingSession.title,
+          sortOrder: editingSession.sortOrder || 1,
+          topicType: "CLASS VIDEOS",
+          uploadedLink: materialForm.uploadedLink,
+          description: materialForm.fileDescription
+        });
+        setSessionsMap(getAllStoredSessions());
+        showToast(`✓ LIVE SYNC: "${materialForm.fileDescription}" uploaded! Reflected immediately in Student LMS.`);
+      } else {
+        showToast(`✓ Added to Grid: ${materialForm.fileDescription}`);
+      }
+    }
+
+    // Reset material form
+    setMaterialForm({
+      listType: "Please Select",
+      uploadedLink: "",
+      fileDescription: "",
+      editingItemId: null
+    });
+  };
+
+  // Delete material from grid
+  const handleDeleteMaterial = (itemId) => {
+    const listKey = currentSessionKey;
+    const existingList = sessionMaterialsMap[listKey] || [];
+    const updated = existingList.filter(i => i.id !== itemId);
+    setSessionMaterialsMap(prev => ({ ...prev, [listKey]: updated }));
+    showToast("Item deleted from grid.");
+  };
+
+  // Edit material from grid
+  const handleEditMaterial = (item) => {
+    setMaterialForm({
+      listType: item.listType,
+      uploadedLink: item.link || item.uploadedLink || "",
+      fileDescription: item.fileDescription,
+      editingItemId: item.id
+    });
+  };
+
+  // =========================================================================
+  // VIEW B: SCREENSHOT 2 (edu.dvanalyticsmds.com/admin/Session.aspx?status=Edit&id=...)
+  // =========================================================================
+  if (editingSession) {
+    return (
+      <div className="space-y-6 text-xs font-sans text-slate-800 animate-in fade-in select-none">
+        
+        {/* Top Breadcrumb Bar */}
+        <div className="flex items-center justify-between bg-white p-3.5 px-5 rounded border border-slate-200 shadow-2xs">
+          <div className="flex items-center gap-2 text-slate-600 font-semibold">
+            <span className="text-slate-400">/</span>
+            <span className="text-slate-900 font-bold">Class Materials</span>
+            <span className="text-slate-400">/</span>
+            <span className="text-teal-700 font-mono text-[11px] font-bold">Session.aspx?status=Edit&id={editingSession.id || '21633'}</span>
+          </div>
+
+          <button
+            onClick={() => setEditingSession(null)}
+            className="px-3.5 py-1.5 rounded bg-[#337ab7] hover:bg-[#286090] text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+          >
+            <span>« Back to Sessions List</span>
+          </button>
+        </div>
+
+        {/* Two-Column Form Row (Content Information & Session Information) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          
+          {/* Left Column (8 cols): Content Information */}
+          <div className="lg:col-span-8 bg-white rounded border border-slate-200 shadow-xs p-5 space-y-4">
+            <h3 className="font-semibold text-sm text-slate-800 border-b border-slate-100 pb-2">
+              Content Information
+            </h3>
+
+            <form onSubmit={handleAddMaterialToGrid} className="space-y-4 pt-1">
+              
+              {/* List * */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1 text-xs">
+                  List<span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={materialForm.listType}
+                  onChange={(e) => setMaterialForm({ ...materialForm, listType: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:border-teal-500 bg-white text-xs"
+                >
+                  <option value="Please Select">Please Select</option>
+                  <option value="Materials">Materials</option>
+                  <option value="Assignments">Assignments</option>
+                  <option value="Class Videos">Class Videos</option>
+                </select>
+              </div>
+
+              {/* Uploaded link * */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1 text-xs">
+                  Uploaded link<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Uploaded File link"
+                  value={materialForm.uploadedLink}
+                  onChange={(e) => setMaterialForm({ ...materialForm, uploadedLink: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:border-teal-500 bg-white text-xs font-mono"
+                />
+
+                {/* 1-Click Preset Links */}
+                <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+                  <span className="text-slate-400">Quick Test Links:</span>
+                  <button
+                    type="button"
+                    onClick={() => setMaterialForm({
+                      ...materialForm,
+                      listType: "Class Videos",
+                      uploadedLink: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                      fileDescription: `${editingSession.application} Session-${editingSession.sessionNumber} Class Video`
+                    })}
+                    className="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded hover:bg-blue-100 font-medium cursor-pointer"
+                  >
+                    + Demo MP4 Stream
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMaterialForm({
+                      ...materialForm,
+                      listType: "Materials",
+                      uploadedLink: "https://drive.google.com/drive/folders/dva-materials-master",
+                      fileDescription: `${editingSession.application} Session-${editingSession.sessionNumber} Materials`
+                    })}
+                    className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded hover:bg-emerald-100 font-medium cursor-pointer"
+                  >
+                    + Google Drive Material
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMaterialForm({
+                      ...materialForm,
+                      listType: "Assignments",
+                      uploadedLink: "https://drive.google.com/drive/folders/dva-assignments-master",
+                      fileDescription: `${editingSession.application} Session-${editingSession.sessionNumber} Assignments`
+                    })}
+                    className="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded hover:bg-amber-100 font-medium cursor-pointer"
+                  >
+                    + Assignment Workbook
+                  </button>
+                </div>
+              </div>
+
+              {/* File Description * */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1 text-xs">
+                  File Description<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Uploaded File Description"
+                  value={materialForm.fileDescription}
+                  onChange={(e) => setMaterialForm({ ...materialForm, fileDescription: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:border-teal-500 bg-white text-xs"
+                />
+              </div>
+
+              {/* Action Buttons: Add to Grid & Back */}
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  type="submit"
+                  className="bg-[#26b99a] hover:bg-[#1f967d] text-white font-bold text-xs px-5 py-2 rounded shadow-2xs cursor-pointer transition-colors"
+                >
+                  {materialForm.editingItemId ? "Update in Grid" : "Add to Grid"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setEditingSession(null)}
+                  className="bg-[#337ab7] hover:bg-[#286090] text-white font-bold text-xs px-5 py-2 rounded shadow-2xs cursor-pointer transition-colors"
+                >
+                  Back
+                </button>
+              </div>
+
+            </form>
+          </div>
+
+          {/* Right Column (4 cols): Session Information */}
+          <div className="lg:col-span-4 bg-white rounded border border-slate-200 shadow-xs p-5 space-y-4">
+            <h3 className="font-semibold text-sm text-slate-800 border-b border-slate-100 pb-2">
+              Session Information
+            </h3>
+
+            <div className="space-y-3.5 text-xs">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Mentor :</span>
+                <strong className="text-slate-900 font-extrabold text-sm block mt-0.5">{editingSession.mentor}</strong>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Batch ID :</span>
+                <span className="font-mono font-bold text-teal-700 text-xs block mt-0.5">{editingSession.batch}</span>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Application :</span>
+                <span className="font-bold text-slate-800 text-xs block mt-0.5">{editingSession.application}</span>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Session Number :</span>
+                <span className="font-mono font-extrabold text-indigo-700 text-base block mt-0.5">{editingSession.sessionNumber}</span>
+              </div>
+            </div>
+
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded text-emerald-800 text-[11px] mt-4 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+              <span>All uploads made here reflect in the Student LMS in real time across all open tabs.</span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Full-Width Grid Table (Screenshot 2) */}
+        <div className="bg-white rounded border border-slate-200 shadow-xs overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead className="bg-[#2A3F54] text-white">
+                <tr>
+                  <th className="py-2.5 px-4 w-16 text-center font-bold">S.No</th>
+                  <th className="py-2.5 px-4 font-bold">List</th>
+                  <th className="py-2.5 px-4 font-bold">File Description</th>
+                  <th className="py-2.5 px-4 font-bold text-center">Video Duration</th>
+                  <th className="py-2.5 px-4 text-center font-bold">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {currentMaterials.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-slate-400 font-medium">
+                      No materials or videos added yet. Select a category and click "Add to Grid" above.
+                    </td>
+                  </tr>
+                ) : (
+                  currentMaterials.map((item, idx) => (
+                    <tr key={item.id || idx} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-2.5 px-4 text-center font-mono font-bold text-slate-600">{idx + 1}</td>
+                      <td className="py-2.5 px-4 font-semibold text-slate-800">
+                        <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-bold ${
+                          item.listType === 'Class Videos' 
+                            ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+                            : (item.listType === 'Assignments' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 text-slate-700')
+                        }`}>
+                          {item.listType}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-4 font-medium text-slate-900">
+                        <div className="flex items-center gap-2">
+                          {item.listType === 'Class Videos' ? <Video className="w-3.5 h-3.5 text-blue-600 shrink-0" /> : <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />}
+                          <span>{item.fileDescription}</span>
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-4 text-center font-mono text-slate-600 text-[11px]">
+                        {item.duration || "-"}
+                      </td>
+                      <td className="py-2.5 px-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => handleDeleteMaterial(item.id)}
+                            className="bg-[#d9534f] hover:bg-[#c9302c] text-white px-2.5 py-1 rounded text-[11px] font-bold cursor-pointer transition-colors shadow-2xs"
+                            title="Delete"
+                          >
+                            Delete
+                          </button>
+                          
+                          <button
+                            onClick={() => handleEditMaterial(item)}
+                            className="bg-[#337ab7] hover:bg-[#286090] text-white px-2.5 py-1 rounded text-[11px] font-bold cursor-pointer transition-colors shadow-2xs"
+                            title="Edit"
+                          >
+                            Edit
+                          </button>
+
+                          {item.listType === 'Class Videos' && (
+                            <button
+                              onClick={() => setPreviewVideoUrl(item.link || item.uploadedLink || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")}
+                              className="bg-[#f0ad4e] hover:bg-[#ec971f] text-slate-950 font-bold px-2.5 py-1 rounded text-[11px] cursor-pointer transition-colors shadow-2xs flex items-center gap-1"
+                              title="Play Video Lecture"
+                            >
+                              <PlayCircle className="w-3 h-3" />
+                              <span>Play</span>
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Video Player Modal */}
+        {previewVideoUrl && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+            <div className="bg-slate-950 border border-slate-800 rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl">
+              <div className="p-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-white">
+                <div className="flex items-center gap-2">
+                  <PlayCircle className="w-4 h-4 text-emerald-400" />
+                  <span className="font-bold text-xs">Video Preview: {editingSession.title}</span>
+                </div>
+                <button
+                  onClick={() => setPreviewVideoUrl(null)}
+                  className="w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center text-sm cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="relative aspect-video bg-black flex items-center justify-center">
+                {previewVideoUrl.includes('youtube.com') || previewVideoUrl.includes('youtu.be') ? (
+                  <iframe
+                    src={previewVideoUrl.replace('watch?v=', 'embed/')}
+                    className="w-full h-full border-0"
+                    allowFullScreen
+                    title="Video Player"
+                  />
+                ) : (
+                  <video
+                    src={previewVideoUrl}
+                    controls
+                    autoPlay
+                    className="w-full h-full object-contain"
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                )}
+              </div>
+
+              <div className="p-3 bg-slate-900 border-t border-slate-800 text-right">
+                <button
+                  onClick={() => setPreviewVideoUrl(null)}
+                  className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded cursor-pointer"
+                >
+                  Close Player
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // VIEW A: SESSIONS OVERVIEW WITH FILTER & CREATE MODAL (Screenshot 1)
+  // =========================================================================
   return (
     <div className="bg-white rounded border border-slate-200 shadow-xs p-6 space-y-5 text-xs font-sans">
+      
       {/* Top Action Button - Exactly as Screenshot 1 */}
       <div>
         <button
@@ -4283,15 +4719,16 @@ export function LiveSessionView({ showToast }) {
                         <span className="truncate">{s.videoUrl}</span>
                       </span>
                     ) : (
-                      <span className="text-slate-400">Class Materials</span>
+                      <span className="text-slate-400">Class Materials Available</span>
                     )}
                   </td>
                   <td className="py-2.5 px-3 text-center">
                     <button
-                      onClick={() => showToast(`Playing/Verifying: ${s.title}`)}
-                      className="bg-[#26b99a] hover:bg-[#1f967d] text-white px-2 py-0.5 rounded-[3px] text-[10px] font-medium cursor-pointer shadow-2xs"
+                      onClick={() => setEditingSession(s)}
+                      className="bg-[#26b99a] hover:bg-[#1f967d] text-white px-2.5 py-1 rounded-[3px] text-[10px] font-bold cursor-pointer shadow-2xs"
+                      title="Open Screenshot 2 Class Materials Upload View"
                     >
-                      View
+                      Manage Materials
                     </button>
                   </td>
                 </tr>
@@ -4301,7 +4738,7 @@ export function LiveSessionView({ showToast }) {
         </table>
       </div>
 
-      {/* CREATE SESSION MODAL - Exactly matching Screenshot 2 */}
+      {/* CREATE SESSION MODAL - Exactly matching Screenshot 1 */}
       {createModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded shadow-2xl max-w-md w-full p-6 space-y-4 text-xs font-sans border border-slate-300 animate-in fade-in zoom-in-95">
@@ -4329,8 +4766,8 @@ export function LiveSessionView({ showToast }) {
                     type="text"
                     required
                     placeholder="dd-mm-yyyy"
-                    value={form.date}
-                    onChange={(e) => setForm({ ...form, date: e.target.value })}
+                    value={createForm.date}
+                    onChange={(e) => setCreateForm({ ...createForm, date: e.target.value })}
                     className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:border-teal-500 bg-white font-mono text-xs"
                   />
                   <Calendar className="w-4 h-4 text-slate-400 absolute right-3 top-2 pointer-events-none" />
@@ -4343,16 +4780,14 @@ export function LiveSessionView({ showToast }) {
                   Mentor<span className="text-red-500">*</span>
                 </label>
                 <select
-                  value={form.mentor}
-                  onChange={(e) => setForm({ ...form, mentor: e.target.value })}
+                  value={createForm.mentor}
+                  onChange={(e) => setCreateForm({ ...createForm, mentor: e.target.value })}
                   className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:border-teal-500 bg-white text-xs"
                 >
                   <option value="Select Mentor">Select Mentor</option>
-                  {initialMentorsMaster.map(m => (
-                    <option key={m.id} value={m.mentorName}>{m.mentorName}</option>
+                  {mentorOptions.map((m, idx) => (
+                    <option key={idx} value={m}>{m}</option>
                   ))}
-                  <option value="Dr. Sandip Mukherjee">Dr. Sandip Mukherjee</option>
-                  <option value="SAJID">SAJID</option>
                 </select>
               </div>
 
@@ -4364,9 +4799,9 @@ export function LiveSessionView({ showToast }) {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Batch 202209 or BATCH 202606"
-                  value={form.batch}
-                  onChange={(e) => setForm({ ...form, batch: e.target.value })}
+                  placeholder="e.g. BATCH 202608 or BATCH 202609"
+                  value={createForm.batch}
+                  onChange={(e) => setCreateForm({ ...createForm, batch: e.target.value })}
                   className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:border-teal-500 bg-white text-xs font-mono"
                 />
               </div>
@@ -4377,8 +4812,8 @@ export function LiveSessionView({ showToast }) {
                   Application<span className="text-red-500">*</span>
                 </label>
                 <select
-                  value={form.application}
-                  onChange={(e) => setForm({ ...form, application: e.target.value })}
+                  value={createForm.application}
+                  onChange={(e) => setCreateForm({ ...createForm, application: e.target.value })}
                   className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:border-teal-500 bg-white text-xs"
                 >
                   <option value="Select Application">Select Application</option>
@@ -4388,74 +4823,19 @@ export function LiveSessionView({ showToast }) {
                 </select>
               </div>
 
-              {/* Session Selection / Input */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-slate-700 font-bold text-xs">
-                    Session<span className="text-red-500">*</span>
-                  </label>
-                  <span className="text-[10px] text-teal-600 font-semibold">
-                    Select existing or type below
-                  </span>
-                </div>
-
-                <div className="space-y-1.5">
-                  <select
-                    value={form.sessionTitle}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setForm(prev => ({
-                        ...prev,
-                        sessionTitle: val,
-                        description: val ? `${val} Video Lecture` : prev.description
-                      }));
-                    }}
-                    className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:border-teal-500 bg-white text-xs font-medium cursor-pointer"
-                  >
-                    <option value="">-- Choose Existing Session or Type Below --</option>
-                    {availableExistingSessions.map((s, idx) => (
-                      <option key={idx} value={s.title}>
-                        {s.title} {s.title.includes('SESSION-1') ? '★ (Excel Session 1)' : ''}
-                      </option>
-                    ))}
-                  </select>
-
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. B1.SESSION-1, Excel session 1, or Advanced Pivot Tables"
-                    value={form.sessionTitle}
-                    onChange={(e) => setForm({ ...form, sessionTitle: e.target.value })}
-                    className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:border-teal-500 bg-white text-xs font-mono font-medium"
-                  />
-                </div>
-              </div>
-
-              {/* Topic Type Selector */}
+              {/* Session * */}
               <div>
                 <label className="block text-slate-700 font-bold mb-1 text-xs">
-                  Topic Type<span className="text-red-500">*</span>
+                  Session<span className="text-red-500">*</span>
                 </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { id: 'CLASS VIDEOS', label: 'Class Video' },
-                    { id: 'MATERIALS', label: 'Materials (.zip)' },
-                    { id: 'ASSIGNMENTS', label: 'Assignment (.xlsx)' }
-                  ].map(t => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setForm({ ...form, topicType: t.id })}
-                      className={`py-1.5 px-2 text-xs rounded border text-center transition-all cursor-pointer font-semibold ${
-                        form.topicType === t.id
-                          ? 'bg-teal-600 text-white border-teal-600 shadow-2xs'
-                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 1"
+                  value={createForm.sessionNumber}
+                  onChange={(e) => setCreateForm({ ...createForm, sessionNumber: e.target.value })}
+                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:border-teal-500 bg-white text-xs font-mono font-medium"
+                />
               </div>
 
               {/* Sort Order * */}
@@ -4464,111 +4844,16 @@ export function LiveSessionView({ showToast }) {
                   Sort Order<span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   required
-                  value={form.sortOrder}
-                  onChange={(e) => setForm({ ...form, sortOrder: e.target.value })}
+                  placeholder="e.g. 1"
+                  value={createForm.sortOrder}
+                  onChange={(e) => setCreateForm({ ...createForm, sortOrder: e.target.value })}
                   className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:border-teal-500 bg-white text-xs font-mono"
                 />
               </div>
 
-              {/* Video URL (Seamless LMS live sync) */}
-              <div>
-                <label className="block text-slate-700 font-bold mb-1 text-xs">
-                  Video Embed / Stream URL or Local File
-                </label>
-                <input
-                  type="text"
-                  placeholder="https://... (YouTube, Google Drive, MP4, VdoCipher, or blob)"
-                  value={form.uploadedLink}
-                  onChange={(e) => setForm({ ...form, uploadedLink: e.target.value })}
-                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:border-teal-500 bg-white text-xs font-mono"
-                />
-
-                {/* Local Video File Picker & 1-Click Test Presets */}
-                <div className="mt-2 space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <label className="text-[11px] font-semibold text-slate-700 cursor-pointer bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded border border-slate-300 inline-flex items-center gap-1.5 shadow-2xs transition-colors">
-                      <span>📁 Select Local Video File</span>
-                      <input
-                        type="file"
-                        accept="video/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          if (e.target.files && e.target.files[0]) {
-                            const file = e.target.files[0];
-                            const blobUrl = URL.createObjectURL(file);
-                            setForm(prev => ({
-                              ...prev,
-                              uploadedLink: blobUrl,
-                              description: file.name
-                            }));
-                          }
-                        }}
-                      />
-                    </label>
-                    <span className="text-[10px] text-slate-400">or 1-click test link:</span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1 text-[10px]">
-                    <button
-                      type="button"
-                      onClick={() => setForm({
-                        ...form,
-                        uploadedLink: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                        description: "Excel Session 1 Class 1 HD Master Stream"
-                      })}
-                      className="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded hover:bg-blue-100 cursor-pointer font-medium"
-                    >
-                      Demo MP4
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setForm({
-                        ...form,
-                        uploadedLink: "https://www.youtube.com/watch?v=k1xGNbYx4d4",
-                        description: "Excel Advanced Formulas & Analytics Masterclass"
-                      })}
-                      className="px-2 py-0.5 bg-red-50 text-red-700 border border-red-200 rounded hover:bg-red-100 cursor-pointer font-medium"
-                    >
-                      YouTube
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setForm({
-                        ...form,
-                        uploadedLink: "https://player.vdocipher.com/v2/?otp=20160313versASE3232Tj8PbBLlQCLHDTQp2I37Tn35428tQ5YVO2eMzx1M59M5y&playbackInfo=eyJ2aWRlb0lkIjoiYjVmYzAwZTcxMWI0NDFjMTg2ZjYwMmI2NmQ4NmQ3YTUifQ==",
-                        description: "VdoCipher DRM Protected Stream"
-                      })}
-                      className="px-2 py-0.5 bg-teal-50 text-teal-700 border border-teal-200 rounded hover:bg-teal-100 cursor-pointer font-medium"
-                    >
-                      VdoCipher
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Video Title / Description */}
-              <div>
-                <label className="block text-slate-700 font-bold mb-1 text-xs">
-                  Description / Video Filename
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Session 1 Class 1 Video Lecture or SESSION-1.mp4"
-                  value={form.description || ''}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="w-full border border-slate-300 rounded px-3 py-1.5 focus:outline-none focus:border-teal-500 bg-white text-xs font-medium"
-                />
-              </div>
-
-              {/* Real-time reflection notice */}
-              <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded text-emerald-800 text-[11px] flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                <span className="font-medium">Live LMS Sync Active: Submitting will update the Student LMS in real time across all open tabs.</span>
-              </div>
-
-              {/* Modal Footer - Exactly matching Screenshot 2 */}
+              {/* Modal Footer - Exactly matching Screenshot 1 */}
               <div className="flex justify-end gap-2 pt-3 border-t">
                 <button
                   type="button"

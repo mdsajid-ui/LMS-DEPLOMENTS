@@ -654,35 +654,143 @@ const initialFeesList = [
     date: "2026-10-01",
     studentId: "9955774102",
     studentName: "SK ABDUL SAJID",
+    rollNo: "DVA-202606-448",
     committedFee: "65000",
     batch: "BATCH 202606",
     course: "APIDS",
     balance: "0",
     amount: "35000",
+    installment1: "35000",
+    installment2: "30000",
+    installment3: "0",
     modeOfPay: "UPI / Bank Transfer",
-    remarks: "Second installment paid in full. Account cleared.",
+    remarks: "Full course fee cleared in two installments.",
     referenceDoc: "Receipt_INV_88392.pdf"
   },
   {
     id: 2,
-    date: "2026-09-25",
-    studentId: "9955774103",
-    studentName: "PRIYANKA MISHRA",
-    committedFee: "65000",
-    batch: "BATCH 202606",
+    date: "2026-09-04",
+    studentId: "6201323342",
+    studentName: "SAHIL JAIN",
+    rollNo: "BLR202609005",
+    committedFee: "300000",
+    batch: "BATCH 202608-FDE",
+    course: "FDE",
+    balance: "200000",
+    amount: "100000",
+    installment1: "100000",
+    installment2: "0",
+    installment3: "0",
+    modeOfPay: "Bank Transfer",
+    remarks: "1st installment received. Balance 200000 due.",
+    referenceDoc: "Receipt_BLR202609005.pdf"
+  },
+  {
+    id: 3,
+    date: "2026-09-07",
+    studentId: "8103963163",
+    studentName: "SURABHI CHAURASIA",
+    rollNo: "BLR202609007",
+    committedFee: "300000",
+    batch: "Self Study Batch",
     course: "APIDS",
-    balance: "20000",
-    amount: "25000",
+    balance: "100000",
+    amount: "100000",
+    installment1: "100000",
+    installment2: "100000",
+    installment3: "0",
     modeOfPay: "Net Banking",
-    remarks: "First installment. Due date for remaining: 15 Oct 2026.",
-    referenceDoc: "Bank_Transfer_Slip.pdf"
+    remarks: "2nd installment received. Balance 100000 due.",
+    referenceDoc: "Receipt_BLR202609007.pdf"
+  },
+  {
+    id: 4,
+    date: "2026-09-13",
+    studentId: "9439240898",
+    studentName: "AMIT DASH",
+    rollNo: "BBS202609014",
+    committedFee: "300000",
+    batch: "BATCH 202609",
+    course: "APIDS",
+    balance: "0",
+    amount: "100000",
+    installment1: "100000",
+    installment2: "100000",
+    installment3: "100000",
+    modeOfPay: "UPI / NEFT",
+    remarks: "3rd and final installment paid in full. Account cleared.",
+    referenceDoc: "Receipt_BBS202609014.pdf"
+  },
+  {
+    id: 5,
+    date: "2026-09-13",
+    studentId: "8123428609",
+    studentName: "BISWAJIT RK",
+    rollNo: "BBS202609010",
+    committedFee: "300000",
+    batch: "BATCH 202609",
+    course: "APIDS",
+    balance: "200000",
+    amount: "100000",
+    installment1: "100000",
+    installment2: "0",
+    installment3: "0",
+    modeOfPay: "Cheque / DD",
+    remarks: "1st installment received. Balance 200000 due.",
+    referenceDoc: "Receipt_BBS202609010.pdf"
+  },
+  {
+    id: 6,
+    date: "2026-09-13",
+    studentId: "8142030658",
+    studentName: "NAGARAJU SARASWATHI",
+    rollNo: "BLR202609008",
+    committedFee: "300000",
+    batch: "BATCH 202609",
+    course: "APIDA",
+    balance: "200000",
+    amount: "100000",
+    installment1: "100000",
+    installment2: "0",
+    installment3: "0",
+    modeOfPay: "Bank Transfer",
+    remarks: "1st installment received. Balance 200000 due.",
+    referenceDoc: "Receipt_BLR202609008.pdf"
+  },
+  {
+    id: 7,
+    date: "2026-09-13",
+    studentId: "9556539717",
+    studentName: "TAPAN MAHAPATRA",
+    rollNo: "BBS202609009",
+    committedFee: "300000",
+    batch: "BATCH 202609",
+    course: "APIDS",
+    balance: "100000",
+    amount: "100000",
+    installment1: "100000",
+    installment2: "100000",
+    installment3: "0",
+    modeOfPay: "UPI Transfer",
+    remarks: "2nd installment received. Balance 100000 due.",
+    referenceDoc: "Receipt_BBS202609009.pdf"
   }
 ];
 
 export function getStoredFees() {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.FEES);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const existingRolls = new Set(parsed.map(f => f.rollNo || f.studentId));
+      const missing = initialFeesList.filter(f => !existingRolls.has(f.rollNo) && !existingRolls.has(f.studentId));
+      if (missing.length > 0) {
+        const merged = [...parsed, ...missing];
+        localStorage.setItem(STORAGE_KEYS.FEES, JSON.stringify(merged));
+        return merged;
+      }
+      return parsed;
+    }
   } catch (e) {}
   try {
     localStorage.setItem(STORAGE_KEYS.FEES, JSON.stringify(initialFeesList));
@@ -716,44 +824,181 @@ export function saveAdminFee(feeData) {
 const initialRegisteredStudents = [
   {
     id: 1,
+    rollNo: "BLR202609005",
+    name: "SAHIL JAIN",
+    email: "Connectwithsahiljain@gmail.com",
+    phone: "6201323342",
+    emergencyPhone: "9559055633",
+    course: "FDE",
+    batch: "BATCH 202608-FDE",
+    regDate: "2026-09-04",
+    dob: "07-11-1999",
+    gender: "Male",
+    education: "B.Tech",
+    totalFee: "300000",
+    paidFee: "100000",
+    installment1: "100000",
+    installment2: "0",
+    installment3: "0",
+    dueFee: "200000",
+    status: "Active",
+    college: "Technical University",
+    location: "Nallurhali Whitefield, Bengaluru"
+  },
+  {
+    id: 2,
+    rollNo: "BLR202609007",
+    name: "SURABHI CHAURASIA",
+    email: "surabhi.chaurasiausa@gmail.com",
+    phone: "8103963163",
+    emergencyPhone: "9425146259",
+    course: "APIDS",
+    batch: "Self Study Batch",
+    regDate: "2026-09-07",
+    dob: "24-02-1993",
+    gender: "Female",
+    education: "M.TECH",
+    totalFee: "300000",
+    paidFee: "200000",
+    installment1: "100000",
+    installment2: "100000",
+    installment3: "0",
+    dueFee: "100000",
+    status: "Active",
+    college: "Postgraduate Institute",
+    location: "ABC, Bengaluru"
+  },
+  {
+    id: 3,
+    rollNo: "BBS202609014",
+    name: "AMIT DASH",
+    email: "AMITDASH0202@GMAIL.COM",
+    phone: "9439240898",
+    emergencyPhone: "9438907966",
+    course: "APIDS",
+    batch: "BATCH 202609",
+    regDate: "2026-09-13",
+    dob: "22-02-2002",
+    gender: "Male",
+    education: "B tech",
+    totalFee: "300000",
+    paidFee: "300000",
+    installment1: "100000",
+    installment2: "100000",
+    installment3: "100000",
+    dueFee: "0",
+    status: "Active",
+    college: "Biju Patnaik University of Technology",
+    location: "B101 Laxmi Ashiyana, Balianta, Bhubaneswar, 752101"
+  },
+  {
+    id: 4,
+    rollNo: "BBS202609010",
+    name: "BISWAJIT RK",
+    email: "biswajitrk123@gmail.com",
+    phone: "8123428609",
+    emergencyPhone: "9901285472",
+    course: "APIDS",
+    batch: "BATCH 202609",
+    regDate: "2026-09-13",
+    dob: "17-11-2005",
+    gender: "Male",
+    education: "Graduate",
+    totalFee: "300000",
+    paidFee: "100000",
+    installment1: "100000",
+    installment2: "0",
+    installment3: "0",
+    dueFee: "200000",
+    status: "Active",
+    college: "Bangalore University",
+    location: "203, 2nd floor, Lavanya Tulip, Whitefield, Bengaluru - 560066"
+  },
+  {
+    id: 5,
+    rollNo: "BLR202609008",
+    name: "NAGARAJU SARASWATHI",
+    email: "snagaraju119@gmail.com",
+    phone: "8142030658",
+    emergencyPhone: "9951175290",
+    course: "APIDA",
+    batch: "BATCH 202609",
+    regDate: "2026-09-13",
+    dob: "06-04-1993",
+    gender: "Male",
+    education: "MCA",
+    totalFee: "300000",
+    paidFee: "100000",
+    installment1: "100000",
+    installment2: "0",
+    installment3: "0",
+    dueFee: "200000",
+    status: "Active",
+    college: "Andhra University",
+    location: "chintalavalli(post) musunuru(MD) Eluru(DT) pin:521207"
+  },
+  {
+    id: 6,
+    rollNo: "BBS202609009",
+    name: "TAPAN MAHAPATRA",
+    email: "pmahapatratapan@gmail.com",
+    phone: "9556539717",
+    emergencyPhone: "7750802742",
+    course: "APIDS",
+    batch: "BATCH 202609",
+    regDate: "2026-09-13",
+    dob: "09-02-2001",
+    gender: "Male",
+    education: "B-tech",
+    totalFee: "300000",
+    paidFee: "200000",
+    installment1: "100000",
+    installment2: "100000",
+    installment3: "0",
+    dueFee: "100000",
+    status: "Active",
+    college: "Utkal University",
+    location: "LIG-52/10 HB Colony chandra sekhar pur, bhubaneswar"
+  },
+  {
+    id: 7,
     rollNo: "DVA-202606-448",
     name: "SK ABDUL SAJID",
     email: "sajid.student@dvanalytics.com",
     phone: "9955774102",
+    emergencyPhone: "9876543210",
     course: "APIDS",
     batch: "BATCH 202606",
     regDate: "2026-06-05",
+    dob: "15-08-2000",
+    gender: "Male",
+    education: "B.Tech (CSE)",
     totalFee: "65000",
     paidFee: "65000",
+    installment1: "35000",
+    installment2: "30000",
+    installment3: "0",
     dueFee: "0",
     status: "Active",
-    gender: "Male",
     college: "Biju Patnaik University of Technology",
     location: "Bhubaneswar / Kolkata"
-  },
-  {
-    id: 2,
-    rollNo: "DVA-202606-449",
-    name: "PRIYANKA MISHRA",
-    email: "priyanka.m@dvanalytics.com",
-    phone: "9812345678",
-    course: "APIDS",
-    batch: "BATCH 202606",
-    regDate: "2026-06-05",
-    totalFee: "65000",
-    paidFee: "45000",
-    dueFee: "20000",
-    status: "Active",
-    gender: "Female",
-    college: "KIIT University",
-    location: "Bhubaneswar"
   }
 ];
 
 export function getStoredStudents() {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.STUDENTS);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const existingRolls = new Set(parsed.map(s => s.rollNo));
+      const missing = initialRegisteredStudents.filter(s => !existingRolls.has(s.rollNo));
+      if (missing.length > 0) {
+        const merged = [...parsed, ...missing];
+        localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(merged));
+        return merged;
+      }
+      return parsed;
+    }
   } catch (e) {}
   try {
     localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(initialRegisteredStudents));

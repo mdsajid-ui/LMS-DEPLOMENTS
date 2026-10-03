@@ -26,6 +26,7 @@ export default function Header({
   onOpenSupport,
   onOpenChat,
   onOpenAdmin,
+  onOpenZoom,
   onNavigateToProgressReport,
   selectedBatch,
   setSelectedBatch
@@ -33,12 +34,12 @@ export default function Header({
   const [profileOpen, setProfileOpen] = useState(false);
 
   return (
-    <header className="h-16 bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 transition-all shadow-xs">
+    <header className="h-16 bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-20 flex items-center justify-between px-4 sm:px-6 transition-all shadow-xs">
       {/* Left side: Hamburger Toggle & Search */}
       <div className="flex items-center gap-3 md:gap-4 flex-1">
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+          className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer"
           title="Toggle Navigation"
         >
           <Menu className="w-5 h-5" />
@@ -59,7 +60,17 @@ export default function Header({
       </div>
 
       {/* Right side: Top action buttons matching original LMS icons & logo */}
-      <div className="flex items-center gap-2 sm:gap-4">
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Live Zoom Classroom Button */}
+        <button
+          onClick={onOpenZoom}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-95"
+          title="Join Live Zoom Meeting (DVMENTOR4 Room)"
+        >
+          <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+          <span className="hidden sm:inline">Join Live</span>
+          <Video className="w-3.5 h-3.5" />
+        </button>
         {/* Support Hotline Icon Button */}
         <button
           onClick={onOpenSupport}

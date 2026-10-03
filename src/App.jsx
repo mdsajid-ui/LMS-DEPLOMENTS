@@ -4,6 +4,7 @@ import Header from './components/Header';
 import NotificationModal from './components/NotificationModal';
 import ScheduleModal from './components/ScheduleModal';
 import SupportModal from './components/SupportModal';
+import ZoomMeetingModal from './components/ZoomMeetingModal';
 import SanviAssistant from './components/SanviAssistant';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -72,6 +73,7 @@ export default function App() {
   const [supportOpen, setSupportOpen] = useState(false);
   const [supportTab, setSupportTab] = useState('hotline');
   const [sanviAssistantOpen, setSanviAssistantOpen] = useState(false);
+  const [zoomModalOpen, setZoomModalOpen] = useState(false);
 
   const handleOpenChat = () => {
     // Open Sanvi Voice AI Assistant directly
@@ -134,6 +136,7 @@ export default function App() {
           onOpenSupport={handleOpenSupport}
           onOpenChat={handleOpenChat}
           onOpenAdmin={handleOpenAdmin}
+          onOpenZoom={() => setZoomModalOpen(true)}
           selectedBatch={selectedBatch}
           setSelectedBatch={setSelectedBatch}
           onNavigateToProgressReport={() => setCurrentTab('progress-report')}
@@ -279,6 +282,12 @@ export default function App() {
         isOpen={supportOpen}
         onClose={() => setSupportOpen(false)}
         initialTab={supportTab}
+      />
+
+      <ZoomMeetingModal
+        isOpen={zoomModalOpen}
+        onClose={() => setZoomModalOpen(false)}
+        defaultMentorId="DVMENTOR4"
       />
 
       {/* Sanvi Voice AI Assistant (Floats across all screens with two-way voice & Jarvis actions) */}

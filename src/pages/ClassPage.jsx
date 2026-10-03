@@ -1,60 +1,262 @@
-import React from 'react';
-import { Video, Calendar, Clock, ExternalLink, PlayCircle, Users, CheckCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  Video, 
+  Calendar, 
+  Clock, 
+  ExternalLink, 
+  PlayCircle, 
+  Users, 
+  CheckCircle,
+  Copy,
+  Check,
+  Radio,
+  User,
+  ShieldCheck,
+  Phone,
+  Mail,
+  Sparkles
+} from 'lucide-react';
+import ZoomMeetingModal from '../components/ZoomMeetingModal';
+import { mentorZoomList, defaultActiveMentor } from '../data/mentorZoomData';
 
 export default function ClassPage({ student }) {
-  return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-slate-500 font-medium bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-        <Video className="w-4 h-4 text-orange-500" />
-        <span>/</span>
-        <span className="text-slate-900 font-semibold">Live Classroom & Sessions</span>
-      </div>
+  const [zoomModalOpen, setZoomModalOpen] = useState(false);
+  const [activeMentorId, setActiveMentorId] = useState("DVMENTOR4");
+  const [copiedId, setCopiedId] = useState(false);
+  const [copiedPass, setCopiedPass] = useState(false);
 
-      {/* Live Class Today Banner */}
-      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-blue-950 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold tracking-wide">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
-            NEXT LIVE SESSION IN 2 HOURS
-          </div>
-          <h2 className="text-2xl font-bold tracking-tight">SQL Server: Advanced Aggregations & Joins</h2>
-          <p className="text-xs text-slate-300">
-            Instructor: Dr. Sandip Mukherjee • Batch: {student.batch} • Platform: Zoom Enterprise
-          </p>
+  const featuredMentor = mentorZoomList.find(m => m.id === "DVMENTOR4") || defaultActiveMentor;
+
+  const handleOpenZoom = (mentorId = "DVMENTOR4") => {
+    setActiveMentorId(mentorId);
+    setZoomModalOpen(true);
+  };
+
+  const handleCopy = (text, isPass = false) => {
+    navigator.clipboard?.writeText(text);
+    if (isPass) {
+      setCopiedPass(true);
+      setTimeout(() => setCopiedPass(false), 2000);
+    } else {
+      setCopiedId(true);
+      setTimeout(() => setCopiedId(false), 2000);
+    }
+  };
+
+  return (
+    <div className="space-y-6 max-w-6xl mx-auto font-sans text-slate-800">
+      {/* Breadcrumb */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+        <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
+          <Video className="w-4 h-4 text-orange-500" />
+          <span>/</span>
+          <span className="text-slate-900 font-bold tracking-tight">Live Classroom & Mentorship Rooms</span>
+          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+            Zoom Enterprise HD
+          </span>
         </div>
 
-        <button className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold text-xs shadow-lg transition-all transform active:scale-95 flex-shrink-0">
-          <Video className="w-4 h-4" />
-          Join Live Zoom Lecture
-          <ExternalLink className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => handleOpenZoom("DVMENTOR4")}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer transform active:scale-95"
+          >
+            <Video className="w-4 h-4" />
+            <span>Join Mentor 4 Room</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Featured Live Room Banner (DVMENTOR4 - Debashish Sir / Ganesh, Sajid) */}
+      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-blue-950 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl relative overflow-hidden">
+        {/* Glow backdrop */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+          <div className="space-y-3 max-w-2xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-black tracking-wide">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                LIVE NOW • ACTIVE SESSION
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 text-xs font-mono font-bold">
+                Room: DVMENTOR4
+              </span>
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+              Live Practical Class & Doubt Clearing Lab
+            </h2>
+            
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              Instructor: <strong className="text-white">{featuredMentor.facultyName}</strong> ({featuredMentor.role}) • Cohort: <span className="text-teal-300 font-semibold">{featuredMentor.cohort}</span>
+            </p>
+
+            {/* Quick credentials chip */}
+            <div className="flex flex-wrap items-center gap-3 pt-1 text-xs">
+              <div className="bg-slate-900/90 border border-slate-700/80 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                <span className="text-slate-400 text-[11px]">Meeting ID:</span>
+                <span className="font-mono font-bold text-white tracking-wide">{featuredMentor.meetingId}</span>
+                <button 
+                  onClick={() => handleCopy(featuredMentor.rawMeetingId, false)} 
+                  className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white"
+                  title="Copy Meeting ID"
+                >
+                  {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+
+              <div className="bg-slate-900/90 border border-slate-700/80 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                <span className="text-slate-400 text-[11px]">Passcode:</span>
+                <span className="font-mono font-bold text-emerald-400 tracking-wide">{featuredMentor.passcode}</span>
+                <button 
+                  onClick={() => handleCopy(featuredMentor.passcode, true)} 
+                  className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white"
+                  title="Copy Passcode"
+                >
+                  {copiedPass ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+
+              <div className="bg-slate-900/90 border border-slate-700/80 px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-slate-300">
+                <Clock className="w-3.5 h-3.5 text-blue-400" />
+                <span>{featuredMentor.timings}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-3 flex-shrink-0">
+            <button 
+              onClick={() => handleOpenZoom("DVMENTOR4")}
+              className="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-sm shadow-xl hover:shadow-2xl transition-all transform active:scale-95 cursor-pointer"
+            >
+              <Video className="w-5 h-5 animate-pulse" />
+              <span>Join Live Zoom Lecture</span>
+              <ExternalLink className="w-4 h-4 opacity-80" />
+            </button>
+
+            <button
+              onClick={() => window.open(featuredMentor.webJoinUrl, '_blank')}
+              className="px-4 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold text-center border border-slate-700 transition-colors cursor-pointer"
+            >
+              Join in Web Browser (No App Required)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* All 5 Mentor Rooms Grid */}
+      <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div>
+            <h3 className="font-extrabold text-slate-900 text-base">All DV Analytics Mentor Rooms (1 to 5)</h3>
+            <p className="text-xs text-slate-500">Switch rooms depending on your scheduled faculty and subject module</p>
+          </div>
+          <span className="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full self-start sm:self-auto">
+            5 Dedicated Zoom Rooms
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
+          {mentorZoomList.map((m) => {
+            const isLive = m.status === 'LIVE NOW';
+            return (
+              <div 
+                key={m.id}
+                className={`p-4 rounded-2xl border transition-all flex flex-col justify-between ${
+                  isLive 
+                    ? 'bg-blue-50/50 border-blue-200 shadow-xs hover:border-blue-300' 
+                    : 'bg-slate-50/70 border-slate-200/80 hover:border-slate-300'
+                }`}
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-slate-900 text-white">
+                      {m.id}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      isLive 
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                        : 'bg-slate-200 text-slate-600'
+                    }`}>
+                      {m.status}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900 mt-1">{m.name}</h4>
+                    <p className="text-[11px] text-slate-500">{m.role}</p>
+                  </div>
+
+                  <div className="text-[11px] space-y-1 pt-1 border-t border-slate-200/60 font-mono text-slate-600">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400 font-sans">Meeting ID:</span>
+                      <span className="font-bold">{m.meetingId}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400 font-sans">Passcode:</span>
+                      <span className="font-bold text-emerald-700">{m.passcode}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400 font-sans">Timings:</span>
+                      <span className="text-slate-700 font-sans text-[10px]">{m.timings}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-3 mt-3 border-t border-slate-200/60 flex items-center gap-2">
+                  <button
+                    onClick={() => handleOpenZoom(m.id)}
+                    className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      isLive 
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs' 
+                        : 'bg-slate-900 hover:bg-slate-800 text-white'
+                    }`}
+                  >
+                    <Video className="w-3.5 h-3.5" />
+                    <span>Join Room</span>
+                  </button>
+                  <button
+                    onClick={() => handleCopy(m.rawMeetingId, false)}
+                    className="p-1.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 text-slate-600"
+                    title="Copy Meeting ID"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Troubleshooting Banner */}
+      <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center font-bold">
+            ?
+          </div>
+          <div>
+            <strong className="block text-slate-900">Live Classes Schedule Joining Problem?</strong>
+            <span className="text-amber-800">
+              Pop-ups blocked or Zoom passcode prompt? Click the "Join in Web Browser" button inside the modal to bypass app issues.
+            </span>
+          </div>
+        </div>
+        <button
+          onClick={() => handleOpenZoom("DVMENTOR4")}
+          className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs whitespace-nowrap cursor-pointer transition-colors"
+        >
+          View Troubleshooting
         </button>
       </div>
 
-      {/* Class Schedule Grid */}
-      <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
-        <h3 className="font-bold text-slate-900 text-sm">Upcoming Live Classes This Week</h3>
-        <div className="space-y-3">
-          {[
-            { date: "Tomorrow, 7:00 PM IST", topic: "Excel VBA Macro Programming - Part 2", mentor: "Senior Consultant", status: "Scheduled" },
-            { date: "Thursday, 7:00 PM IST", topic: "Relational Algebra & Normalization Rules", mentor: "Database Architect", status: "Scheduled" },
-            { date: "Saturday, 10:00 AM IST", topic: "Practical Retail Sales Analysis Hands-on Lab", mentor: "Lead Data Scientist", status: "Lab Session" }
-          ].map((c, i) => (
-            <div key={i} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-bold uppercase text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-200">
-                  {c.date}
-                </span>
-                <h4 className="text-xs font-bold text-slate-900 mt-1">{c.topic}</h4>
-                <p className="text-[11px] text-slate-500">Instructor: {c.mentor}</p>
-              </div>
-              <button className="px-3.5 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 transition-colors">
-                Add to Calendar
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Zoom Modal */}
+      <ZoomMeetingModal
+        isOpen={zoomModalOpen}
+        onClose={() => setZoomModalOpen(false)}
+        defaultMentorId={activeMentorId}
+      />
     </div>
   );
 }

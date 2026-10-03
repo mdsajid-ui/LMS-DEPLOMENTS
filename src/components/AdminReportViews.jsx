@@ -49,7 +49,34 @@ export function ReportInvoiceView({ showToast }) {
     const students = getStoredStudents();
     const fees = getStoredFees();
 
-    // Map the first 120 collection transactions to official invoice records
+    // Real student fee payments from StudentList (10).xls & stored fees
+    const realFeeInvoices = fees.map((f, i) => {
+      const feeAmt = parseInt(String(f.amount || f.paidFee || 100000).replace(/[^0-9]/g, '')) || 100000;
+      const baseFee = Math.round(feeAmt / 1.18);
+      const gst = feeAmt - baseFee;
+      const committed = parseInt(String(f.committedFee || f.totalFee || 300000).replace(/[^0-9]/g, '')) || 300000;
+      const status = feeAmt >= committed ? "Paid in Full" : "Partial Paid";
+      const branch = (f.rollNo && f.rollNo.startsWith('BLR')) ? "BLR" : "BBSR";
+
+      return {
+        id: `INV-2026-${f.rollNo || (9000 + i)}`,
+        date: f.date || "2026-09-13",
+        student: f.studentName || f.name,
+        rollNo: f.rollNo || `DVA-2026-${i + 1}`,
+        branch: branch,
+        course: f.course || "APIDS",
+        batch: f.batch || "BATCH 202609",
+        baseFee: baseFee,
+        gst: gst,
+        totalAmount: feeAmt,
+        paymentMode: f.modeOfPay || "Bank Transfer",
+        counselor: "Sajid",
+        status: status,
+        refNumber: f.referenceDoc ? f.referenceDoc.replace('.pdf', '') : `TXN-STU-${1000 + i}`
+      };
+    });
+
+    // Map the collection transactions to official invoice records
     const seedRecords = collectionData.slice(0, 150).map((c, i) => {
       const invNum = `INV-2026-${String(4000 + i).padStart(5, '0')}`;
       const feeAmt = c.amount || 35000;
@@ -76,7 +103,7 @@ export function ReportInvoiceView({ showToast }) {
       };
     });
 
-    return seedRecords;
+    return [...realFeeInvoices, ...seedRecords];
   }, []);
 
   const filteredInvoices = useMemo(() => {
