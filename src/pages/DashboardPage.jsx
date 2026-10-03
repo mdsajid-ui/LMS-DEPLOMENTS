@@ -107,9 +107,9 @@ export default function DashboardPage({
       </div>
 
       {/* 4 Performance Metric Radial Gauges / Progress Hub */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 items-stretch">
         {/* Gauge 1: Live Class Attendance */}
-        <div onClick={onNavigateToAttendance} className="cursor-pointer transition-transform hover:-translate-y-1">
+        <div onClick={onNavigateToAttendance} className="cursor-pointer transition-transform hover:-translate-y-1 h-full flex flex-col">
           <RadialGauge
             title="Live Classes"
             percentage={student.attendancePercent}
@@ -123,7 +123,7 @@ export default function DashboardPage({
         </div>
 
         {/* Gauge 2: Recorded Video Watch Time Tracker (Key user requirement) */}
-        <div onClick={onNavigateToSession} className="cursor-pointer transition-transform hover:-translate-y-1">
+        <div onClick={onNavigateToSession} className="cursor-pointer transition-transform hover:-translate-y-1 h-full flex flex-col">
           <RadialGauge
             title="Recorded Videos"
             percentage={Math.round(watchPercentage)}
@@ -137,7 +137,7 @@ export default function DashboardPage({
         </div>
 
         {/* Gauge 3: Assignments Progress */}
-        <div onClick={onNavigateToAssignments} className="cursor-pointer transition-transform hover:-translate-y-1">
+        <div onClick={onNavigateToAssignments} className="cursor-pointer transition-transform hover:-translate-y-1 h-full flex flex-col">
           <RadialGauge
             title="Assignments"
             percentage={33}
@@ -151,7 +151,7 @@ export default function DashboardPage({
         </div>
 
         {/* Gauge 4: CAT Benchmark Assessment */}
-        <div onClick={onNavigateToCat} className="cursor-pointer transition-transform hover:-translate-y-1">
+        <div onClick={onNavigateToCat} className="cursor-pointer transition-transform hover:-translate-y-1 h-full flex flex-col">
           <RadialGauge
             title="CAT Benchmark"
             percentage={88}
