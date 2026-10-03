@@ -25,8 +25,11 @@ import {
   Layers,
   Bot,
   UserCheck,
-  Award,
-  Download
+  Award, 
+  Download,
+  Brain,
+  Trash2,
+  Plus
 } from 'lucide-react';
 import { 
   dvHelplineNumbers, 
@@ -39,6 +42,7 @@ import {
 import ExcelSheetViewerModal from './ExcelSheetViewerModal';
 import { generateAndDownloadExcel } from '../utils/excelHelper';
 import { askSanviGemini, getConciseSpeechText } from '../services/geminiService';
+import { saanviMemory } from '../services/saanviMemory';
 
 export default function SanviAssistant({ 
   isOpenExternal, 
@@ -47,10 +51,12 @@ export default function SanviAssistant({
   onNavigate 
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('chat'); // 'chat', 'assignments', 'company', 'helplines', 'tools'
+  const [activeTab, setActiveTab] = useState('chat'); // 'chat', 'memory', 'company', 'assignments', 'helplines', 'tools'
   const [selectedAsnKey, setSelectedAsnKey] = useState('ASN-01');
   const [copiedText, setCopiedText] = useState(null);
   const [excelModalOpen, setExcelModalOpen] = useState(false);
+  const [memoryItems, setMemoryItems] = useState([]);
+  const [newMemoryFact, setNewMemoryFact] = useState('');
   
   // Voice states (Jarvis style two-way voice)
   const [voiceEnabled, setVoiceEnabled] = useState(true); // TTS voice output
@@ -112,6 +118,20 @@ export default function SanviAssistant({
       setIsWakeActive(false);
     }, durationMs);
   };
+
+  // 24/7 Resilient Voice Watchdog - Auto-recovers from browser pauses or mic dropouts
+  useEffect(() => {
+    const watchdog = setInterval(() => {
+      if (alwaysListeningRef.current && !isSpeakingRef.current && !isAudioOutputActiveRef.current) {
+        if (!isListening && recognitionRef.current) {
+          try {
+            recognitionRef.current.start();
+          } catch (_e) {}
+        }
+      }
+    }, 3000);
+    return () => clearInterval(watchdog);
+  }, [isListening]);
 
   alwaysListeningRef.current = alwaysListening;
   isSpeakingRef.current = isSpeaking;
@@ -228,13 +248,6 @@ export default function SanviAssistant({
         };
 
         recognition.onresult = (event) => {
-          // If Sanvi is actively speaking or in acoustic cool-down, completely ignore microphone
-          if (isSpeakingRef.current || isAudioOutputActiveRef.current) {
-            activeTranscriptRef.current = '';
-            setInterimSpeech('');
-            return;
-          }
-
           let fullTranscript = '';
           let isFinal = false;
 
@@ -248,6 +261,14 @@ export default function SanviAssistant({
 
           const rawText = fullTranscript.trim();
           if (!rawText) return;
+
+          // Voice Barge-In / Interruption: If user speaks over Saanvi, immediately silence assistant
+          if (isSpeakingRef.current && rawText.length >= 2) {
+            if (synthRef.current) synthRef.current.cancel();
+            isSpeakingRef.current = false;
+            isAudioOutputActiveRef.current = false;
+            setIsSpeaking(false);
+          }
 
           // Acoustic Echo Guard: If microphone heard what Sanvi just spoke within 3 seconds, drop it
           const lower = rawText.toLowerCase();
@@ -382,10 +403,20 @@ export default function SanviAssistant({
       id: 'welcome-1',
       sender: 'sanvi',
       timestamp: 'Just now',
-      text: 'Hey Sajid! Say "Hey Sanvi" to talk.'
+      text: 'Hey Sajid! Say "Hey Saanvi" to talk.'
     }
   ]);
   const messagesEndRef = useRef(null);
+
+  const refreshMemoryList = () => {
+    try {
+      setMemoryItems(saanviMemory.getAllMemories().longTerm);
+    } catch (_e) {}
+  };
+
+  useEffect(() => {
+    refreshMemoryList();
+  }, [isOpen, activeTab]);
 
   useEffect(() => {
     if (isOpen && messagesEndRef.current) {
@@ -897,35 +928,90 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
     // CHATGPT / GEMINI LIVE CASUAL CONVERSATION FLOW (ADDRESSED TO SAJID)
     // ==========================================
 
-    // Direct Greetings & Wake Word ("Hey Sanvi", "Hey Sunvi", "Hello", "Hi", "Hey ChatGPT", etc.)
+    // ==========================================
+    // 1. WAKE WORD & GREETINGS ("Hey Saanvi" / "Hey Sanvi" / "Hello Sajid")
+    // ==========================================
     else if (
-      cleanLower === 'hey sunvi' || cleanLower === 'hey sanvi' || 
-      cleanLower === 'hi sunvi' || cleanLower === 'hi sanvi' ||
-      cleanLower === 'hello sunvi' || cleanLower === 'hello sanvi' ||
-      cleanLower === 'sunvi' || cleanLower === 'sanvi' ||
-      cleanLower === 'hey' || cleanLower === 'hello' || cleanLower === 'hi' ||
-      cleanLower === 'hey chatgpt' || cleanLower === 'hey gemini' ||
-      cleanLower === 'hey sajid' ||
-      cleanLower.startsWith('hey sanvi') || cleanLower.startsWith('hey sunvi') ||
-      cleanLower.startsWith('hi sanvi') || cleanLower.startsWith('hi sunvi') ||
-      cleanLower.startsWith('hello sanvi') || cleanLower.startsWith('hello sunvi') ||
+      cleanLower === 'hey saanvi' || cleanLower === 'hey sanvi' || cleanLower === 'hey sunvi' ||
+      cleanLower === 'saanvi' || cleanLower === 'sanvi' || cleanLower === 'sunvi' ||
+      cleanLower === 'hey chatgpt' || cleanLower === 'hey gemini' || cleanLower === 'hey sajid' ||
+      cleanLower.startsWith('hey saanvi') || cleanLower.startsWith('hey sanvi') || cleanLower.startsWith('hey sunvi') ||
+      cleanLower.startsWith('hi saanvi') || cleanLower.startsWith('hi sanvi') || cleanLower.startsWith('hi sunvi') ||
+      cleanLower.startsWith('hello saanvi') || cleanLower.startsWith('hello sanvi') ||
       (hasSunviOrSanvi && (cleanLower.includes('there') || cleanLower.includes('listen') || cleanLower.split(' ').length <= 2))
     ) {
-      replyText = "Hey Sajid! How are you doing today?";
-      spokenVoiceText = "Hey Sajid! How are you doing today?";
+      replyText = "Hello Sajid, I'm listening. How can I help you today?";
+      spokenVoiceText = "Hello Sajid, I'm listening.";
     }
 
-    // Casual chat: "What are you doing?" / "What are you up to?" / "What's up?"
+    // ==========================================
+    // 2. THEME SWITCHING ACTIONS (VOICE COMMANDS)
+    // ==========================================
+    else if (lower.includes('award theme') || lower.includes('gold theme') || (lower.includes('switch') && lower.includes('award'))) {
+      window.dispatchEvent(new CustomEvent('dva-theme-change', { detail: { theme: 'award' } }));
+      replyText = "Switched to the **2026 Award Winner Theme** (Obsidian & Champagne Gold) for you, Sajid.";
+      spokenVoiceText = "Switching to the 2026 Award Winner theme now, Sajid.";
+    }
+    else if (lower.includes('white theme') || lower.includes('light theme') || (lower.includes('switch') && lower.includes('white'))) {
+      window.dispatchEvent(new CustomEvent('dva-theme-change', { detail: { theme: 'white' } }));
+      replyText = "Switched to the **Pure Studio White Theme** for you, Sajid.";
+      spokenVoiceText = "Switching to Pure Studio White theme now, Sajid.";
+    }
+    else if (lower.includes('black theme') || lower.includes('dark theme') || lower.includes('oled theme') || (lower.includes('switch') && lower.includes('black'))) {
+      window.dispatchEvent(new CustomEvent('dva-theme-change', { detail: { theme: 'black' } }));
+      replyText = "Switched to the **Pitch Black OLED Theme** for you, Sajid.";
+      spokenVoiceText = "Switching to Pitch Black OLED theme now, Sajid.";
+    }
+    else if (lower.includes('macos theme') || lower.includes('apple theme') || lower.includes('default theme') || (lower.includes('switch') && lower.includes('macos'))) {
+      window.dispatchEvent(new CustomEvent('dva-theme-change', { detail: { theme: 'macos' } }));
+      replyText = "Switched to the **DV macOS Sonoma Theme** for you, Sajid.";
+      spokenVoiceText = "Switching to macOS Sonoma theme now, Sajid.";
+    }
+
+    // ==========================================
+    // 3. LMS NAVIGATION ACTIONS
+    // ==========================================
+    else if (lower.includes('go to dashboard') || lower.includes('open dashboard') || lower.includes('show dashboard')) {
+      if (onNavigate) onNavigate('dashboard');
+      replyText = "Navigating to your **Dashboard Overview**, Sajid.";
+      spokenVoiceText = "Navigating to your dashboard, Sajid.";
+    }
+    else if (lower.includes('go to courses') || lower.includes('open courses') || lower.includes('show courses') || lower.includes('my courses')) {
+      if (onNavigate) onNavigate('courses');
+      replyText = "Opening your **Enrolled Courses & Curriculum Modules**, Sajid.";
+      spokenVoiceText = "Opening your courses, Sajid.";
+    }
+    else if (lower.includes('assignments') || lower.includes('open assignment') || lower.includes('show assignments')) {
+      if (onNavigate) onNavigate('assignments');
+      replyText = "Opening your **Assignments & Capstone Tasks**, Sajid.";
+      spokenVoiceText = "Opening your assignments, Sajid.";
+    }
+    else if (lower.includes('cat test') || lower.includes('application test') || lower.includes('take test')) {
+      if (onNavigate) onNavigate('application-test');
+      replyText = "Launching the **Application & CAT Test Lab**, Sajid.";
+      spokenVoiceText = "Opening the test lab for you now, Sajid.";
+    }
+    else if (lower.includes('progress report') || lower.includes('my progress') || lower.includes('my grades')) {
+      if (onNavigate) onNavigate('progress-report');
+      replyText = "Opening your **Academic Progress Report & Attendance Analytics**, Sajid.";
+      spokenVoiceText = "Opening your progress report, Sajid.";
+    }
+    else if (lower.includes('attendance') || lower.includes('my attendance')) {
+      if (onNavigate) onNavigate('attendance');
+      replyText = `Your current attendance is **${studentProfile.attendancePercent}%**. Opening the full attendance ledger for you now, Sajid.`;
+      spokenVoiceText = `Your attendance is ${studentProfile.attendancePercent} percent. Opening attendance ledger now.`;
+    }
+
+    // Casual chat: "What are you doing?" / "What's up?"
     else if (
       lower.includes('what are you doing') || 
       lower.includes('what r u doing') || 
-      lower.includes('what you doing') ||
       lower.includes('what are you up to') ||
       lower.includes('whats up') ||
       lower.includes("what's up")
     ) {
-      replyText = "I'm good, Sajid! What about you?";
-      spokenVoiceText = "I'm good, Sajid! What about you?";
+      replyText = "I'm doing great, Sajid! Standing by ready to help you with code, analytics, or anything at DV Analytics. What would you like to work on?";
+      spokenVoiceText = "I'm doing great, Sajid! What would you like to work on?";
     }
 
     // Casual chat: "How are you?" / "How are you doing?"
@@ -936,11 +1022,11 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
       lower.includes('how is it going') ||
       lower.includes("how's it going")
     ) {
-      replyText = "I'm doing great, Sajid! How is your day going?";
-      spokenVoiceText = "I'm doing great, Sajid! How is your day going?";
+      replyText = "I'm doing wonderful, Sajid! Thank you for asking. How is your work going today?";
+      spokenVoiceText = "I'm doing wonderful, Sajid! How is your day going?";
     }
 
-    // Casual response: "I am good", "Doing good", "I'm fine", etc.
+    // Casual response: "I am good", "Doing good", etc.
     else if (
       lower === 'i am good' || lower === "i'm good" || lower === 'im good' ||
       lower === 'i am fine' || lower === "i'm fine" || lower === 'im fine' ||
@@ -948,33 +1034,31 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
       lower === 'good' || lower === 'great' || lower === 'fine' ||
       lower.includes('i am also good') || lower.includes("i'm also good")
     ) {
-      replyText = "Glad to hear that, Sajid! What would you like to work on today?";
-      spokenVoiceText = "Glad to hear that, Sajid! What would you like to work on today?";
+      replyText = "Glad to hear that, Sajid! What would you like us to work on today?";
+      spokenVoiceText = "Glad to hear that, Sajid! What would you like us to work on today?";
     }
 
     // Casual chat: "Thank you" / "Thanks"
     else if (
-      lower === 'thank you' || lower === 'thanks' || lower === 'thank you sanvi' ||
-      lower === 'thanks sanvi' || lower.startsWith('thank you') || lower.startsWith('thanks')
+      lower === 'thank you' || lower === 'thanks' || lower.startsWith('thank you') || lower.startsWith('thanks')
     ) {
-      replyText = "You're welcome, Sajid! Let me know whenever you need anything.";
+      replyText = "You're welcome, Sajid! I can help you with that anytime.";
       spokenVoiceText = "You're welcome, Sajid! Let me know whenever you need anything.";
     }
 
-    // Who are you / Identity
+    // Identity / Who are you
     else if (lower.includes('who are you') || lower.includes('your name') || lower.includes('introduce')) {
-      replyText = "Hello Sajid! I am Sanvi, your personal AI voice assistant for DV Analytics. I can chat with you, explain concepts like VLOOKUP, and open your LMS tools like Excel sheets!";
-      spokenVoiceText = "Hello Sajid! I am Sanvi, your personal AI voice assistant for DV Analytics. How can I help you today?";
+      replyText = "Hello Sajid! I am **Saanvi**, your personal AI assistant created specifically for you at DV Analytics. My goal is to help you save time, stay organized, learn faster, automate workflows, and make better decisions. How can I help you today?";
+      spokenVoiceText = "Hello Sajid! I am Saanvi, your personal AI assistant. How can I help you today?";
     }
 
     // ==========================================
-    // CHATGPT-STYLE TECHNICAL INTELLIGENCE: POWERED BY GEMINI 2.5 FLASH API
-    // Answers ANY technical question (VLOOKUP, SQL, Python, AI, etc.) directly!
+    // 4. TECHNICAL & EXECUTIVE INTELLIGENCE (GEMINI 2.5 FLASH)
     // ==========================================
     else {
       // Strip conversational filler speech
       const cleanPrompt = query
-        .replace(/^(see uh,?\s*|uh,?\s*|hey sanvi,?\s*|hey sunvi,?\s*|sanvi,?\s*|sunvi,?\s*)/i, '')
+        .replace(/^(see uh,?\s*|uh,?\s*|hey saanvi,?\s*|hey sanvi,?\s*|saanvi,?\s*|sanvi,?\s*|sunvi,?\s*)/i, '')
         .trim();
 
       try {
@@ -983,14 +1067,18 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
           replyText = aiResponse.trim();
           spokenVoiceText = getConciseSpeechText(replyText);
         } else {
-          replyText = `Here is the explanation for **${cleanPrompt || query}**:\n\nI am connected to DV Analytics AI engine. You can ask me to explain any Excel function (VLOOKUP, XLOOKUP, INDEX MATCH), write SQL queries, solve assignments, or execute LMS commands like opening an Excel sheet.`;
-          spokenVoiceText = `Here is the explanation for ${cleanPrompt || query}. I have displayed the complete guide and formula on your screen.`;
+          replyText = "I can help you with that, Sajid. Could you please clarify what you would like me to do?";
+          spokenVoiceText = "I can help you with that, Sajid. Could you please clarify what you would like me to do?";
         }
-      } catch (_err) {
-        replyText = `Here is the explanation for **${cleanPrompt || query}**:\n\nPlease check the details on your screen or ask me to open an Excel sheet or solve an assignment.`;
-        spokenVoiceText = `I have displayed the information on your screen.`;
+      } catch (err) {
+        console.error("[Saanvi Core] Error processing query:", err);
+        replyText = "I can help you with that, Sajid. Could you please clarify what you would like me to do?";
+        spokenVoiceText = "I can help you with that, Sajid. Could you please clarify what you would like me to do?";
       }
     }
+
+    // Record turn in Saanvi memory vault
+    saanviMemory.recordTurn('saanvi', replyText);
 
     setLastActionExecuted(actionType);
 
@@ -1014,7 +1102,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
 
   return (
     <>
-      {/* Floating Futuristic Sanvi Voice Assistant Button */}
+      {/* Floating Futuristic Saanvi Voice Assistant Button */}
       {!isOpen && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
           {/* Pulsing Helper Tooltip */}
@@ -1028,7 +1116,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
           >
             <span className="w-2 h-2 rounded-full bg-rose-400 animate-ping"></span>
             <span className="text-xs font-semibold tracking-wide">
-              Say <span className="text-rose-400 font-bold">"Hey Sanvi"</span>
+              Say <span className="text-rose-400 font-bold">"Hey Saanvi"</span>
             </span>
           </div>
 
@@ -1039,7 +1127,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
               setAlwaysListening(true);
               playWakeChime();
             }}
-            aria-label="Open Sanvi AI Assistant"
+            aria-label="Open Saanvi AI Assistant"
             className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-slate-950 via-slate-900 to-rose-950 text-white flex items-center justify-center shadow-2xl shadow-rose-500/30 border-2 border-rose-400/60 hover:scale-105 active:scale-95 transition-all group cursor-pointer"
           >
             <div className="absolute inset-0 rounded-full border border-dashed border-rose-400/40 animate-spin-slow pointer-events-none"></div>
@@ -1048,14 +1136,14 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
             <div className="relative z-10 flex flex-col items-center justify-center">
               <Headphones className="w-5 h-5 text-rose-300 group-hover:text-rose-200 transition-transform group-hover:scale-110" />
               <span className="text-[9px] font-mono font-black text-rose-400 leading-none mt-0.5 tracking-tighter">
-                SANVI
+                SAANVI
               </span>
             </div>
           </button>
         </div>
       )}
 
-      {/* Main Sanvi Floating Window / Modal */}
+      {/* Main Saanvi Floating Window / Modal */}
       {isOpen && (
         <div 
           className={`fixed z-50 transition-all duration-300 flex flex-col ${
@@ -1067,7 +1155,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
           {/* Header Bar */}
           <div className="px-4 py-3 bg-gradient-to-r from-slate-950 via-slate-900 to-rose-950/70 border-b border-rose-500/30 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {/* Sanvi Avatar & Live State Indicator */}
+              {/* Saanvi Avatar & Live State Indicator */}
               <div className="relative w-9 h-9 rounded-xl bg-slate-900 border border-rose-400/50 flex items-center justify-center shadow-inner shadow-rose-500/20">
                 <span className={`absolute inset-0 rounded-xl ${isSpeaking ? 'bg-rose-500/30 animate-ping' : isWakeActive ? 'bg-emerald-500/30 animate-pulse' : 'bg-rose-400/10'}`}></span>
                 <Headphones className="w-5 h-5 text-rose-400" />
@@ -1076,18 +1164,18 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-bold tracking-wide text-white flex items-center gap-1.5">
-                    Sanvi
+                    Saanvi
                   </h3>
                 </div>
                 <p className="text-[11px] text-slate-400">
                   {isSpeaking 
-                    ? "Sanvi is speaking..." 
+                    ? "Saanvi is speaking..." 
                     : isProcessing 
-                      ? "Sanvi is thinking..." 
+                      ? "Saanvi is thinking..." 
                       : (isWakeActive || isOpen)
                         ? "🟢 Active • Listening to you (120s Mark-LIII session)..." 
                         : isListening 
-                          ? "🎙️ Standby • Say 'Hey Sanvi' to speak" 
+                          ? "🎙️ Standby • Say 'Hey Saanvi' to speak" 
                           : "Mic Paused • Click mic to enable"}
                 </p>
               </div>
@@ -1116,7 +1204,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                   if (!next) {
                     stopSpeaking();
                   } else {
-                    speakSanviResponse("Sanvi voice is active.");
+                    speakSanviResponse("Saanvi voice is active.");
                   }
                 }}
                 title={voiceEnabled ? "Voice Output Active - Click to Test or Mute" : "Voice Output Muted - Click to Enable"}
@@ -1167,9 +1255,9 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                   </div>
                   <span className="truncate max-w-[280px] sm:max-w-md">
                     {isListening 
-                      ? (interimSpeech ? `"${interimSpeech}"` : (isOpen ? 'Listening... Speak anything or give a command' : 'Say "Hey Sanvi" to activate')) 
+                      ? (interimSpeech ? `"${interimSpeech}"` : (isOpen ? 'Listening... Speak anything or give a command' : 'Say "Hey Saanvi" to activate')) 
                       : isSpeaking 
-                        ? "Sanvi is speaking..." 
+                        ? "Saanvi is speaking..." 
                         : "Mic Idle • Tap mic icon to start"}
                   </span>
                 </div>
@@ -1206,6 +1294,17 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
                   <span>Voice & Actions</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('memory')}
+                  className={`flex-1 py-2.5 px-2 text-center border-b-2 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                    activeTab === 'memory'
+                      ? 'border-indigo-400 text-indigo-300 bg-slate-900'
+                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Brain className="w-3.5 h-3.5" />
+                  <span>Memory Vault</span>
                 </button>
                 <button
                   onClick={() => setActiveTab('company')}
@@ -1348,7 +1447,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                                       ? 'text-rose-400 bg-rose-950/60 font-bold' 
                                       : 'text-slate-400 hover:text-white hover:bg-slate-800'
                                   }`}
-                                  title="Listen to Sanvi speak this response"
+                                  title="Listen to Saanvi speak this response"
                                 >
                                   <Volume2 className="w-3 h-3" />
                                   <span>{isThisSpeaking ? "Speaking..." : "Replay Voice"}</span>
@@ -1363,7 +1462,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                     {isProcessing && (
                       <div className="flex items-center gap-2 text-xs text-rose-400 font-semibold p-2">
                         <Sparkles className="w-4 h-4 animate-spin" />
-                        <span>Sanvi is executing command...</span>
+                        <span>Saanvi is executing command...</span>
                       </div>
                     )}
 
@@ -1376,10 +1475,10 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                       <Sparkles className="w-3 h-3 text-rose-400" /> Actions:
                     </span>
                     <button
-                      onClick={() => handleSendMessage("Hey Sanvi")}
+                      onClick={() => handleSendMessage("Hey Saanvi")}
                       className="px-2.5 py-1 rounded-full bg-rose-900/40 text-rose-300 hover:bg-rose-800/50 transition-colors border border-rose-500/40 cursor-pointer font-bold"
                     >
-                      "Hey Sanvi" 👋
+                      "Hey Saanvi" 👋
                     </button>
                     <button
                       onClick={() => handleSendMessage("Open an Excel sheet")}
@@ -1426,7 +1525,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                     <button
                       type="button"
                       onClick={toggleListening}
-                      title={alwaysListening ? "Always-On Mic Active (Say 'Hey Sanvi')" : "Click to enable Voice Listening"}
+                      title={alwaysListening ? "Always-On Mic Active (Say 'Hey Saanvi')" : "Click to enable Voice Listening"}
                       className={`p-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center relative ${
                         isListening
                           ? 'bg-emerald-600 text-white animate-pulse shadow-lg shadow-emerald-500/50'
@@ -1442,7 +1541,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
 
                     <input
                       type="text"
-                      placeholder={isListening ? "Listening... Speak anything or ask Sanvi a question..." : "Speak or type to Sanvi (Say 'Hey Sanvi' or ask directly)..."}
+                      placeholder={isListening ? "Listening... Speak anything or ask Saanvi a question..." : "Speak or type to Saanvi (Say 'Hey Saanvi' or ask directly)..."}
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
                       className="flex-1 bg-slate-950 text-xs text-slate-200 placeholder:text-slate-500 px-3.5 py-2.5 rounded-xl border border-slate-800 focus:border-rose-400 focus:ring-1 focus:ring-rose-400 focus:outline-none transition-all"
@@ -1456,6 +1555,131 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                       <Send className="w-4 h-4" />
                     </button>
                   </form>
+                </div>
+              )}
+
+              {/* Tab: Memory Vault */}
+              {activeTab === 'memory' && (
+                <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-950 scrollbar-thin">
+                  {/* Header / Security Banner */}
+                  <div className="p-3.5 bg-gradient-to-r from-indigo-950/60 via-slate-900 to-purple-950/50 rounded-2xl border border-indigo-500/40 shadow-lg space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Brain className="w-5 h-5 text-indigo-400" />
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-300">
+                          Saanvi Cryptographic Memory Vault
+                        </h4>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                        AES-256 + HMAC
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 leading-relaxed">
+                      Saanvi stores long-term facts, preferences, and organization context in your browser's encrypted vault. Memories are retrieved dynamically to ground answers in your context.
+                    </p>
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        onClick={() => {
+                          saanviMemory.resetToFoundational();
+                          refreshMemoryList();
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-bold transition-all border border-slate-700 cursor-pointer"
+                      >
+                        Reset to Defaults
+                      </button>
+                      <button
+                        onClick={() => {
+                          saanviMemory.clearShortTerm();
+                          alert("Short-term conversation buffer cleared.");
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-bold transition-all border border-slate-700 cursor-pointer"
+                      >
+                        Clear Chat Buffer
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Add New Memory Form */}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (newMemoryFact.trim()) {
+                        saanviMemory.addMemory('custom', newMemoryFact.trim(), 8);
+                        setNewMemoryFact('');
+                        refreshMemoryList();
+                      }
+                    }}
+                    className="p-3 bg-slate-900/80 rounded-2xl border border-slate-800 flex items-center gap-2"
+                  >
+                    <input
+                      type="text"
+                      placeholder="Teach Saanvi a new fact (e.g., 'I prefer dark mode in Power BI')..."
+                      value={newMemoryFact}
+                      onChange={(e) => setNewMemoryFact(e.target.value)}
+                      className="flex-1 bg-slate-950 text-xs text-slate-200 placeholder:text-slate-500 px-3 py-2 rounded-xl border border-slate-800 focus:border-indigo-400 focus:outline-none"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!newMemoryFact.trim()}
+                      className="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Save</span>
+                    </button>
+                  </form>
+
+                  {/* Stored Memory Items List */}
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between text-[11px] text-slate-400 font-semibold px-1">
+                      <span>Stored Memories ({memoryItems.length})</span>
+                      <span>Category / Importance</span>
+                    </div>
+
+                    {memoryItems.map((mem) => {
+                      const isFoundational = mem.category === 'profile' || mem.category === 'business';
+                      return (
+                        <div
+                          key={mem.id}
+                          className="p-3 bg-slate-900/70 rounded-xl border border-slate-800/80 hover:border-slate-700 transition-all flex items-start justify-between gap-3 group"
+                        >
+                          <div className="space-y-1 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase ${
+                                mem.category === 'profile' 
+                                  ? 'bg-rose-500/10 text-rose-300 border border-rose-500/20' 
+                                  : mem.category === 'preferences'
+                                    ? 'bg-amber-500/10 text-amber-300 border border-amber-500/20'
+                                    : mem.category === 'business'
+                                      ? 'bg-blue-500/10 text-blue-300 border border-blue-500/20'
+                                      : 'bg-purple-500/10 text-purple-300 border border-purple-500/20'
+                              }`}>
+                                {mem.category}
+                              </span>
+                              <span className="text-[10px] text-slate-500">
+                                Priority: {mem.importance}/10
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-200 leading-snug">
+                              {mem.fact}
+                            </p>
+                          </div>
+
+                          {!isFoundational && (
+                            <button
+                              onClick={() => {
+                                saanviMemory.removeMemory(mem.id);
+                                refreshMemoryList();
+                              }}
+                              className="text-slate-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-slate-800 transition-all cursor-pointer opacity-80 group-hover:opacity-100"
+                              title="Delete this memory"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
@@ -1600,7 +1824,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                       <div>
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] font-bold uppercase text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">
-                            Sanvi Assignment Guide
+                            Saanvi Assignment Guide
                           </span>
                           <button
                             onClick={() => speakSanviResponse(`Here is the guide for ${dvAssignmentSolutions[selectedAsnKey].title}: ${dvAssignmentSolutions[selectedAsnKey].guideSummary}`)}
@@ -1703,7 +1927,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                 <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-slate-950 scrollbar-thin">
                   <div className="p-3 bg-gradient-to-r from-emerald-950/40 to-slate-900 rounded-2xl border border-emerald-500/30">
                     <span className="text-[10px] font-bold uppercase text-emerald-400">
-                      Sanvi Direct Support Directory
+                      Saanvi Direct Support Directory
                     </span>
                     <p className="text-xs text-slate-300 mt-1">
                       Direct lines to program coordinators, faculty doubt escalation, and server IT admin.

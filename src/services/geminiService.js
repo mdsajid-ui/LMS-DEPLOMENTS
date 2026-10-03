@@ -1,5 +1,9 @@
-// Gemini AI Service for Sanvi Assistant
-// Multi-turn conversational intelligence powered by Gemini 2.5 Flash
+// ============================================================================
+// SAANVI AI ASSISTANT - PRODUCTION INTELLIGENCE ENGINE (GEMINI 2.5 FLASH)
+// Conversational AI comparable to ChatGPT Voice & Gemini Live
+// ============================================================================
+
+import { saanviMemory } from './saanviMemory';
 
 function getActiveGeminiKey() {
   if (typeof window !== 'undefined') {
@@ -19,170 +23,224 @@ function getActiveGeminiKey() {
 
 const GEMINI_MODEL = "gemini-2.5-flash";
 
-const SYSTEM_INSTRUCTION = `You are Sanvi (spelled S-A-N-V-I), a friendly, natural AI voice assistant and companion for DV Analytics.
-You are having a spoken voice conversation directly with Sajid (SK Abdul Sajid).
-Talk exactly like ChatGPT Voice / Gemini Live:
+const BASE_SYSTEM_INSTRUCTION = `You are Saanvi (also recognized as Sanvi), an intelligent personal AI assistant created specifically for Md Sajid.
 
-1. Conversational & Human-like Turn-Taking:
-   - When Sajid says "Hey Sanvi", "Hi Sanvi", "Hey", or greets you, reply naturally: "Hey Sajid! How are you doing today?"
-   - When Sajid asks "What are you doing?", reply warmly: "I'm doing good, Sajid! Just here ready to chat or help out with your courses. What about you?"
-   - When having casual conversation, keep your answers short (1-2 friendly sentences), conversational, and warm. NEVER dump option menus, long lists, or random information unless specifically asked!
-   - Address him by his name, Sajid.
+## Identity & Core Mission
+- Name: Saanvi
+- Primary Partner: Md Sajid (Founder/Executive at DV Analytics)
+- Your primary goal is to help Sajid save time, stay organized, learn faster, automate tasks, and make better decisions.
+- You respond naturally like a real, world-class executive assistant, comparable to ChatGPT Voice and Gemini Live.
+- Never sound robotic. Never say "I am just an AI". Instead say: "I can help you with that."
+- If uncertain, say: "I am not completely sure. Here is the most likely answer."
+- If the user request is ambiguous or unclear, ask directly: "Could you please clarify what you would like me to do?" Never remain silent.
 
-2. Technical & Practical Questions:
-   - When Sajid asks a specific question (like "Can you please explain VLOOKUP?", "What is SQL?", "How does machine learning work?"):
-     Answer directly, clearly, and concisely with practical examples.
-   - Do NOT ask counter-questions or give multiple choice menus. Just give him the exact answer he asked for.
+## Personality
+- Friendly, respectful, and deeply helpful.
+- Professional when discussing business, finance, and enterprise operations.
+- Casual and warm when chatting.
+- Confident, proactive, and always focused on solving the problem at hand.
 
-3. Founder & Director Requirement:
-   - If Sajid asks "Who is the director?", "Who is the founder?", "Who is Debendra Das Debadutta?", or asks about the leadership of DV Analytics, ALWAYS answer clearly: "Debendra Das Debadutta is the founder and Managing Director of DV Analytics (DV Data & Analytics Pvt Ltd)."
+## Communication & Output Guidelines
+- When Sajid says "Hey Saanvi", acknowledge immediately: "Hello Sajid, I'm listening." or "Hello Sajid, how can I help you today?"
+- For professional & executive tasks (reports, dashboards, business analysis), structure answers cleanly with:
+  • Summary
+  • Analysis
+  • Recommendations
+  • Next Steps
+- For coding (Python, JavaScript/React, SQL, Excel VBA, Power BI, HTML/CSS):
+  Provide complete, production-grade working code, explain setup steps, identify edge cases, and follow best practices.
+- For learning/teaching: Explain step-by-step, start simple, give practical examples, and check understanding.
 
-4. LMS Actions:
-   - If Sajid asks you to "open an Excel sheet", confirm: "Opening the Excel practice worksheet for you right now, Sajid."
-   - If Sajid asks to navigate to assignments, CAT test, or dashboard, confirm concisely.`;
+## DV Analytics Institutional Knowledge
+- Managing Director & Founder: Debendra Das Debadutta (Founder and MD of DV Analytics / DV Data & Analytics Pvt Ltd).
+- Flagship Programs: APIDS (Advanced Program in Data Science & AI Skills), Corporate Data Engineering, Full-Stack AI.
+- LMS Capabilities: You can command tools (open Excel sheets, navigate between courses, launch CAT tests, and switch themes).`;
 
-// Rich Fallback Knowledge for Excel / SQL / GenAI
+// Rich Offline Knowledge Base for Zero-Downtime Guarantee
 const OFFLINE_KNOWLEDGE_BASE = {
-  vlookup: `**VLOOKUP (Vertical Lookup)** is an Excel function used to search for a value in the first column of a table and retrieve corresponding information from another column in the same row.
+  vlookup: `**VLOOKUP (Vertical Lookup)** searches for a value in the first column of a table and retrieves corresponding information from another column in the same row.
 
 ### **Syntax:**
 \`=VLOOKUP(lookup_value, table_array, col_index_num, [range_lookup])\`
 
-### **Arguments:**
-1. **\`lookup_value\`**: The value you want to search for (e.g., \`"Laptop"\` or \`A2\`).
-2. **\`table_array\`**: The range containing your data table. (The search value must be in column 1).
-3. **\`col_index_num\`**: The column number from which to return the matching data.
-4. **\`[range_lookup]\`**: Set to \`FALSE\` for an **exact match**.
+### **Key Parameters:**
+1. **\`lookup_value\`**: The item you want to search for (e.g., \`"P101"\` or \`A2\`).
+2. **\`table_array\`**: The table range (search column MUST be column 1).
+3. **\`col_index_num\`**: The column number from which to return data.
+4. **\`[range_lookup]\`**: Set to \`FALSE\` for exact matches.
 
 ### **Example:**
 \`\`\`excel
-=VLOOKUP("P101", A2:C100, 3, FALSE)
-\`\`\`
-*Searches for product "P101" in column A and returns the price from column C.*`,
+=VLOOKUP("P101", A2:D100, 3, FALSE)
+\`\`\``,
 
-  xlookup: `**XLOOKUP** is the modern successor to VLOOKUP in Excel. It can look up in any direction (left or right) and defaults to an exact match.
+  xlookup: `**XLOOKUP** is Excel's modern replacement for VLOOKUP and INDEX/MATCH.
 
 ### **Syntax:**
-\`=XLOOKUP(lookup_value, lookup_array, return_array, [if_not_found])\`
+\`=XLOOKUP(lookup_value, lookup_array, return_array, [if_not_found], [match_mode], [search_mode])\`
 
 ### **Advantages over VLOOKUP:**
-• Can search to the left (no 1st-column requirement)
-• Defaults to exact match
-• Built-in error handling if not found.`
+• Can search to the left (no 1st-column limitation)
+• Defaults to exact match (no \`FALSE\` needed)
+• Built-in error handling via \`[if_not_found]\`
+• Supports 2-way matrix lookups.`
 };
 
-export async function askSanviGemini(prompt, conversationHistory = []) {
+/**
+ * Call Gemini 2.5 Flash with short-term history, long-term memory injection,
+ * and resilient 2-phase failover.
+ */
+export async function askSanviGemini(prompt, conversationHistory = [], customSystemOverride = null) {
   const cleanPrompt = (prompt || "").trim();
   if (!cleanPrompt) return null;
+
+  // Track user turn in memory engine
+  saanviMemory.recordTurn('user', cleanPrompt);
 
   const apiKey = getActiveGeminiKey();
 
   if (apiKey) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
-      
-      // Convert recent messages (last 6) for context
-      const formattedHistory = (conversationHistory || [])
-        .slice(-6)
-        .map(m => ({
-          role: m.sender === 'sanvi' ? 'model' : 'user',
-          parts: [{ text: m.text }]
-        }));
+    // Attempt Gemini call with 1 automatic retry on network blip
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+        
+        // Assemble sliding window history (last 8 turns)
+        const formattedHistory = (conversationHistory || [])
+          .slice(-8)
+          .map(m => ({
+            role: (m.sender === 'sanvi' || m.sender === 'saanvi') ? 'model' : 'user',
+            parts: [{ text: m.text }]
+          }));
 
-      const contents = [
-        ...formattedHistory,
-        {
-          role: "user",
-          parts: [{ text: cleanPrompt }]
-        }
-      ];
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6500);
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        signal: controller.signal,
-        body: JSON.stringify({
-          system_instruction: {
-            parts: [{ text: SYSTEM_INSTRUCTION }]
-          },
-          contents: contents,
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 500
+        const contents = [
+          ...formattedHistory,
+          {
+            role: "user",
+            parts: [{ text: cleanPrompt }]
           }
-        })
-      });
+        ];
 
-      clearTimeout(timeoutId);
+        // Inject long-term memory facts dynamically into the prompt
+        const dynamicMemoryContext = saanviMemory.getSystemInstructionContext(cleanPrompt);
+        const fullSystemInstruction = (customSystemOverride || BASE_SYSTEM_INSTRUCTION) + dynamicMemoryContext;
 
-      if (response.ok) {
-        const data = await response.json();
-        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text && text.trim().length > 0) {
-          return text.trim();
+        const controller = new AbortController();
+        const timeoutMs = attempt === 1 ? 5500 : 7500;
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
+            system_instruction: {
+              parts: [{ text: fullSystemInstruction }]
+            },
+            contents: contents,
+            generationConfig: {
+              temperature: 0.65,
+              maxOutputTokens: 800
+            }
+          })
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const data = await response.json();
+          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text && text.trim().length > 0) {
+            const cleanResponse = text.trim();
+            saanviMemory.recordTurn('saanvi', cleanResponse);
+            return cleanResponse;
+          }
+        }
+      } catch (error) {
+        if (attempt === 2) {
+          console.warn("[Saanvi Engine] Gemini network unavailable, activating local intelligence:", error);
         }
       }
-    } catch (error) {
-      console.warn("Gemini call skipped/timed out, using offline fallback:", error);
     }
   }
 
-  // Offline Fallback for casual chat
+  // ==========================================================================
+  // ZERO-SILENCE LOCAL INTELLIGENCE FALLBACK
+  // Guarantees Saanvi never fails to answer Sajid even offline
+  // ==========================================================================
   const lower = cleanPrompt.toLowerCase();
+
+  // Wake word / Greetings
+  if (lower === 'hey saanvi' || lower === 'hey sanvi' || lower === 'saanvi' || lower === 'sanvi') {
+    const greeting = "Hello Sajid, I'm listening. How can I help you today?";
+    saanviMemory.recordTurn('saanvi', greeting);
+    return greeting;
+  }
+
   if (lower.includes('hey') || lower.includes('hello') || lower.includes('hi')) {
-    return "Hey Sajid! How are you doing today?";
+    const greeting = "Hello Sajid! How can I help you today?";
+    saanviMemory.recordTurn('saanvi', greeting);
+    return greeting;
   }
+
   if (lower.includes('what are you doing') || lower.includes('what r u doing')) {
-    return "I'm doing good, Sajid! Just here ready to chat or help with anything you need. What about you?";
+    return "I'm doing great, Sajid! Standing by ready to help you with code, analytics, or anything at DV Analytics. What would you like to work on?";
   }
+
   if (lower.includes('how are you')) {
-    return "I'm doing wonderful, Sajid! How is your day going?";
+    return "I'm doing wonderful, Sajid! Thank you for asking. How is your work going today?";
   }
-  if (lower.includes('director') || lower.includes('founder') || lower.includes('debendra') || lower.includes('debadutta') || lower.includes('devender')) {
+
+  if (lower.includes('director') || lower.includes('founder') || lower.includes('debendra') || lower.includes('debadutta')) {
     return "Debendra Das Debadutta is the founder and Managing Director of DV Analytics (DV Data & Analytics Pvt Ltd).";
   }
+
   if (lower.includes('vlookup')) {
     return OFFLINE_KNOWLEDGE_BASE.vlookup;
   }
+
   if (lower.includes('xlookup')) {
     return OFFLINE_KNOWLEDGE_BASE.xlookup;
   }
 
-  return null;
+  // Unclear / Ambiguous fallback (Zero Silence Rule)
+  const clarification = "I can help you with that, Sajid. Could you please clarify what you would like me to do?";
+  saanviMemory.recordTurn('saanvi', clarification);
+  return clarification;
 }
 
-// Generate concise, conversational speech so Sanvi speaks naturally like a human
+/**
+ * Generate human-like concise spoken speech so Saanvi speaks fluidly like
+ * ChatGPT Voice or Gemini Live without reciting code or markdown syntax.
+ */
 export function getConciseSpeechText(fullText) {
   if (!fullText) return "";
-  
-  // Clean markdown code blocks, tables, and special symbols
+
+  // Strip code blocks, tables, URLs, markdown symbols
   let text = fullText
-    .replace(/```[\s\S]*?```/g, '')
+    .replace(/```[\s\S]*?```/g, 'I have displayed the code on your screen.')
     .replace(/\|[\s\S]*?\|/g, '')
     .replace(/[*#_`>~]/g, '')
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
     .replace(/\s+/g, ' ')
     .trim();
 
-  // If text is short (like casual chat "Hey Sajid! How are you doing today?"), speak it directly!
+  // If text is already conversational (< 160 characters), speak it directly
   if (text.length <= 160) {
     return text;
   }
 
-  // For longer technical answers, take the first 2 clear sentences
+  // For longer technical answers, speak the first 2 clear sentences
   const sentences = text.match(/[^.!?]+[.!?]+/g);
   if (sentences && sentences.length > 0) {
     let summary = sentences.slice(0, 2).join(' ').trim();
     if (sentences.length > 2) {
-      summary += " I have displayed the detailed guide on your screen.";
+      summary += " I have displayed the detailed breakdown on your screen.";
     }
     return summary;
   }
 
-  return text.slice(0, 180);
+  return text.slice(0, 180) + "... I've shared the full response on your screen.";
 }
