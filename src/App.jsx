@@ -179,7 +179,7 @@ export default function App() {
 
   return (
     <ErrorBoundary onReset={() => window.location.reload()}>
-      <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex font-sans antialiased overflow-x-hidden">
+      <div className="h-screen bg-[#f8fafc] text-slate-900 flex font-sans antialiased overflow-hidden">
         {/* Left Navigation Sidebar */}
         <Sidebar
           currentTab={currentTab}
@@ -191,7 +191,7 @@ export default function App() {
         />
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-h-screen min-w-0 transition-all duration-300">
+        <div className="flex-1 flex flex-col h-screen min-w-0 transition-all duration-300 overflow-hidden">
           {/* Top Navbar Header */}
           <Header
             collapsed={sidebarCollapsed}
@@ -211,7 +211,7 @@ export default function App() {
           />
 
           {/* Page Content View */}
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto min-h-0 pb-28 scrollbar-thin">
             <ErrorBoundary onReset={() => setCurrentTab('courses')}>
               {currentTab === 'welcome' && (
               <WelcomePage

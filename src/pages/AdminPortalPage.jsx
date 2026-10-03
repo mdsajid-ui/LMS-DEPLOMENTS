@@ -762,7 +762,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
   // MAIN AUTHENTICATED ADMIN PORTAL VIEW
   // ==========================================
   return (
-    <div className="min-h-screen bg-[#f7f8fa] text-slate-900 flex font-sans antialiased">
+    <div className="h-screen bg-[#f7f8fa] text-slate-900 flex font-sans antialiased overflow-hidden">
       {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed top-20 right-6 z-50 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 border border-slate-700 animate-in fade-in slide-in-from-top-2">
@@ -772,7 +772,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
       )}
 
       {/* Admin Sidebar - DV Deep Navy & macOS MacBook Design System */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gradient-to-b from-[#081220] via-[#0d1d36] to-[#060c17] text-slate-200 flex flex-col transition-all duration-300 shrink-0 border-r border-slate-800/80 z-40 select-none shadow-xl`}>
+      <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} h-full bg-gradient-to-b from-[#081220] via-[#0d1d36] to-[#060c17] text-slate-200 flex flex-col transition-all duration-300 shrink-0 border-r border-slate-800/80 z-40 select-none shadow-xl overflow-hidden`}>
         {/* macOS Traffic Lights & Top Brand Logo */}
         <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800/80 bg-[#081220]/75 backdrop-blur-xl">
           <div className="flex items-center gap-3">
@@ -811,7 +811,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
         </div>
 
         {/* Accordion Sidebar Menu with macOS Highlighting */}
-        <nav className="flex-1 overflow-y-auto py-2 text-xs divide-y divide-slate-800/60 scrollbar-thin">
+        <nav className="flex-1 overflow-y-auto min-h-0 py-2 text-xs divide-y divide-slate-800/60 scrollbar-thin">
           {/* 1. Dashboard Accordion */}
           <div className={openAccordions.dashboard ? "border-r-[4px] border-orange-500 bg-[#0f2347]/50" : ""}>
             <button
@@ -1220,9 +1220,9 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#f8fafc]">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-[#f8fafc]">
         {/* Top Navbar Header - macOS Frosted Glass */}
-        <header className="h-16 bg-white/80 backdrop-blur-2xl border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+        <header className="h-16 shrink-0 bg-white/80 backdrop-blur-2xl border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between shadow-[0_1px_3px_rgba(0,0,0,0.02)] z-30">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="mac-btn mac-btn-glass p-2 rounded-xl text-slate-700 hover:text-slate-900 cursor-pointer"
@@ -1292,7 +1292,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
         </header>
 
         {/* Scrollable Page Body */}
-        <main className="flex-1 overflow-y-auto p-6 space-y-6">
+        <main className="flex-1 overflow-y-auto min-h-0 p-4 sm:p-6 space-y-6 pb-28 scrollbar-thin">
           {/* Header Row: Breadcrumb on left + DV Analytics Logo on right - macOS Frosted Card */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
             <div className="flex items-center gap-2 text-slate-600 text-sm font-semibold">

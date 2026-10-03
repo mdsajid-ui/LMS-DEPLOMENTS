@@ -54,7 +54,7 @@ export default function Sidebar({
 
   return (
     <aside 
-      className={`sticky top-0 h-screen shrink-0 bg-gradient-to-b from-[#081220] via-[#0d1d36] to-[#060c17] text-slate-200 border-r border-slate-800/70 z-30 flex flex-col transition-all duration-300 ease-in-out select-none shadow-xl ${
+      className={`sticky top-0 h-screen shrink-0 bg-gradient-to-b from-[#081220] via-[#0d1d36] to-[#060c17] text-slate-200 border-r border-slate-800/70 z-30 flex flex-col transition-all duration-300 ease-in-out select-none shadow-xl overflow-hidden ${
         collapsed ? 'w-20' : 'w-72'
       }`}
     >
@@ -119,7 +119,7 @@ export default function Sidebar({
       </div>
 
       {/* Nav Menu Items */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1 scrollbar-thin">
+      <div className="flex-1 overflow-y-auto min-h-0 px-3 py-3 space-y-1 scrollbar-thin">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentTab === item.id;
