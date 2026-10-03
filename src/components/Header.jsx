@@ -28,6 +28,8 @@ export default function Header({
   onOpenAdmin,
   onOpenZoom,
   onNavigateToProgressReport,
+  onNavigateToAccountProfile,
+  onLogout,
   selectedBatch,
   setSelectedBatch
 }) {
@@ -174,7 +176,7 @@ export default function Header({
                   </button>
                 )}
                 <button 
-                  onClick={() => { setProfileOpen(false); onNavigateToProgressReport?.(); }}
+                  onClick={() => { setProfileOpen(false); onNavigateToAccountProfile ? onNavigateToAccountProfile() : onNavigateToProgressReport?.(); }}
                   className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer"
                 >
                   <User className="w-4 h-4 text-slate-400" /> My Profile &amp; Enrollment
@@ -188,7 +190,13 @@ export default function Header({
               </div>
 
               <div className="pt-1 border-t border-slate-100">
-                <button className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 text-xs font-semibold flex items-center gap-2.5">
+                <button 
+                  onClick={() => {
+                    setProfileOpen(false);
+                    onLogout?.();
+                  }}
+                  className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 text-xs font-semibold flex items-center gap-2.5 cursor-pointer transition-colors"
+                >
                   <LogOut className="w-4 h-4 text-red-500" /> Logout Session
                 </button>
               </div>

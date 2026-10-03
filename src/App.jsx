@@ -26,8 +26,10 @@ import NotificationPage from './pages/NotificationPage';
 import ProgressReportPage from './pages/ProgressReportPage';
 import ChangeProgramPage from './pages/ChangeProgramPage';
 import AdminPortalPage from './pages/AdminPortalPage';
+import LoginPage from './pages/LoginPage';
 
-import { studentProfile } from './data/mockData';
+import { studentProfile as initialStudentProfile } from './data/mockData';
+import { getStoredStudentProfile, saveStudentProfile, subscribeToDataUpdates } from './utils/lmsStorage';
 
 export default function App() {
   const checkIsAdminUrl = () => {
@@ -37,11 +39,28 @@ export default function App() {
     return hash.includes('admin') || search.includes('admin') || pathname.includes('/admin');
   };
 
+  const checkIsLoginUrl = () => {
+    const hash = window.location.hash.toLowerCase();
+    const search = window.location.search.toLowerCase();
+    return hash.includes('login') || search.includes('login');
+  };
+
   const [isAdminPortal, setIsAdminPortal] = useState(() => checkIsAdminUrl());
+  const [activeStudent, setActiveStudent] = useState(() => getStoredStudentProfile());
+  const [isStudentAuthenticated, setIsStudentAuthenticated] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const authFlag = localStorage.getItem('dva_student_authenticated');
+    if (authFlag === 'false') return false;
+    return true;
+  });
+  const [showLoginScreen, setShowLoginScreen] = useState(() => checkIsLoginUrl());
 
   useEffect(() => {
     const handleUrlChange = () => {
       setIsAdminPortal(checkIsAdminUrl());
+      if (checkIsLoginUrl()) {
+        setShowLoginScreen(true);
+      }
     };
     window.addEventListener('hashchange', handleUrlChange);
     window.addEventListener('popstate', handleUrlChange);
@@ -49,6 +68,16 @@ export default function App() {
       window.removeEventListener('hashchange', handleUrlChange);
       window.removeEventListener('popstate', handleUrlChange);
     };
+  }, []);
+
+  // Listen for real-time student profile updates
+  useEffect(() => {
+    const unsubscribe = subscribeToDataUpdates((event) => {
+      if (event?.type === 'profile' || event?.type === 'storage_sync') {
+        setActiveStudent(getStoredStudentProfile());
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
   const handleOpenAdmin = () => {
@@ -60,6 +89,29 @@ export default function App() {
     window.location.hash = '';
     history.pushState("", document.title, window.location.pathname + window.location.search);
     setIsAdminPortal(false);
+    setShowLoginScreen(false);
+  };
+
+  const handleStudentLoginSuccess = (profile) => {
+    setActiveStudent(profile);
+    setIsStudentAuthenticated(true);
+    setShowLoginScreen(false);
+    setIsAdminPortal(false);
+    localStorage.setItem('dva_student_authenticated', 'true');
+    window.location.hash = '';
+  };
+
+  const handleAdminLoginSuccess = () => {
+    setIsAdminPortal(true);
+    setShowLoginScreen(false);
+    window.location.hash = '/admin/Reg.aspx';
+  };
+
+  const handleStudentLogout = () => {
+    setIsStudentAuthenticated(false);
+    setShowLoginScreen(true);
+    localStorage.setItem('dva_student_authenticated', 'false');
+    window.location.hash = '#/login';
   };
 
   const [currentTab, setCurrentTab] = useState('welcome');
@@ -89,6 +141,17 @@ export default function App() {
     setSelectedSubject(subject.name);
     setCurrentTab('session');
   };
+
+  if (showLoginScreen || (!isStudentAuthenticated && !isAdminPortal)) {
+    return (
+      <ErrorBoundary onReset={() => { setShowLoginScreen(false); setIsStudentAuthenticated(true); }}>
+        <LoginPage 
+          onStudentLoginSuccess={handleStudentLoginSuccess}
+          onAdminLoginSuccess={handleAdminLoginSuccess}
+        />
+      </ErrorBoundary>
+    );
+  }
 
   if (isAdminPortal) {
     return (
@@ -120,7 +183,7 @@ export default function App() {
         setCurrentTab={setCurrentTab}
         collapsed={sidebarCollapsed}
         setCollapsed={setSidebarCollapsed}
-        student={studentProfile}
+        student={activeStudent}
         onOpenAdmin={handleOpenAdmin}
       />
 
@@ -130,7 +193,7 @@ export default function App() {
         <Header
           collapsed={sidebarCollapsed}
           setCollapsed={setSidebarCollapsed}
-          student={studentProfile}
+          student={activeStudent}
           onOpenNotifications={() => setNotificationsOpen(true)}
           onOpenSchedule={() => setScheduleOpen(true)}
           onOpenSupport={handleOpenSupport}
@@ -140,6 +203,8 @@ export default function App() {
           selectedBatch={selectedBatch}
           setSelectedBatch={setSelectedBatch}
           onNavigateToProgressReport={() => setCurrentTab('progress-report')}
+          onNavigateToAccountProfile={() => setCurrentTab('account-profile')}
+          onLogout={handleStudentLogout}
         />
 
         {/* Page Content View */}
@@ -154,7 +219,7 @@ export default function App() {
 
           {currentTab === 'dashboard' && (
             <DashboardPage
-              student={studentProfile}
+              student={activeStudent}
               onNavigateToCourses={() => setCurrentTab('courses')}
               onNavigateToAssignments={() => setCurrentTab('assignments')}
               onNavigateToAttendance={() => setCurrentTab('attendance')}
@@ -167,14 +232,14 @@ export default function App() {
 
           {currentTab === 'courses' && (
             <CoursesPage
-              student={studentProfile}
+              student={activeStudent}
               onSelectSubject={handleSelectSubject}
             />
           )}
 
           {currentTab === 'session' && (
             <SessionPage
-              student={studentProfile}
+              student={activeStudent}
               subjectName={selectedSubject}
               onBackToCourses={() => setCurrentTab('courses')}
             />
@@ -182,25 +247,25 @@ export default function App() {
 
           {currentTab === 'assignments' && (
             <AssignmentsPage
-              student={studentProfile}
+              student={activeStudent}
             />
           )}
 
           {currentTab === 'application-test' && (
             <ApplicationTestPage 
-              student={studentProfile} 
+              student={activeStudent} 
             />
           )}
 
           {currentTab === 'resume' && (
             <ResumePage
-              student={studentProfile}
+              student={activeStudent}
             />
           )}
 
           {currentTab === 'interview-prep' && (
             <InterviewPrepPage 
-              student={studentProfile}
+              student={activeStudent}
             />
           )}
 
@@ -214,25 +279,25 @@ export default function App() {
 
           {currentTab === 'attendance' && (
             <AttendancePage
-              student={studentProfile}
+              student={activeStudent}
             />
           )}
 
           {currentTab === 'feedback' && (
             <FeedbackPage
-              student={studentProfile}
+              student={activeStudent}
             />
           )}
 
           {currentTab === 'class' && (
             <ClassPage
-              student={studentProfile}
+              student={activeStudent}
             />
           )}
 
           {currentTab === 'account-profile' && (
             <AccountProfilePage
-              student={studentProfile}
+              student={activeStudent}
             />
           )}
 
@@ -242,13 +307,13 @@ export default function App() {
 
           {currentTab === 'progress-report' && (
             <ProgressReportPage
-              student={studentProfile}
+              student={activeStudent}
             />
           )}
 
           {currentTab === 'change-program' && (
             <ChangeProgramPage
-              student={studentProfile}
+              student={activeStudent}
             />
           )}
           </ErrorBoundary>
@@ -302,14 +367,23 @@ export default function App() {
       <div className="fixed bottom-5 right-5 z-40 flex items-center gap-2 bg-slate-950/90 text-white p-1.5 pl-3.5 rounded-full shadow-2xl border border-slate-700/80 backdrop-blur-md text-xs select-none animate-in fade-in duration-300">
         <div className="flex items-center gap-1.5 pr-1">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span className="text-[11px] font-semibold text-slate-300">Student Access Active</span>
+          <span className="text-[11px] font-semibold text-slate-300 truncate max-w-[130px]">
+            {activeStudent?.name || "Student"}
+          </span>
         </div>
         <button
           onClick={handleOpenAdmin}
           className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-slate-950 font-bold text-xs shadow-md transition-all cursor-pointer active:scale-95"
-          title="Open Admin Portal to upload videos, manage sessions, and update records"
+          title="Open Admin Portal"
         >
-          <span>Admin Portal ➔</span>
+          <span>Admin ➔</span>
+        </button>
+        <button
+          onClick={handleStudentLogout}
+          className="px-2.5 py-1.5 rounded-full bg-slate-800 hover:bg-red-900/60 text-slate-300 hover:text-red-300 text-xs transition-colors cursor-pointer"
+          title="Log out of student account"
+        >
+          Logout
         </button>
       </div>
     </div>

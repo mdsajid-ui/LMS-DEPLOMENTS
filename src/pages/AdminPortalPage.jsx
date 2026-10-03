@@ -98,6 +98,7 @@ import {
   saveAdminFee, 
   getStoredStudents, 
   saveAdminStudent,
+  saveStudentProfile,
   subscribeToDataUpdates
 } from '../utils/lmsStorage';
 
@@ -594,7 +595,8 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
           <form 
             onSubmit={(e) => {
               e.preventDefault();
-              if (loginUsername.trim().toLowerCase() === "skabdulsajid" || loginUsername.trim().toLowerCase() === "debendra" || loginUsername.trim().toLowerCase() === "admin") {
+              const cleanUser = loginUsername.trim().toLowerCase();
+              if (cleanUser === "skabdulsajid" || cleanUser === "debendra" || cleanUser === "admin") {
                 setIsAuthenticated(true);
                 setAdminUser({
                   username: loginUsername,
@@ -602,9 +604,37 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                   role: "System Administrator",
                   email: `${loginUsername}@dvanalytics.com`
                 });
-              } else {
-                setLoginError("Invalid credentials. Enter skabdulsajid / @2288");
+                return;
               }
+
+              // Check if user is a student attempting to log in
+              const allStudents = getStoredStudents();
+              const matchedStudent = allStudents.find(s => {
+                const sRoll = (s.rollNo || '').trim().toLowerCase();
+                const sEmail = (s.email || '').trim().toLowerCase();
+                const sPhone = (s.phone || '').trim();
+                const sName = (s.name || '').trim().toLowerCase();
+                return sRoll === cleanUser || sEmail === cleanUser || sPhone === cleanUser || sName === cleanUser || sName.includes(cleanUser);
+              }) || (cleanUser.includes('sajid') || cleanUser === 'student' ? {
+                name: "SK ABDUL SAJID",
+                rollNo: "DVA-202606-448",
+                batch: "BATCH 202606",
+                email: "abdul.sajid@example.com",
+                courseCode: "APIDS"
+              } : null);
+
+              if (matchedStudent) {
+                saveStudentProfile(matchedStudent);
+                localStorage.setItem('dva_student_authenticated', 'true');
+                if (onBackToStudentLms) {
+                  onBackToStudentLms();
+                } else {
+                  window.location.hash = '';
+                }
+                return;
+              }
+
+              setLoginError("Invalid credentials. For Admin enter skabdulsajid / @2288. For Student enter your Roll No (e.g. DVA-202606-448, BLR202609001)");
             }} 
             className="space-y-5"
           >
@@ -616,12 +646,12 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
             )}
 
             <div className="space-y-1">
-              <label className="block text-xs font-semibold text-slate-500">Username</label>
+              <label className="block text-xs font-semibold text-slate-500">Username / Student Roll No</label>
               <input
                 type="text"
                 value={loginUsername}
                 onChange={(e) => setLoginUsername(e.target.value)}
-                placeholder="Enter administrator username"
+                placeholder="Admin username or Student Roll No"
                 className="w-full px-4 py-2.5 bg-blue-50/60 focus:bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:border-red-500 focus:outline-none transition-all"
                 required
               />
@@ -661,7 +691,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
 
               <button
                 type="button"
-                onClick={() => alert("Password reset link sent to administrator email.")}
+                onClick={() => alert("Password reset link sent to your registered email.")}
                 className="text-red-500 hover:text-red-600 font-medium"
               >
                 Forgot Password ?
@@ -676,10 +706,20 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-slate-100">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2 text-center">
-              Quick Admin Credentials:
-            </span>
+          <div className="mt-8 pt-6 border-t border-slate-100 space-y-3">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="font-bold uppercase tracking-wider text-slate-400">
+                Quick Credentials:
+              </span>
+              <button
+                type="button"
+                onClick={onBackToStudentLms}
+                className="text-teal-700 font-bold hover:underline cursor-pointer"
+              >
+                Go to Student LMS ➔
+              </button>
+            </div>
+
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -697,14 +737,18 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
               <button
                 type="button"
                 onClick={() => {
-                  setLoginUsername("Debendra");
+                  setLoginUsername("DVA-202606-448");
                   setLoginPassword("@2288");
-                  setIsAuthenticated(true);
+                  const allStudents = getStoredStudents();
+                  const s = allStudents[0] || { name: "SK ABDUL SAJID", rollNo: "DVA-202606-448", batch: "BATCH 202606" };
+                  saveStudentProfile(s);
+                  localStorage.setItem('dva_student_authenticated', 'true');
+                  onBackToStudentLms?.();
                 }}
-                className="p-2 text-left bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 text-xs cursor-pointer"
+                className="p-2 text-left bg-orange-50 hover:bg-orange-100 rounded-lg border border-orange-200 text-xs cursor-pointer"
               >
-                <div className="font-bold text-slate-800">Debendra</div>
-                <div className="text-[10px] text-slate-500">Director / Admin</div>
+                <div className="font-bold text-orange-900">Student Login</div>
+                <div className="text-[10px] text-orange-700">DVA-202606-448 (Sajid)</div>
               </button>
             </div>
           </div>
