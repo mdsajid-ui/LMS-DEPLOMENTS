@@ -44,14 +44,21 @@ export default function WelcomePage({ onNavigateToCourse, onNavigateToDashboard 
         </div>
       </div>
 
-      {/* Hero Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 text-white p-6 sm:p-10 shadow-xl border border-slate-800">
+      {/* Hero Welcome Banner with macOS Window Styling & DV Logo Palette */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#081220] via-[#0d1d36] to-[#102a5c] text-white p-6 sm:p-10 shadow-xl border border-blue-900/40">
+        {/* macOS Traffic Lights on Hero */}
+        <div className="absolute top-5 right-6 hidden sm:flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]/80"></span>
+          <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]/80"></span>
+          <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]/80"></span>
+        </div>
+
         {/* Decorative background glow */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="relative z-10 space-y-4 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-400 text-xs font-bold tracking-wide">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-400 text-xs font-bold tracking-wide">
             <Sparkles className="w-3.5 h-3.5" />
             DV ANALYTICS FLAGSHIP COHORT
           </div>
@@ -68,26 +75,26 @@ export default function WelcomePage({ onNavigateToCourse, onNavigateToDashboard 
             APIDS equips participants with the necessary skills and knowledge to excel in various high-demand roles within the data science and AI domain across banking, telecom, retail, e-commerce, insurance, life sciences, pharma, and global tech enterprises.
           </p>
 
-          {/* Action CTAs */}
+          {/* Action CTAs - MacBook Push Buttons */}
           <div className="pt-4 flex flex-wrap items-center gap-3">
             <button
               onClick={onNavigateToCourse}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-xs shadow-lg shadow-orange-500/25 transition-all transform active:scale-95"
+              className="mac-btn mac-btn-orange px-5 py-2.5 rounded-xl text-white font-bold text-xs gap-2 shadow-lg cursor-pointer active:scale-95"
             >
-              Start Learning Now
+              <span>Start Learning Now</span>
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
               onClick={onNavigateToDashboard}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium text-xs border border-white/10 transition-all backdrop-blur-sm"
+              className="mac-btn mac-btn-navy px-5 py-2.5 rounded-xl text-white font-semibold text-xs gap-2 border border-blue-400/40 cursor-pointer active:scale-95"
             >
-              View My Dashboard
+              <span>View My Dashboard</span>
             </button>
             <button
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-300 font-medium text-xs border border-slate-700 transition-all"
+              className="mac-btn mac-btn-dark px-4 py-2.5 rounded-xl text-slate-300 hover:text-white font-medium text-xs gap-2 cursor-pointer active:scale-95"
             >
               <DownloadCloud className="w-4 h-4 text-orange-400" />
-              Download Syllabus PDF
+              <span>Download Syllabus PDF</span>
             </button>
           </div>
         </div>

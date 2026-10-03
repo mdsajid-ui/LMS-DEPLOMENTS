@@ -323,11 +323,11 @@ DataFrame Output:
       {/* ================= SECTION 0: THE 3 CORE SELECTION CARDS ================= */}
       {!activeSection ? (
         <div className="space-y-4">
-          {/* Quick Action: Bulk Upload Excel Card */}
-          <div className="flex items-center justify-between bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-teal-50 border border-teal-200 text-teal-700 flex items-center justify-center">
-                <UploadCloud className="w-4 h-4 text-teal-600" />
+          {/* Quick Action: Bulk Upload Excel Card - macOS Frosted Card */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-orange-50 border border-orange-200 text-orange-600 flex items-center justify-center shrink-0">
+                <UploadCloud className="w-5 h-5 text-orange-600" />
               </div>
               <div>
                 <span className="font-bold text-slate-800 text-xs block">Corporate Assessment Uploader</span>
@@ -337,97 +337,102 @@ DataFrame Output:
             <div className="flex items-center gap-2">
               <button
                 onClick={() => { setUploadModalType('mcq'); setUploadModalOpen(true); }}
-                className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold border border-blue-200 text-xs transition cursor-pointer"
+                className="mac-btn mac-btn-navy px-3.5 py-1.5 rounded-xl text-xs font-bold gap-1.5 shadow-xs cursor-pointer"
               >
                 + Upload MCQ (.xlsx)
               </button>
               <button
                 onClick={() => { setUploadModalType('practical'); setUploadModalOpen(true); }}
-                className="px-3 py-1.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs shadow-xs transition cursor-pointer"
+                className="mac-btn mac-btn-orange px-3.5 py-1.5 rounded-xl text-xs font-bold gap-1.5 shadow-xs cursor-pointer"
               >
                 + Upload Practical Lab (.xlsx)
               </button>
             </div>
           </div>
 
-          {/* Card 1: Multiple Choice Question (MCQ) - Royal Blue #3498db */}
+          {/* Card 1: Multiple Choice Question (MCQ) - DV Logo Deep Navy & Royal Blue MacBook Card */}
           <button
             onClick={() => setActiveSection('mcq')}
-            className="w-full bg-[#3498db] hover:bg-[#2980b9] text-white rounded-2xl px-6 py-5 flex items-center justify-between shadow-md hover:shadow-lg transition-all group transform active:scale-[0.99] text-left cursor-pointer"
+            className="w-full bg-gradient-to-r from-[#0b1728] via-[#102a5c] to-[#1e40af] text-white rounded-2xl px-6 py-5 flex items-center justify-between border border-blue-400/25 shadow-md hover:shadow-xl transition-all group transform active:scale-[0.99] text-left cursor-pointer"
           >
             <div className="flex items-center gap-4">
-              <div className="p-3.5 rounded-xl bg-white/20 backdrop-blur-sm">
-                <FileEdit className="w-6 h-6 text-white" />
+              <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-inner">
+                <FileEdit className="w-6 h-6 text-blue-200" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base sm:text-lg font-bold tracking-wide">
+                  <h3 className="text-base sm:text-lg font-bold tracking-wide text-white">
                     Multiple Choice Question (MCQ)
                   </h3>
-                  <span className="text-[11px] font-mono bg-white/20 px-2 py-0.5 rounded-full font-bold">
+                  <span className="text-[11px] font-mono bg-blue-500/30 text-blue-100 border border-blue-400/30 px-2 py-0.5 rounded-full font-bold">
                     {allMcqBank.length} Questions
                   </span>
                 </div>
-                <p className="text-xs text-blue-100 font-normal mt-0.5">
+                <p className="text-xs text-blue-100/90 font-normal mt-0.5">
                   SQL, Python, Excel & SAS • 30 Mins • Auto-Evaluated Scorecard with Real-time Explanations
                 </p>
               </div>
             </div>
 
-            <div className="w-10 h-10 rounded-full bg-white/20 group-hover:bg-white/30 flex items-center justify-center transition-all group-hover:translate-x-1 flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-white/15 group-hover:bg-white/25 flex items-center justify-center transition-all group-hover:translate-x-1 flex-shrink-0 border border-white/20">
               <ArrowRight className="w-5 h-5 text-white" />
             </div>
           </button>
 
-          {/* Card 2: Practical Question - Warm Amber #f39c12 */}
+          {/* Card 2: Practical Question - DV Logo Vivid Flame Orange MacBook Card */}
           <button
             onClick={() => setActiveSection('practical')}
-            className="w-full bg-[#f39c12] hover:bg-[#e67e22] text-white rounded-2xl px-6 py-5 flex items-center justify-between shadow-md hover:shadow-lg transition-all group transform active:scale-[0.99] text-left cursor-pointer"
+            className="w-full bg-gradient-to-r from-[#c2410c] via-[#ea580c] to-[#f97316] text-white rounded-2xl px-6 py-5 flex items-center justify-between border border-orange-300/35 shadow-md hover:shadow-xl transition-all group transform active:scale-[0.99] text-left cursor-pointer"
           >
             <div className="flex items-center gap-4">
-              <div className="p-3.5 rounded-xl bg-white/20 backdrop-blur-sm">
+              <div className="p-3.5 rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 shadow-inner">
                 <FileEdit className="w-6 h-6 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base sm:text-lg font-bold tracking-wide">
+                  <h3 className="text-base sm:text-lg font-bold tracking-wide text-white">
                     Practical Question & Labs
                   </h3>
-                  <span className="text-[11px] font-mono bg-white/20 px-2 py-0.5 rounded-full font-bold">
+                  <span className="text-[11px] font-mono bg-white/20 text-white border border-white/30 px-2 py-0.5 rounded-full font-bold">
                     Banking, Healthcare & Sales
                   </span>
                 </div>
-                <p className="text-xs text-amber-100 font-normal mt-0.5">
+                <p className="text-xs text-orange-100 font-normal mt-0.5">
                   Hands-on Multi-Table SQL, Python, Excel & SAS Sandboxes with Live Schema Inspector & Excel Ingestion
                 </p>
               </div>
             </div>
 
-            <div className="w-10 h-10 rounded-full bg-white/20 group-hover:bg-white/30 flex items-center justify-center transition-all group-hover:translate-x-1 flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-white/20 group-hover:bg-white/30 flex items-center justify-center transition-all group-hover:translate-x-1 flex-shrink-0 border border-white/25">
               <ArrowRight className="w-5 h-5 text-white" />
             </div>
           </button>
 
-          {/* Card 3: Personal Interview - Coral / Red #e74c3c */}
+          {/* Card 3: Personal Interview - MacBook Slate Obsidian Card */}
           <button
             onClick={() => setActiveSection('interview')}
-            className="w-full bg-[#e74c3c] hover:bg-[#c0392b] text-white rounded-2xl px-6 py-5 flex items-center justify-between shadow-md hover:shadow-lg transition-all group transform active:scale-[0.99] text-left cursor-pointer"
+            className="w-full bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#334155] text-white rounded-2xl px-6 py-5 flex items-center justify-between border border-slate-700/60 shadow-md hover:shadow-xl transition-all group transform active:scale-[0.99] text-left cursor-pointer"
           >
             <div className="flex items-center gap-4">
-              <div className="p-3.5 rounded-xl bg-white/20 backdrop-blur-sm">
-                <FileEdit className="w-6 h-6 text-white" />
+              <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 shadow-inner">
+                <FileEdit className="w-6 h-6 text-slate-200" />
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-bold tracking-wide">
-                  Personal Interview
-                </h3>
-                <p className="text-xs text-rose-100 font-normal mt-0.5">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-bold tracking-wide text-white">
+                    Personal Interview
+                  </h3>
+                  <span className="text-[11px] font-mono bg-slate-700/60 text-slate-300 border border-slate-600/50 px-2 py-0.5 rounded-full font-bold">
+                    AI Proctoring
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 font-normal mt-0.5">
                   AI Mock Interview Simulator with Camera/Mic & 1-on-1 Faculty Viva Voce
                 </p>
               </div>
             </div>
 
-            <div className="w-10 h-10 rounded-full bg-white/20 group-hover:bg-white/30 flex items-center justify-center transition-all group-hover:translate-x-1 flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-white/10 group-hover:bg-white/20 flex items-center justify-center transition-all group-hover:translate-x-1 flex-shrink-0 border border-white/15">
               <ArrowRight className="w-5 h-5 text-white" />
             </div>
           </button>

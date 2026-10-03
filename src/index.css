@@ -39,3 +39,207 @@
 .transition-all-smooth {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* ==========================================================================
+   macOS MacBook Design System & DV Analytics Brand DNA
+   ========================================================================== */
+
+/* Apple macOS Typography & System Fonts */
+:root {
+  --font-sf: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono-mac: "SF Mono", Monaco, Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
+  
+  /* DV Analytics Logo Color Tokens */
+  --dva-navy-deep: #081220;
+  --dva-navy-dark: #0b1728;
+  --dva-navy-card: #0f2347;
+  --dva-navy-blue: #1d4ed8;
+  --dva-orange: #ea580c;
+  --dva-orange-vivid: #f97316;
+  --dva-orange-light: #fb923c;
+}
+
+/* MacBook Window Traffic Light Controls */
+.mac-traffic-lights {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.mac-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  position: relative;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  cursor: pointer;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+.mac-dot:hover {
+  transform: scale(1.1);
+}
+.mac-dot-red {
+  background-color: #ff5f56;
+  border: 1px solid #e0443e;
+}
+.mac-dot-yellow {
+  background-color: #ffbd2e;
+  border: 1px solid #dea123;
+}
+.mac-dot-green {
+  background-color: #27c93f;
+  border: 1px solid #1aab29;
+}
+
+/* MacBook Tactile Push Buttons (Apple HIG Physics) */
+.mac-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  border-radius: 10px;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.mac-btn:active {
+  transform: scale(0.975);
+}
+
+/* Branded DV Navy Button with MacBook bevel & glow */
+.mac-btn-navy {
+  background: linear-gradient(180deg, #1b3565 0%, #0d1e3d 100%);
+  border: 1px solid #284c8a;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(13, 30, 61, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+.mac-btn-navy:hover {
+  background: linear-gradient(180deg, #22437e 0%, #102447 100%);
+  border-color: #3b66b2;
+  box-shadow: 0 4px 12px rgba(13, 30, 61, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.mac-btn-navy:active {
+  background: linear-gradient(180deg, #0d1e3d 0%, #081220 100%);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35);
+}
+
+/* Branded DV Orange Button with MacBook bevel */
+.mac-btn-orange {
+  background: linear-gradient(180deg, #fb923c 0%, #ea580c 100%);
+  border: 1px solid #f97316;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(234, 88, 12, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.mac-btn-orange:hover {
+  background: linear-gradient(180deg, #fdba74 0%, #f97316 100%);
+  border-color: #ea580c;
+  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.mac-btn-orange:active {
+  background: linear-gradient(180deg, #ea580c 0%, #c2410c 100%);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Live Zoom MacBook Button with Pulsing Signal */
+.mac-btn-live {
+  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+  border: 1px solid #b91c1c;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.mac-btn-live:hover {
+  background: linear-gradient(180deg, #f87171 0%, #ef4444 100%);
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.mac-btn-live:active {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* macOS Translucent Frosted Glass Button */
+.mac-btn-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  color: #1e293b;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.mac-btn-glass:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: #cbd5e1;
+  color: #0f172a;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+.mac-btn-glass:active {
+  background: rgba(241, 245, 249, 0.9);
+  box-shadow: inset 0 1.5px 3px rgba(15, 23, 42, 0.1);
+}
+
+/* Dark Terminal MacBook Button */
+.mac-btn-dark {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid #334155;
+  color: #f1f5f9;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.mac-btn-dark:hover {
+  background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+  border-color: #475569;
+}
+.mac-btn-dark:active {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* macOS Window Frame Card */
+.mac-window {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 8px 30px -4px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+}
+.mac-window-dark {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(51, 65, 85, 0.7);
+  box-shadow: 0 12px 40px -4px rgba(0, 0, 0, 0.45);
+}
+
+/* macOS Frosted Glass Surface Card */
+.mac-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mac-card:hover {
+  border-color: rgba(203, 213, 225, 0.9);
+  box-shadow: 0 8px 25px -4px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+}
+
+/* macOS Segmented Tab Control */
+.mac-segmented {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+.mac-segmented-item {
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  color: #64748b;
+}
+.mac-segmented-item.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+}

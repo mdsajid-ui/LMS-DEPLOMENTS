@@ -260,29 +260,29 @@ Execution finished with 0 errors.`,
         </div>
 
         <div className="flex items-center gap-2.5 text-xs">
-          {/* UPLOAD EXCEL LAB BUTTON */}
+          {/* UPLOAD EXCEL LAB BUTTON - MacBook Navy Push Button */}
           <button
             onClick={() => setUploadModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-slate-950 font-bold shadow-md transition-all cursor-pointer active:scale-95"
+            className="mac-btn mac-btn-navy px-3 py-1.5 rounded-xl text-white font-bold gap-1.5 shadow-md cursor-pointer active:scale-95"
             title="Upload new assessment from Excel workbook (.xlsx)"
           >
-            <UploadCloud className="w-4 h-4" />
+            <UploadCloud className="w-4 h-4 text-orange-400" />
             <span>Upload Lab (.xlsx)</span>
           </button>
 
-          <div className="flex items-center gap-1.5 bg-slate-900 px-3 py-1 rounded-lg border border-slate-800 text-slate-300">
-            <Camera className="w-3.5 h-3.5 text-teal-400" />
+          <div className="flex items-center gap-1.5 bg-slate-900/90 px-3 py-1.5 rounded-xl border border-slate-800 text-slate-300">
+            <Camera className="w-3.5 h-3.5 text-emerald-400" />
             <span className="hidden sm:inline">Webcam:</span> Verified
           </div>
 
-          <div className="flex items-center gap-1.5 bg-slate-900 px-3 py-1 rounded-lg border border-slate-800 text-orange-400 font-mono font-bold">
+          <div className="flex items-center gap-1.5 bg-slate-900/90 px-3 py-1.5 rounded-xl border border-slate-800 text-orange-400 font-mono font-bold">
             <Clock className="w-3.5 h-3.5" />
             <span>01:24:18</span>
           </div>
 
           <button
             onClick={onBack}
-            className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold cursor-pointer transition-all"
+            className="mac-btn mac-btn-dark px-3 py-1.5 rounded-xl text-slate-300 hover:text-white font-semibold cursor-pointer"
           >
             Exit Lab
           </button>
@@ -453,25 +453,33 @@ Execution finished with 0 errors.`,
         {/* Right Column: Live Sandbox Editor & Terminal (7 Cols) */}
         <div className="lg:col-span-7 space-y-4">
           
-          {/* Code Editor Frame */}
+          {/* Code Editor Frame - macOS Terminal Window Styling */}
           <div className="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-xl flex flex-col text-xs">
             
-            {/* Editor Action Header */}
+            {/* Editor Action Header with macOS Window Controls */}
             <div className="bg-slate-950 px-4 py-3 flex items-center justify-between border-b border-slate-800">
-              <div className="flex items-center gap-2">
-                <Terminal className="w-4 h-4 text-teal-400" />
-                <span className="font-mono font-bold text-slate-200 text-xs uppercase tracking-wide">
-                  {selectedDomain.toUpperCase()} Practical Sandbox
-                </span>
-                <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700">
-                  {saveStatus === 'saved' ? 'All changes saved' : 'Unsaved changes'}
-                </span>
+              <div className="flex items-center gap-3">
+                {/* macOS Traffic Lights */}
+                <div className="mac-traffic-lights mr-1" title="macOS Terminal Controls">
+                  <span className="mac-dot mac-dot-red"></span>
+                  <span className="mac-dot mac-dot-yellow"></span>
+                  <span className="mac-dot mac-dot-green"></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Terminal className="w-4 h-4 text-orange-400" />
+                  <span className="font-mono font-bold text-slate-200 text-xs uppercase tracking-wide">
+                    {selectedDomain.toUpperCase()} Sandbox
+                  </span>
+                  <span className="text-[10px] bg-slate-800/90 text-slate-400 px-2 py-0.5 rounded border border-slate-700">
+                    {saveStatus === 'saved' ? 'All changes saved' : 'Unsaved changes'}
+                  </span>
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleSaveCode}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold flex items-center gap-1.5 cursor-pointer transition-all"
+                  className="mac-btn mac-btn-dark px-3 py-1.5 rounded-lg text-slate-300 font-bold flex items-center gap-1.5 cursor-pointer"
                   title="Save current work"
                 >
                   <Save className="w-3.5 h-3.5" />
@@ -481,10 +489,10 @@ Execution finished with 0 errors.`,
                 <button
                   onClick={handleRunCode}
                   disabled={isExecuting}
-                  className={`px-4 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all shadow-md cursor-pointer ${
+                  className={`mac-btn px-4 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all shadow-md cursor-pointer ${
                     isExecuting 
                       ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
-                      : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 active:scale-95'
+                      : 'mac-btn-orange text-white active:scale-95'
                   }`}
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
@@ -632,15 +640,15 @@ Execution finished with 0 errors.`,
             <button
               onClick={handleSubmitLab}
               disabled={submissionComplete}
-              className={`px-5 py-2.5 rounded-xl font-bold flex items-center gap-1.5 shadow-md transition-all cursor-pointer ${
+              className={`mac-btn px-5 py-2.5 rounded-xl font-bold flex items-center gap-1.5 shadow-md transition-all cursor-pointer ${
                 submissionComplete
                   ? 'bg-slate-100 text-emerald-700 border border-emerald-200 cursor-default'
-                  : 'bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-slate-950 active:scale-95'
+                  : 'mac-btn-orange text-white active:scale-95'
               }`}
             >
               {submissionComplete ? (
                 <>
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <CheckCircle2 className="w-4 h-4 text-white" />
                   <span>Lab Submitted & Qualified</span>
                 </>
               ) : (

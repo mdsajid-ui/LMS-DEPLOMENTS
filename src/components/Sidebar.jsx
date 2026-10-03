@@ -54,18 +54,34 @@ export default function Sidebar({
 
   return (
     <aside 
-      className={`sticky top-0 h-screen shrink-0 bg-slate-950 text-slate-200 border-r border-slate-800/80 z-30 flex flex-col transition-all duration-300 ease-in-out select-none ${
+      className={`sticky top-0 h-screen shrink-0 bg-gradient-to-b from-[#081220] via-[#0d1d36] to-[#060c17] text-slate-200 border-r border-slate-800/70 z-30 flex flex-col transition-all duration-300 ease-in-out select-none shadow-xl ${
         collapsed ? 'w-20' : 'w-72'
       }`}
     >
-      {/* Top Brand Logo */}
-      <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800/80 bg-slate-950/60 backdrop-blur-md">
-        <Logo collapsed={collapsed} />
+      {/* macOS Window Controls & Top Brand Logo */}
+      <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800/80 bg-[#081220]/75 backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          {/* macOS Traffic Lights Window Controls */}
+          {!collapsed ? (
+            <div className="mac-traffic-lights mr-1.5" title="macOS Window Controls">
+              <span className="mac-dot mac-dot-red" title="Close"></span>
+              <span className="mac-dot mac-dot-yellow" title="Minimize"></span>
+              <span className="mac-dot mac-dot-green" title="Expand"></span>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1 items-center mr-1" title="macOS Window Controls">
+              <span className="w-2 h-2 rounded-full bg-[#ff5f56]"></span>
+              <span className="w-2 h-2 rounded-full bg-[#ffbd2e]"></span>
+              <span className="w-2 h-2 rounded-full bg-[#27c93f]"></span>
+            </div>
+          )}
+          <Logo collapsed={collapsed} />
+        </div>
       </div>
 
       {/* Student Profile Card (Matching original LMS APIDS 202606 card) */}
       <div className="p-3 border-b border-slate-800/80">
-        <div className={`rounded-xl bg-gradient-to-b from-slate-900 to-slate-900/90 border border-slate-800 p-3 transition-all ${
+        <div className={`rounded-2xl bg-gradient-to-b from-[#0f2347]/70 to-[#0b1728]/80 border border-slate-700/60 p-3 transition-all shadow-inner ${
           collapsed ? 'flex flex-col items-center p-2' : ''
         }`}>
           <div className="flex items-center gap-3">
@@ -112,10 +128,10 @@ export default function Sidebar({
               key={item.id}
               onClick={() => setCurrentTab(item.id)}
               title={collapsed ? item.label : undefined}
-              className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl font-bold text-xs tracking-wider transition-all group relative ${
+              className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl font-bold text-xs tracking-wider transition-all group relative cursor-pointer ${
                 isActive 
-                  ? 'bg-white text-slate-950 shadow-md font-bold' 
-                  : 'text-slate-300 hover:text-white hover:bg-slate-900/90 font-medium'
+                  ? 'bg-gradient-to-r from-white via-white to-slate-100 text-slate-950 shadow-[0_2px_10px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,1)] font-bold' 
+                  : 'text-slate-300 hover:text-white hover:bg-white/10 font-medium active:scale-[0.98]'
               } ${collapsed ? 'justify-center px-0' : ''}`}
             >
               <Icon className={`w-4 h-4 flex-shrink-0 transition-transform group-hover:scale-110 ${
@@ -129,7 +145,7 @@ export default function Sidebar({
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
                       isActive 
                         ? 'bg-slate-200 text-slate-900 font-bold' 
-                        : 'bg-slate-800 text-orange-400 border border-slate-700'
+                        : 'bg-orange-500/15 text-orange-400 border border-orange-500/30'
                     }`}>
                       {item.badge}
                     </span>
@@ -137,26 +153,26 @@ export default function Sidebar({
                 </>
               )}
 
-              {/* Active pill dot on left */}
+              {/* Active pill dot on left - DV Brand Orange Gradient */}
               {isActive && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-white rounded-r-full"></div>
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-gradient-to-b from-orange-400 via-orange-500 to-amber-500 rounded-r-full shadow-[0_0_8px_rgba(234,88,12,0.6)]"></div>
               )}
             </button>
           );
         })}
 
-        {/* Switch to Admin Portal Button */}
+        {/* Switch to Admin Portal Button - MacBook Native Button Physics */}
         {onOpenAdmin && (
           <button
             onClick={onOpenAdmin}
-            className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl transition-all group cursor-pointer mt-3 bg-gradient-to-r from-teal-950/70 to-slate-900 border border-teal-500/30 text-teal-300 hover:text-white hover:border-teal-400 shadow-xs"
+            className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl mac-btn-navy border border-blue-500/40 text-blue-200 hover:text-white shadow-md transition-all group cursor-pointer mt-3"
             title="Switch to Admin Portal Control"
           >
-            <Settings className="w-4 h-4 text-teal-400 shrink-0 group-hover:rotate-90 transition-transform" />
+            <Settings className="w-4 h-4 text-orange-400 shrink-0 group-hover:rotate-90 transition-transform" />
             {!collapsed && (
               <div className="flex-1 flex items-center justify-between text-left">
                 <span className="font-semibold text-xs tracking-wide">ADMIN ACCESS</span>
-                <span className="px-1.5 py-0.5 text-[9px] font-bold bg-teal-500 text-slate-950 rounded uppercase">
+                <span className="px-1.5 py-0.5 text-[9px] font-bold bg-orange-500 text-white rounded uppercase shadow-xs">
                   Portal
                 </span>
               </div>

@@ -81,8 +81,8 @@ export default function DashboardPage({
         </div>
       </div>
 
-      {/* Main Section Header Banner: "My Overall Progress" (Matches black bar in LMS) */}
-      <div className="bg-slate-950 text-white rounded-2xl px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md border border-slate-800">
+      {/* Main Section Header Banner: "My Overall Progress" - DV Navy Brand Gradient */}
+      <div className="bg-gradient-to-r from-[#081220] via-[#0d1d36] to-[#102447] border border-blue-900/40 text-white rounded-2xl px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
         <div>
           <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2.5">
             <TrendingUp className="w-5 h-5 text-orange-500" />
@@ -114,7 +114,7 @@ export default function DashboardPage({
             title="Live Classes"
             percentage={student.attendancePercent}
             status="Attended"
-            color="#ef4444"
+            color="#ea580c"
             size={180}
             strokeWidth={13}
             subtitle={`${student.liveAttendedCount || 18} of ${student.liveTotalCount || 30} Sessions`}
@@ -128,7 +128,7 @@ export default function DashboardPage({
             title="Recorded Videos"
             percentage={Math.round(watchPercentage)}
             status="Watch Time"
-            color="#3b82f6"
+            color="#2563eb"
             size={180}
             strokeWidth={13}
             subtitle={`${watchedHours}h of ${student.totalRecordedHours}h Watched`}
@@ -165,11 +165,11 @@ export default function DashboardPage({
         </div>
       </div>
 
-      {/* Progress Report & Grade Card Access Strip */}
+      {/* Progress Report & Grade Card Access Strip - DV Navy/Orange Gradient */}
       {onNavigateToProgressReport && (
         <div 
           onClick={onNavigateToProgressReport}
-          className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-950 p-4 rounded-2xl border border-slate-800 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md hover:border-orange-500/50 transition-all cursor-pointer group"
+          className="bg-gradient-to-r from-[#081220] via-[#0f2347] to-[#1e3a8a] p-4 rounded-2xl border border-blue-800/40 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md hover:border-orange-500/50 transition-all cursor-pointer group"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center justify-center font-bold">
