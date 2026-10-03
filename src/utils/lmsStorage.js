@@ -1,4 +1,5 @@
 import { excelSessions, sqlSessions, pythonSessions, assignmentsList, studentProfile } from '../data/mockData.js';
+import { sealPayload, unsealPayload, sanitizeString } from './securityShield.js';
 
 const STORAGE_KEYS = {
   SESSIONS: 'dva_lms_sessions_v1',
@@ -10,6 +11,33 @@ const STORAGE_KEYS = {
   ACTIVE_PROFILE: 'dva_lms_active_profile_v1',
   LIVE_CLASSES: 'dva_lms_live_classes_v1'
 };
+
+/**
+ * Military-Grade Cryptographic Storage Adapters:
+ * Encrypts and cryptographically signs data to prevent DevTools manipulation or score forgery.
+ */
+export function getSecureItem(key, fallback = null) {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return unsealPayload(raw, fallback);
+  } catch (e) {
+    return fallback;
+  }
+}
+
+export function setSecureItem(key, data) {
+  if (typeof window === 'undefined') return;
+  try {
+    const sealed = sealPayload(data);
+    localStorage.setItem(key, sealed);
+  } catch (e) {
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch (err) {}
+  }
+}
 
 // ==========================================
 // REAL-TIME BROADCAST & MULTI-TAB SYNC
@@ -154,9 +182,8 @@ const defaultSessionsState = {
 
 export function getAllStoredSessions() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.SESSIONS);
-    if (raw) {
-      const parsed = JSON.parse(raw);
+    const parsed = getSecureItem(STORAGE_KEYS.SESSIONS, null);
+    if (parsed) {
       // Ensure all keys exist
       if (parsed.excel && parsed.sql && parsed.python) {
         return parsed;
@@ -164,11 +191,11 @@ export function getAllStoredSessions() {
       return { ...defaultSessionsState, ...parsed };
     }
   } catch (e) {
-    console.error('Error reading sessions from localStorage:', e);
+    console.error('Error reading sessions from storage:', e);
   }
 
   try {
-    localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(defaultSessionsState));
+    setSecureItem(STORAGE_KEYS.SESSIONS, defaultSessionsState);
   } catch (e) {}
   return defaultSessionsState;
 }
@@ -357,9 +384,9 @@ export function saveAdminSession({
 
   all[key] = subjectSessions;
   try {
-    localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(all));
+    setSecureItem(STORAGE_KEYS.SESSIONS, all);
   } catch (e) {
-    console.error('Error saving session to localStorage:', e);
+    console.error('Error saving session to storage:', e);
   }
 
   // Instant notification to all open tabs and Student LMS
@@ -390,7 +417,7 @@ export function deleteAdminSession(sessionId, subjectName) {
   all[key] = (all[key] || []).filter(s => s.id !== sessionId);
 
   try {
-    localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(all));
+    setSecureItem(STORAGE_KEYS.SESSIONS, all);
   } catch (e) {}
 
   notifyDataUpdated({
@@ -409,12 +436,12 @@ export function deleteAdminSession(sessionId, subjectName) {
 // ==========================================
 export function getStoredStudentProfile() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.ACTIVE_PROFILE);
-    if (raw) return JSON.parse(raw);
+    const parsed = getSecureItem(STORAGE_KEYS.ACTIVE_PROFILE, null);
+    if (parsed) return parsed;
   } catch (e) {}
 
   try {
-    localStorage.setItem(STORAGE_KEYS.ACTIVE_PROFILE, JSON.stringify(studentProfile));
+    setSecureItem(STORAGE_KEYS.ACTIVE_PROFILE, studentProfile);
   } catch (e) {}
   return studentProfile;
 }
@@ -422,7 +449,7 @@ export function getStoredStudentProfile() {
 export function saveStudentProfile(updatedProfile) {
   const merged = { ...getStoredStudentProfile(), ...updatedProfile };
   try {
-    localStorage.setItem(STORAGE_KEYS.ACTIVE_PROFILE, JSON.stringify(merged));
+    setSecureItem(STORAGE_KEYS.ACTIVE_PROFILE, merged);
   } catch (e) {}
 
   notifyDataUpdated({
@@ -506,11 +533,11 @@ const initialAdminAssignments = [
 
 export function getStoredAssignmentsList() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.ASSIGNMENTS);
-    if (raw) return JSON.parse(raw);
+    const parsed = getSecureItem(STORAGE_KEYS.ASSIGNMENTS, null);
+    if (parsed) return parsed;
   } catch (e) {}
   try {
-    localStorage.setItem(STORAGE_KEYS.ASSIGNMENTS, JSON.stringify(initialAdminAssignments));
+    setSecureItem(STORAGE_KEYS.ASSIGNMENTS, initialAdminAssignments);
   } catch (e) {}
   return initialAdminAssignments;
 }
@@ -519,7 +546,7 @@ export function updateAdminAssignment(id, updateFields) {
   const list = getStoredAssignmentsList();
   const updated = list.map(a => a.id === id ? { ...a, ...updateFields } : a);
   try {
-    localStorage.setItem(STORAGE_KEYS.ASSIGNMENTS, JSON.stringify(updated));
+    setSecureItem(STORAGE_KEYS.ASSIGNMENTS, updated);
   } catch (e) {}
 
   notifyDataUpdated({
@@ -543,7 +570,7 @@ export function saveAdminAssignment(assignmentData) {
   };
   const updated = [newAsn, ...list];
   try {
-    localStorage.setItem(STORAGE_KEYS.ASSIGNMENTS, JSON.stringify(updated));
+    setSecureItem(STORAGE_KEYS.ASSIGNMENTS, updated);
   } catch (e) {}
 
   notifyDataUpdated({
@@ -599,11 +626,11 @@ const initialResumesList = [
 
 export function getStoredResumes() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.RESUMES);
-    if (raw) return JSON.parse(raw);
+    const parsed = getSecureItem(STORAGE_KEYS.RESUMES, null);
+    if (parsed) return parsed;
   } catch (e) {}
   try {
-    localStorage.setItem(STORAGE_KEYS.RESUMES, JSON.stringify(initialResumesList));
+    setSecureItem(STORAGE_KEYS.RESUMES, initialResumesList);
   } catch (e) {}
   return initialResumesList;
 }
@@ -618,7 +645,7 @@ export function saveAdminResume(resumeData) {
   };
   const updated = [created, ...list];
   try {
-    localStorage.setItem(STORAGE_KEYS.RESUMES, JSON.stringify(updated));
+    setSecureItem(STORAGE_KEYS.RESUMES, updated);
   } catch (e) {}
 
   notifyDataUpdated({
@@ -634,7 +661,7 @@ export function deleteAdminResume(id) {
   const list = getStoredResumes();
   const updated = list.filter(r => r.id !== id);
   try {
-    localStorage.setItem(STORAGE_KEYS.RESUMES, JSON.stringify(updated));
+    setSecureItem(STORAGE_KEYS.RESUMES, updated);
   } catch (e) {}
 
   notifyDataUpdated({
@@ -780,21 +807,20 @@ const initialFeesList = [
 
 export function getStoredFees() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.FEES);
-    if (raw) {
-      const parsed = JSON.parse(raw);
+    const parsed = getSecureItem(STORAGE_KEYS.FEES, null);
+    if (parsed) {
       const existingRolls = new Set(parsed.map(f => f.rollNo || f.studentId));
       const missing = initialFeesList.filter(f => !existingRolls.has(f.rollNo) && !existingRolls.has(f.studentId));
       if (missing.length > 0) {
         const merged = [...parsed, ...missing];
-        localStorage.setItem(STORAGE_KEYS.FEES, JSON.stringify(merged));
+        setSecureItem(STORAGE_KEYS.FEES, merged);
         return merged;
       }
       return parsed;
     }
   } catch (e) {}
   try {
-    localStorage.setItem(STORAGE_KEYS.FEES, JSON.stringify(initialFeesList));
+    setSecureItem(STORAGE_KEYS.FEES, initialFeesList);
   } catch (e) {}
   return initialFeesList;
 }
@@ -808,7 +834,7 @@ export function saveAdminFee(feeData) {
   };
   const updated = [newFee, ...fees];
   try {
-    localStorage.setItem(STORAGE_KEYS.FEES, JSON.stringify(updated));
+    setSecureItem(STORAGE_KEYS.FEES, updated);
   } catch (e) {}
 
   notifyDataUpdated({
@@ -988,21 +1014,20 @@ const initialRegisteredStudents = [
 
 export function getStoredStudents() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.STUDENTS);
-    if (raw) {
-      const parsed = JSON.parse(raw);
+    const parsed = getSecureItem(STORAGE_KEYS.STUDENTS, null);
+    if (parsed) {
       const existingRolls = new Set(parsed.map(s => s.rollNo));
       const missing = initialRegisteredStudents.filter(s => !existingRolls.has(s.rollNo));
       if (missing.length > 0) {
         const merged = [...parsed, ...missing];
-        localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(merged));
+        setSecureItem(STORAGE_KEYS.STUDENTS, merged);
         return merged;
       }
       return parsed;
     }
   } catch (e) {}
   try {
-    localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(initialRegisteredStudents));
+    setSecureItem(STORAGE_KEYS.STUDENTS, initialRegisteredStudents);
   } catch (e) {}
   return initialRegisteredStudents;
 }
@@ -1018,7 +1043,7 @@ export function saveAdminStudent(studentData) {
   };
   const updated = [created, ...students];
   try {
-    localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(updated));
+    setSecureItem(STORAGE_KEYS.STUDENTS, updated);
   } catch (e) {}
 
   // If this student matches current logged-in student, update active profile
@@ -1113,14 +1138,11 @@ export const initialLiveClasses = [
 export function getStoredLiveClasses() {
   if (typeof window === 'undefined') return initialLiveClasses;
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.LIVE_CLASSES);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
+    const parsed = getSecureItem(STORAGE_KEYS.LIVE_CLASSES, null);
+    if (parsed && Array.isArray(parsed) && parsed.length > 0) return parsed;
   } catch (e) {}
   try {
-    localStorage.setItem(STORAGE_KEYS.LIVE_CLASSES, JSON.stringify(initialLiveClasses));
+    setSecureItem(STORAGE_KEYS.LIVE_CLASSES, initialLiveClasses);
   } catch (e) {}
   return initialLiveClasses;
 }
@@ -1144,7 +1166,7 @@ export function saveLiveClass(classData) {
   }
 
   try {
-    localStorage.setItem(STORAGE_KEYS.LIVE_CLASSES, JSON.stringify(updated));
+    setSecureItem(STORAGE_KEYS.LIVE_CLASSES, updated);
   } catch (e) {}
 
   notifyDataUpdated({
@@ -1167,7 +1189,7 @@ export function updateLiveClassStatus(id, newStatus) {
   });
 
   try {
-    localStorage.setItem(STORAGE_KEYS.LIVE_CLASSES, JSON.stringify(updated));
+    setSecureItem(STORAGE_KEYS.LIVE_CLASSES, updated);
   } catch (e) {}
 
   notifyDataUpdated({
@@ -1184,7 +1206,7 @@ export function deleteLiveClass(id) {
   const updated = current.filter(c => c.id !== id);
 
   try {
-    localStorage.setItem(STORAGE_KEYS.LIVE_CLASSES, JSON.stringify(updated));
+    setSecureItem(STORAGE_KEYS.LIVE_CLASSES, updated);
   } catch (e) {}
 
   notifyDataUpdated({

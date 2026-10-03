@@ -18,6 +18,7 @@ import {
 import Logo from '../components/Logo';
 import { getStoredStudents, saveStudentProfile } from '../utils/lmsStorage';
 import { studentProfile as defaultStudentProfile } from '../data/mockData';
+import { sanitizeString } from '../utils/securityShield';
 
 export default function LoginPage({ onStudentLoginSuccess, onAdminLoginSuccess }) {
   const [authRole, setAuthRole] = useState('student'); // 'student' | 'admin'
@@ -50,7 +51,8 @@ export default function LoginPage({ onStudentLoginSuccess, onAdminLoginSuccess }
     setErrorMessage('');
     setSuccessMessage('');
 
-    const cleanUser = username.trim().toLowerCase();
+    // Sanitized inputs against injection vectors
+    const cleanUser = sanitizeString(username).trim().toLowerCase();
     const cleanPass = password.trim();
 
     // 1. Check if user is logging into Admin Portal
