@@ -32,13 +32,16 @@ import {
   Search,
   Filter,
   Users,
-  CheckCheck
+  CheckCheck,
+  Receipt
 } from 'lucide-react';
+import InvoiceFormatModal from '../components/InvoiceFormatModal';
 
 export default function ProgressReportPage({ student }) {
   // Navigation tabs: 'sms-performance', 'sms-reviews', 'skills', 'assignments', 'capstones'
   const [activeTab, setActiveTab] = useState('sms-performance');
   const [gradeCardModalOpen, setGradeCardModalOpen] = useState(false);
+  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [reviewFilter, setReviewFilter] = useState('all'); // 'all', 'faculty', 'mentor', 'student'
   const [searchModule, setSearchModule] = useState('');
@@ -310,6 +313,14 @@ export default function ProgressReportPage({ student }) {
         </div>
 
         <div className="flex items-center gap-2.5 self-start sm:self-auto">
+          <button 
+            onClick={() => setInvoiceModalOpen(true)}
+            className="px-3.5 py-1.5 rounded-xl bg-teal-500/10 hover:bg-teal-500/20 text-teal-700 border border-teal-500/30 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+          >
+            <Receipt className="w-3.5 h-3.5" />
+            <span>Tax Invoice</span>
+          </button>
+
           <button 
             onClick={() => setGradeCardModalOpen(true)}
             className="px-3.5 py-1.5 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 border border-orange-500/30 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer"
@@ -1284,6 +1295,28 @@ export default function ProgressReportPage({ student }) {
           </div>
         </div>
       )}
+
+      {/* Official Tax Invoice Format Modal */}
+      <InvoiceFormatModal
+        isOpen={invoiceModalOpen}
+        invoice={{
+          id: "DVA/2026-27/INV-0142",
+          date: "15.06.2026",
+          student: student.name,
+          rollNo: student.studentId,
+          branch: "Bhubaneswar Center",
+          course: `${student.courseCode} - Core Analytics & Machine Learning (Term 1)`,
+          batch: student.batch,
+          totalAmount: 65000,
+          baseFee: 55085,
+          gst: 9915,
+          status: "Paid in Full",
+          paymentMode: "Razorpay / UPI",
+          refNumber: "PAY_20260615_88129",
+          counselor: "Debendra Das Debadutta"
+        }}
+        onClose={() => setInvoiceModalOpen(false)}
+      />
 
     </div>
   );

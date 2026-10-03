@@ -50,6 +50,7 @@ import {
   getStoredAssignmentsList,
   updateAdminAssignment
 } from '../utils/lmsStorage';
+import InvoiceFormatModal from './InvoiceFormatModal';
 
 export const masterApplicationDropdownList = [
   "All",
@@ -3766,6 +3767,8 @@ export function RegistrationView({ showToast }) {
 // =========================================================================
 export function FeeView({ showToast }) {
   const students = useMemo(() => getStoredStudents(), []);
+  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
+  const [activeInvoice, setActiveInvoice] = useState(null);
   const [feeForm, setFeeForm] = useState({
     date: "01-10-2026",
     studentId: "9955774102",
@@ -3999,16 +4002,50 @@ export function FeeView({ showToast }) {
           </div>
         </div>
 
-        {/* Submit Button */}
-        <div className="pt-2 sm:ml-[25%]">
+        {/* Action Buttons */}
+        <div className="pt-2 sm:ml-[25%] flex flex-wrap items-center gap-3">
           <button
             type="submit"
             className="bg-[#26b99a] hover:bg-[#1f967d] text-white font-bold text-xs px-6 py-2 rounded-[3px] shadow-2xs cursor-pointer transition-colors"
           >
-            Submit
+            Submit & Record Fee
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const studentObj = students.find(s => s.phone === feeForm.studentId || s.rollNo?.includes(feeForm.studentId));
+              const amountVal = Number(feeForm.amount) || 35000;
+              const generatedInv = {
+                id: `DVA/2026-27/INV-${Math.floor(1000 + Math.random() * 9000)}`,
+                date: feeForm.date || new Date().toLocaleDateString('en-GB'),
+                student: studentObj?.name || "STUDENT " + feeForm.studentId,
+                rollNo: studentObj?.rollNo || feeForm.studentId,
+                branch: studentObj?.branch || "Bhubaneswar",
+                course: feeForm.course || "APIDS",
+                batch: feeForm.batch || "BATCH 202606",
+                totalAmount: amountVal,
+                paymentMode: feeForm.modeOfPay || "UPI",
+                refNumber: feeForm.remarks || "UTR-20261001-99824",
+                counselor: "Debendra Das Debadutta"
+              };
+              setActiveInvoice(generatedInv);
+              setInvoiceModalOpen(true);
+            }}
+            className="bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2 rounded-[3px] flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+          >
+            <FileText className="w-3.5 h-3.5 text-teal-400" />
+            <span>Generate & Preview Tax Invoice Format</span>
           </button>
         </div>
       </form>
+
+      {/* Official Tax Invoice Format Modal */}
+      <InvoiceFormatModal
+        isOpen={invoiceModalOpen}
+        invoice={activeInvoice}
+        onClose={() => setInvoiceModalOpen(false)}
+      />
     </div>
   );
 }

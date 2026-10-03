@@ -28,6 +28,7 @@ import {
   Briefcase
 } from 'lucide-react';
 import { exportArrayToCsv } from '../utils/excelHelper';
+import InvoiceFormatModal from './InvoiceFormatModal';
 import collectionData from '../data/collectionReportData.json';
 import { getStoredStudents, getStoredFees, getStoredAssignmentsList } from '../utils/lmsStorage';
 
@@ -365,91 +366,12 @@ export function ReportInvoiceView({ showToast }) {
         )}
       </div>
 
-      {/* Printable Invoice Modal */}
-      {selectedInvoice && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6 shadow-2xl border border-slate-300 space-y-4 text-xs font-sans">
-            <div className="flex items-center justify-between border-b pb-3">
-              <div>
-                <h4 className="font-black text-base text-slate-900">DV ANALYTICS & DATA LABS PVT LTD</h4>
-                <p className="text-[11px] text-slate-500">Official Tax Invoice & Fee Acknowledgment Receipt</p>
-              </div>
-              <button onClick={() => setSelectedInvoice(null)} className="p-1 hover:bg-slate-100 rounded">
-                <X className="w-5 h-5 text-slate-400" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-3 rounded border border-slate-200 text-[11px]">
-              <div>
-                <span className="text-slate-400 block font-bold uppercase">Invoice No:</span>
-                <span className="font-mono font-bold text-slate-800 text-xs">{selectedInvoice.id}</span>
-                <span className="text-slate-400 block font-bold uppercase mt-2">Invoice Date:</span>
-                <span className="font-mono text-slate-800">{selectedInvoice.date}</span>
-                <span className="text-slate-400 block font-bold uppercase mt-2">GSTIN / ARN:</span>
-                <span className="font-mono text-slate-800">21AAACD4498E1Z4</span>
-              </div>
-              <div>
-                <span className="text-slate-400 block font-bold uppercase">Billed To (Student):</span>
-                <span className="font-bold text-slate-900 text-xs block">{selectedInvoice.student}</span>
-                <span className="font-mono text-slate-600 block">{selectedInvoice.rollNo}</span>
-                <span className="text-slate-600 block">Branch Center: {selectedInvoice.branch}</span>
-                <span className="text-slate-600 block">Course Program: {selectedInvoice.course} ({selectedInvoice.batch})</span>
-              </div>
-            </div>
-
-            <table className="w-full border text-xs">
-              <thead className="bg-[#2A3F54] text-white">
-                <tr>
-                  <th className="py-2 px-3 text-left">Description</th>
-                  <th className="py-2 px-3 text-right">Taxable Amount</th>
-                  <th className="py-2 px-3 text-right">CGST (9%)</th>
-                  <th className="py-2 px-3 text-right">SGST (9%)</th>
-                  <th className="py-2 px-3 text-right">Total Net</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b">
-                  <td className="py-2.5 px-3">
-                    <span className="font-bold block">{selectedInvoice.course} Tuition & Lab Fees</span>
-                    <span className="text-[10px] text-slate-400">Payment Mode: {selectedInvoice.paymentMode} (Ref: {selectedInvoice.refNumber})</span>
-                  </td>
-                  <td className="py-2.5 px-3 text-right font-mono">₹{selectedInvoice.baseFee.toLocaleString('en-IN')}</td>
-                  <td className="py-2.5 px-3 text-right font-mono">₹{Math.round(selectedInvoice.gst / 2).toLocaleString('en-IN')}</td>
-                  <td className="py-2.5 px-3 text-right font-mono">₹{Math.round(selectedInvoice.gst / 2).toLocaleString('en-IN')}</td>
-                  <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-800">₹{selectedInvoice.totalAmount.toLocaleString('en-IN')}</td>
-                </tr>
-              </tbody>
-              <tfoot className="bg-slate-100 font-bold">
-                <tr>
-                  <td colSpan={4} className="py-2 px-3 text-right uppercase">Net Amount Paid:</td>
-                  <td className="py-2 px-3 text-right font-mono text-sm text-emerald-700">₹{selectedInvoice.totalAmount.toLocaleString('en-IN')}</td>
-                </tr>
-              </tfoot>
-            </table>
-
-            <div className="pt-3 border-t flex items-center justify-between text-[11px] text-slate-500">
-              <span>Counselor: {selectedInvoice.counselor} | Authorized Digital Receipt</span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => window.print()}
-                  className="px-3 py-1.5 bg-slate-800 text-white rounded font-bold hover:bg-slate-900 cursor-pointer"
-                >
-                  Print Invoice
-                </button>
-                <button
-                  onClick={() => {
-                    showToast?.("Invoice PDF generated and queued for download!");
-                    setSelectedInvoice(null);
-                  }}
-                  className="px-3 py-1.5 bg-[#26B99A] text-white rounded font-bold hover:bg-teal-600 cursor-pointer"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Official Tax Invoice Format Modal */}
+      <InvoiceFormatModal
+        isOpen={!!selectedInvoice}
+        invoice={selectedInvoice}
+        onClose={() => setSelectedInvoice(null)}
+      />
     </div>
   );
 }
