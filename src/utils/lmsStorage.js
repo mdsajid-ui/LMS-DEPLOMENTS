@@ -7,7 +7,8 @@ const STORAGE_KEYS = {
   STUDENTS: 'dva_lms_students_v1',
   RESUMES: 'dva_lms_resumes_v1',
   INTERVIEW_KITS: 'dva_lms_interview_kits_v1',
-  ACTIVE_PROFILE: 'dva_lms_active_profile_v1'
+  ACTIVE_PROFILE: 'dva_lms_active_profile_v1',
+  LIVE_CLASSES: 'dva_lms_live_classes_v1'
 };
 
 // ==========================================
@@ -1039,3 +1040,159 @@ export function saveAdminStudent(studentData) {
   });
   return updated;
 }
+
+// ==========================================
+// 8. LIVE CLASSROOM & ZOOM SCHEDULE SYNC
+// ==========================================
+export const initialLiveClasses = [
+  {
+    id: "live-cls-101",
+    date: new Date().toISOString().split('T')[0],
+    time: "11:00 AM - 06:30 PM",
+    batch: "BATCH 202606",
+    cohortInfo: "Ganesh, Sajid • BATCH 202606 / 202608 / 202609",
+    subject: "SQL Server Advanced & Practical Data Lab",
+    topic: "Practical Lab & Live Doubt Clearing Session",
+    mentor: "Debashish Sir (DVMENTOR4)",
+    mentorId: "DVMENTOR4",
+    email: "dvmentor4.2024@gmail.com",
+    phone: "089042 50708 (Debashish Sir)",
+    meetingId: "754 061 9228",
+    rawMeetingId: "7540619228",
+    passcode: "281340",
+    zoomJoinUrl: "https://zoom.us/j/7540619228?pwd=cENiVlhqNVY5SERhUHRwckdJREZMQT09",
+    webJoinUrl: "https://app.zoom.us/wc/7540619228/join?pwd=cENiVlhqNVY5SERhUHRwckdJREZMQT09",
+    hostStartUrl: "https://zoom.us/s/7540619228?pwd=cENiVlhqNVY5SERhUHRwckdJREZMQT09",
+    status: "LIVE NOW",
+    isPrimary: true
+  },
+  {
+    id: "live-cls-102",
+    date: new Date().toISOString().split('T')[0],
+    time: "07:00 PM - 09:00 PM",
+    batch: "BATCH 202608",
+    cohortInfo: "APIDS Master Cohort • BATCH 202608",
+    subject: "Excel Base and Advanced",
+    topic: "Power Query Automation, DAX & Dynamic Modeling",
+    mentor: "Debendra Debadutta Das (DVMENTOR1)",
+    mentorId: "DVMENTOR1",
+    email: "dvmentor1@dvanalyticsmds.com",
+    phone: "089042 50701",
+    meetingId: "812 345 6789",
+    rawMeetingId: "8123456789",
+    passcode: "100200",
+    zoomJoinUrl: "https://zoom.us/j/8123456789?pwd=DVMENTOR1PASS",
+    webJoinUrl: "https://zoom.us/wc/join/8123456789?pwd=DVMENTOR1PASS",
+    hostStartUrl: "https://zoom.us/s/8123456789?pwd=DVMENTOR1PASS",
+    status: "SCHEDULED",
+    isPrimary: false
+  },
+  {
+    id: "live-cls-103",
+    date: new Date().toISOString().split('T')[0],
+    time: "10:00 AM - 01:00 PM",
+    batch: "BATCH 202609",
+    cohortInfo: "Weekend Data Science • BATCH 202609",
+    subject: "Python Analytics",
+    topic: "Pandas Data Cleaning, GroupBy & Visualizations",
+    mentor: "Dr. Sandip Mukherjee (DVMENTOR2)",
+    mentorId: "DVMENTOR2",
+    email: "dvmentor2@dvanalyticsmds.com",
+    phone: "089042 50702",
+    meetingId: "823 456 7890",
+    rawMeetingId: "8234567890",
+    passcode: "200300",
+    zoomJoinUrl: "https://zoom.us/j/8234567890?pwd=DVMENTOR2PASS",
+    webJoinUrl: "https://zoom.us/wc/join/8234567890?pwd=DVMENTOR2PASS",
+    hostStartUrl: "https://zoom.us/s/8234567890?pwd=DVMENTOR2PASS",
+    status: "SCHEDULED",
+    isPrimary: false
+  }
+];
+
+export function getStoredLiveClasses() {
+  if (typeof window === 'undefined') return initialLiveClasses;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.LIVE_CLASSES);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+  try {
+    localStorage.setItem(STORAGE_KEYS.LIVE_CLASSES, JSON.stringify(initialLiveClasses));
+  } catch (e) {}
+  return initialLiveClasses;
+}
+
+export function saveLiveClass(classData) {
+  const current = getStoredLiveClasses();
+  let updated;
+  if (classData.id) {
+    const exists = current.some(c => c.id === classData.id);
+    if (exists) {
+      updated = current.map(c => c.id === classData.id ? { ...c, ...classData } : c);
+    } else {
+      updated = [classData, ...current];
+    }
+  } else {
+    const newClass = {
+      ...classData,
+      id: `live-cls-${Date.now()}`
+    };
+    updated = [newClass, ...current];
+  }
+
+  try {
+    localStorage.setItem(STORAGE_KEYS.LIVE_CLASSES, JSON.stringify(updated));
+  } catch (e) {}
+
+  notifyDataUpdated({
+    type: 'live_classes',
+    classes: updated,
+    message: `Live class updated: ${classData.subject || 'Live Session'}`
+  });
+
+  return updated;
+}
+
+export function updateLiveClassStatus(id, newStatus) {
+  const current = getStoredLiveClasses();
+  const updated = current.map(c => {
+    if (c.id === id) {
+      return { ...c, status: newStatus };
+    }
+    // If setting to LIVE NOW, other classes for same batch can be scheduled
+    return c;
+  });
+
+  try {
+    localStorage.setItem(STORAGE_KEYS.LIVE_CLASSES, JSON.stringify(updated));
+  } catch (e) {}
+
+  notifyDataUpdated({
+    type: 'live_classes',
+    classes: updated,
+    message: `Live class status changed to ${newStatus}`
+  });
+
+  return updated;
+}
+
+export function deleteLiveClass(id) {
+  const current = getStoredLiveClasses();
+  const updated = current.filter(c => c.id !== id);
+
+  try {
+    localStorage.setItem(STORAGE_KEYS.LIVE_CLASSES, JSON.stringify(updated));
+  } catch (e) {}
+
+  notifyDataUpdated({
+    type: 'live_classes',
+    classes: updated,
+    message: 'Live class schedule deleted'
+  });
+
+  return updated;
+}
+

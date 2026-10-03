@@ -18,14 +18,26 @@ import {
 } from 'lucide-react';
 import ZoomMeetingModal from '../components/ZoomMeetingModal';
 import { mentorZoomList, defaultActiveMentor } from '../data/mentorZoomData';
+import { getStoredLiveClasses, subscribeToDataUpdates } from '../utils/lmsStorage';
 
 export default function ClassPage({ student }) {
   const [zoomModalOpen, setZoomModalOpen] = useState(false);
   const [activeMentorId, setActiveMentorId] = useState("DVMENTOR4");
   const [copiedId, setCopiedId] = useState(false);
   const [copiedPass, setCopiedPass] = useState(false);
+  const [liveClasses, setLiveClasses] = useState(() => getStoredLiveClasses());
 
-  const featuredMentor = mentorZoomList.find(m => m.id === "DVMENTOR4") || defaultActiveMentor;
+  useEffect(() => {
+    const unsub = subscribeToDataUpdates((e) => {
+      if (e?.type === 'live_classes' || e?.type === 'storage_sync') {
+        setLiveClasses(getStoredLiveClasses());
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const currentActiveClass = liveClasses.find(c => c.status === "LIVE NOW") || liveClasses[0];
+  const featuredMentor = mentorZoomList.find(m => m.id === (currentActiveClass?.mentorId || "DVMENTOR4")) || defaultActiveMentor;
 
   const handleOpenZoom = (mentorId = "DVMENTOR4") => {
     setActiveMentorId(mentorId);
@@ -227,6 +239,101 @@ export default function ClassPage({ student }) {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Live Class Schedule & Broadcast Center */}
+      <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-teal-600" />
+            <div>
+              <h3 className="font-extrabold text-slate-900 text-base">Scheduled Live Class Timetable</h3>
+              <p className="text-xs text-slate-500">Live sessions broadcasted by DV Analytics Admin & Faculty Team</p>
+            </div>
+          </div>
+          <span className="text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200 px-3 py-1 rounded-full self-start sm:self-auto flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
+            Synced with Admin Portal
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200">
+                <th className="py-2.5 px-3">Date & Slot</th>
+                <th className="py-2.5 px-3">Batch</th>
+                <th className="py-2.5 px-3">Subject & Session Agenda</th>
+                <th className="py-2.5 px-3">Mentor Room</th>
+                <th className="py-2.5 px-3 text-center">Status</th>
+                <th className="py-2.5 px-3 text-right">Join Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {liveClasses.map((cls) => {
+                const isLive = cls.status === "LIVE NOW";
+                return (
+                  <tr key={cls.id} className={`hover:bg-slate-50/70 transition-colors ${isLive ? 'bg-red-50/30' : ''}`}>
+                    <td className="py-3 px-3 whitespace-nowrap">
+                      <div className="font-bold text-slate-900">{cls.date}</div>
+                      <div className="text-slate-500 text-[11px] flex items-center gap-1 mt-0.5">
+                        <Clock className="w-3 h-3 text-slate-400" />
+                        <span>{cls.time}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 whitespace-nowrap">
+                      <span className="px-2 py-0.5 rounded-full font-bold text-[11px] bg-teal-50 text-teal-800 border border-teal-200">
+                        {cls.batch}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="font-bold text-slate-900">{cls.subject}</div>
+                      <div className="text-slate-500 text-[11px]">{cls.topic}</div>
+                    </td>
+                    <td className="py-3 px-3 whitespace-nowrap">
+                      <span className="font-mono font-bold text-slate-800 mr-1.5">{cls.mentorId}</span>
+                      <span className="text-slate-600 text-[11px]">({cls.mentor?.split('(')[0] || cls.mentor})</span>
+                    </td>
+                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${
+                        isLive 
+                          ? 'bg-red-100 text-red-700 animate-pulse border border-red-200' 
+                          : 'bg-blue-50 text-blue-700 border border-blue-200'
+                      }`}>
+                        {isLive && <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>}
+                        {cls.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => handleOpenZoom(cls.mentorId || "DVMENTOR4")}
+                          className={`py-1.5 px-3 rounded-xl font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer ${
+                            isLive
+                              ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white shadow-xs'
+                              : 'bg-slate-900 hover:bg-slate-800 text-white'
+                          }`}
+                        >
+                          <Video className="w-3.5 h-3.5" />
+                          <span>{isLive ? 'Join Live Now' : 'Enter Room'}</span>
+                        </button>
+                        <a
+                          href={cls.webJoinUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1.5 px-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-700 text-[11px] font-semibold transition-colors"
+                          title="Join via Web Browser"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 

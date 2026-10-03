@@ -77,6 +77,7 @@ import {
   AssignBatchView,
   MockInterviewFeedbackView
 } from '../components/AdminMasterViews';
+import ClassManagementView from '../components/ClassManagementView';
 import {
   ReportInvoiceView,
   ReportStudentView,
@@ -170,6 +171,12 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     if (url.includes('rpt_mcq') || url.includes('report-mcq')) return 'report-mcq';
     if (url.includes('rpt_practical') || url.includes('report-practical')) return 'report-practical';
     if (url.includes('rpt_expense') || url.includes('report-expense')) return 'report-expense';
+    if (url.includes('class.aspx') || url.includes('/class')) return 'class';
+    if (url.includes('discussionforum') || url.includes('discussion-forum')) return 'discussion-forum';
+    if (url.includes('appusers') || url.includes('app-users')) return 'app-users';
+    if (url.includes('importlead') || url.includes('import-lead')) return 'import-lead';
+    if (url.includes('batchcompletion') || url.includes('batch-completion')) return 'batch-completion';
+    if (url.includes('assignbatchcollection') || url.includes('assign-batch-collection')) return 'assign-batch-collection';
     if (url.includes('fee')) return 'fee';
     if (url.includes('sessiondelete')) return 'session-delete';
     if (url.includes('sessionsp')) return 'non-live-session';
@@ -207,6 +214,13 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     else if (menuKey === 'pay-approval') window.location.hash = '/admin/PayApproval.aspx';
     else if (menuKey === 'external-link') window.location.hash = '/admin/external_link.aspx';
     else if (menuKey === 'fee') window.location.hash = '/admin/Fee.aspx';
+    else if (menuKey === 'class') window.location.hash = '/admin/Class.aspx';
+    else if (menuKey === 'discussion-forum') window.location.hash = '/admin/DiscussionForum.aspx';
+    else if (menuKey === 'app-users') window.location.hash = '/admin/AppUsers.aspx';
+    else if (menuKey === 'import-lead') window.location.hash = '/admin/ImportLead.aspx';
+    else if (menuKey === 'batch-completion') window.location.hash = '/admin/BatchCompletion.aspx';
+    else if (menuKey === 'assign-batch-collection') window.location.hash = '/admin/AssignBatchForCollection.aspx';
+    else if (menuKey === 'expense') window.location.hash = '/admin/Expense.aspx';
     else if (menuKey === 'session') window.location.hash = '/admin/Session.aspx';
     else if (menuKey === 'session-delete') window.location.hash = '/admin/sessiondelete.aspx';
     else if (menuKey === 'reg') window.location.hash = '/admin/Reg.aspx';
@@ -969,24 +983,55 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'mock-interview' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
                   <span>Mock Interview</span>
                 </button>
-                {[
-                  "Discussion Forum", 
-                  "App Users", 
-                  "Class", 
-                  "Import Lead", 
-                  "Batch Completion", 
-                  "Assign Batch For Collection", 
-                  "Expense"
-                ].map(t => (
-                  <button
-                    key={t}
-                    onClick={() => showToast(`Selected transaction: ${t}`)}
-                    className="w-full flex items-center gap-2.5 py-1.5 px-3 rounded text-slate-300 hover:text-white hover:bg-[#1f2b37] transition-colors text-left group cursor-pointer"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-500 group-hover:bg-[#1abb9c] shrink-0 -ml-1 transition-colors" />
-                    <span>{t}</span>
-                  </button>
-                ))}
+                <button
+                  onClick={() => handleSelectMenu('class')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'class' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'class' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>Class</span>
+                </button>
+                <button
+                  onClick={() => handleSelectMenu('discussion-forum')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'discussion-forum' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'discussion-forum' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>Discussion Forum</span>
+                </button>
+                <button
+                  onClick={() => handleSelectMenu('app-users')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'app-users' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'app-users' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>App Users</span>
+                </button>
+                <button
+                  onClick={() => handleSelectMenu('import-lead')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'import-lead' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'import-lead' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>Import Lead</span>
+                </button>
+                <button
+                  onClick={() => handleSelectMenu('batch-completion')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'batch-completion' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'batch-completion' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>Batch Completion</span>
+                </button>
+                <button
+                  onClick={() => handleSelectMenu('assign-batch-collection')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'assign-batch-collection' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'assign-batch-collection' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>Assign Batch For Collection</span>
+                </button>
+                <button
+                  onClick={() => handleSelectMenu('expense')}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'expense' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'expense' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span>Expense</span>
+                </button>
               </div>
             )}
           </div>
@@ -1209,6 +1254,13 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                 {activeMenu === 'exe-users' && "Release User"}
                 {activeMenu === 'assign-batch' && "Assign Batch"}
                 {activeMenu === 'mock-interview' && "Mock Interview Feedback"}
+                {activeMenu === 'class' && "Class (Class.aspx) - Live Classroom & Mentorship Scheduling"}
+                {activeMenu === 'discussion-forum' && "Discussion Forum (DiscussionForum.aspx)"}
+                {activeMenu === 'app-users' && "App Users (AppUsers.aspx)"}
+                {activeMenu === 'import-lead' && "Import Lead (ImportLead.aspx)"}
+                {activeMenu === 'batch-completion' && "Batch Completion (BatchCompletion.aspx)"}
+                {activeMenu === 'assign-batch-collection' && "Assign Batch For Collection (AssignBatchCollection.aspx)"}
+                {activeMenu === 'expense' && "Expense Ledger (Expense.aspx)"}
                 {activeMenu === 'monthly-collection' && "Monthly Collection (rpt_CollectionSummary.aspx)"}
                 {activeMenu === 'daily-collection' && "Daily Collection Ledger (rpt_Collection.aspx)"}
                 {activeMenu === 'report-invoice' && "Fee Invoice Register (rpt_Invoice.aspx)"}
@@ -1415,6 +1467,91 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
           {/* ========================================================= */}
           {activeMenu === 'mock-interview' && (
             <MockInterviewFeedbackView showToast={showToast} />
+          )}
+
+          {/* ========================================================= */}
+          {/* VIEW 4J: LIVE CLASSROOM & ZOOM SCHEDULE (Class.aspx)       */}
+          {/* ========================================================= */}
+          {activeMenu === 'class' && (
+            <ClassManagementView 
+              showToast={showToast} 
+              onNavigateToSession={(batch, subject) => handleSelectMenu('session')} 
+            />
+          )}
+
+          {/* VIEW 4K: DISCUSSION FORUM (DiscussionForum.aspx) */}
+          {activeMenu === 'discussion-forum' && (
+            <div className="bg-white rounded border border-slate-200 p-6 space-y-4">
+              <div className="flex items-center justify-between border-b pb-3">
+                <h3 className="text-sm font-bold text-slate-800">Discussion Forum & Query Center</h3>
+                <span className="text-[11px] bg-teal-50 text-teal-700 px-2 py-0.5 rounded font-mono font-bold">DiscussionForum.aspx</span>
+              </div>
+              <p className="text-xs text-slate-500">Student queries, mentor discussions, and technical doubt threads across all batches.</p>
+              <div className="border rounded p-4 bg-slate-50 text-xs text-slate-600">
+                All forum threads and doubt resolution feeds are active and synchronized with LMS.
+              </div>
+            </div>
+          )}
+
+          {/* VIEW 4L: APP USERS (AppUsers.aspx) */}
+          {activeMenu === 'app-users' && (
+            <div className="bg-white rounded border border-slate-200 p-6 space-y-4">
+              <div className="flex items-center justify-between border-b pb-3">
+                <h3 className="text-sm font-bold text-slate-800">App Users Management</h3>
+                <span className="text-[11px] bg-teal-50 text-teal-700 px-2 py-0.5 rounded font-mono font-bold">AppUsers.aspx</span>
+              </div>
+              <p className="text-xs text-slate-500">Registered application logins, device sessions, and role permissions.</p>
+              <div className="border rounded p-4 bg-slate-50 text-xs text-slate-600">
+                Connected App Users Roster: All student and faculty mobile/web sessions logged.
+              </div>
+            </div>
+          )}
+
+          {/* VIEW 4M: IMPORT LEAD (ImportLead.aspx) */}
+          {activeMenu === 'import-lead' && (
+            <div className="bg-white rounded border border-slate-200 p-6 space-y-4">
+              <div className="flex items-center justify-between border-b pb-3">
+                <h3 className="text-sm font-bold text-slate-800">Import Student Inquiries & Leads</h3>
+                <span className="text-[11px] bg-teal-50 text-teal-700 px-2 py-0.5 rounded font-mono font-bold">ImportLead.aspx</span>
+              </div>
+              <p className="text-xs text-slate-500">Upload Excel lead sheets, map columns, and assign telecallers.</p>
+              <div className="border rounded p-4 bg-slate-50 text-xs text-slate-600">
+                Lead intake channel ready. Excel and CSV bulk import active.
+              </div>
+            </div>
+          )}
+
+          {/* VIEW 4N: BATCH COMPLETION (BatchCompletion.aspx) */}
+          {activeMenu === 'batch-completion' && (
+            <div className="bg-white rounded border border-slate-200 p-6 space-y-4">
+              <div className="flex items-center justify-between border-b pb-3">
+                <h3 className="text-sm font-bold text-slate-800">Batch Completion & Certification</h3>
+                <span className="text-[11px] bg-teal-50 text-teal-700 px-2 py-0.5 rounded font-mono font-bold">BatchCompletion.aspx</span>
+              </div>
+              <p className="text-xs text-slate-500">Track cohort curriculum milestones, practical evaluation defense, and graduation eligibility.</p>
+              <div className="border rounded p-4 bg-slate-50 text-xs text-slate-600">
+                Active Cohort BATCH 202606: 82% complete. BATCH 202608: In progress.
+              </div>
+            </div>
+          )}
+
+          {/* VIEW 4O: ASSIGN BATCH FOR COLLECTION */}
+          {activeMenu === 'assign-batch-collection' && (
+            <div className="bg-white rounded border border-slate-200 p-6 space-y-4">
+              <div className="flex items-center justify-between border-b pb-3">
+                <h3 className="text-sm font-bold text-slate-800">Assign Batch For Fee Collection</h3>
+                <span className="text-[11px] bg-teal-50 text-teal-700 px-2 py-0.5 rounded font-mono font-bold">AssignBatchCollection.aspx</span>
+              </div>
+              <p className="text-xs text-slate-500">Assign accounts executives and collection targets per active batch.</p>
+              <div className="border rounded p-4 bg-slate-50 text-xs text-slate-600">
+                Accounts executive assignment roster linked to collection ledger.
+              </div>
+            </div>
+          )}
+
+          {/* VIEW 4P: EXPENSE */}
+          {activeMenu === 'expense' && (
+            <ReportExpenseView showToast={showToast} />
           )}
 
           {/* ========================================================= */}
