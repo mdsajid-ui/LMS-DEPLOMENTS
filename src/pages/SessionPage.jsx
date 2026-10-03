@@ -25,8 +25,67 @@ import {
   Send
 } from 'lucide-react';
 import { getSubjectSessions, studentProfile, excelMasterDriveFolder, sqlMasterDriveFolder, pythonMasterDriveFolder } from '../data/mockData';
-import { getSubjectStoredSessions } from '../utils/lmsStorage';
+import { getSubjectStoredSessions, subscribeToDataUpdates, findSessionFolderIndex } from '../utils/lmsStorage';
 import { downloadFile, generateAndDownloadExcel } from '../utils/excelHelper';
+
+/**
+ * Universal Video URL Parser: Detects YouTube, Google Drive, VdoCipher, Vimeo, or direct MP4/WebM/blob
+ */
+export function parseVideoUrl(rawUrl) {
+  if (!rawUrl) return { type: 'direct', src: './sample-lecture.mp4' };
+  const url = String(rawUrl).trim();
+
+  // YouTube match
+  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+  if (ytMatch && ytMatch[1]) {
+    return {
+      type: 'youtube',
+      embedUrl: `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&rel=0&modestbranding=1`,
+      videoId: ytMatch[1]
+    };
+  }
+
+  // Google Drive match
+  if (url.includes('drive.google.com')) {
+    const driveFileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (driveFileMatch && driveFileMatch[1]) {
+      return {
+        type: 'drive',
+        embedUrl: `https://drive.google.com/file/d/${driveFileMatch[1]}/preview`,
+        fileId: driveFileMatch[1]
+      };
+    }
+    return {
+      type: 'drive',
+      embedUrl: url.replace('/view', '/preview'),
+      fileId: ''
+    };
+  }
+
+  // VdoCipher match
+  if (url.includes('player.vdocipher.com') || url.includes('vdocipher')) {
+    return {
+      type: 'vdocipher',
+      embedUrl: url
+    };
+  }
+
+  // Vimeo match
+  const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vimeoMatch && vimeoMatch[1]) {
+    return {
+      type: 'vimeo',
+      embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`,
+      videoId: vimeoMatch[1]
+    };
+  }
+
+  // Direct video file (MP4, WebM, blob:, uploaded link, etc.)
+  return {
+    type: 'direct',
+    src: url
+  };
+}
 
 export default function SessionPage({ 
   student = studentProfile, 
@@ -45,16 +104,25 @@ export default function SessionPage({
     setSessions(getSubjectStoredSessions(subjectName));
   }, [subjectName]);
 
+  // Real-time multi-tab & cross-window live listener
   useEffect(() => {
-    const handleDataUpdate = () => {
-      setSessions(getSubjectStoredSessions(subjectName));
-    };
-    window.addEventListener('dva_data_updated', handleDataUpdate);
-    window.addEventListener('storage', handleDataUpdate);
-    return () => {
-      window.removeEventListener('dva_data_updated', handleDataUpdate);
-      window.removeEventListener('storage', handleDataUpdate);
-    };
+    const unsubscribe = subscribeToDataUpdates((detail) => {
+      const freshSessions = getSubjectStoredSessions(subjectName);
+      setSessions(freshSessions);
+
+      // If current session was updated, update selectedSession too
+      setSelectedSession(prev => {
+        if (!prev) return freshSessions[1] || freshSessions[0];
+        const match = freshSessions.find(s => s.id === prev.id || (s.title && prev.title && s.title.toLowerCase() === prev.title.toLowerCase()));
+        return match || prev;
+      });
+
+      if (detail && detail.sessionTitle) {
+        showToast(`⚡ Live Admin Sync: ${detail.sessionTitle} video is now live!`);
+      }
+    });
+
+    return () => unsubscribe();
   }, [subjectName]);
   
   // Selected session for SessionVideo.aspx
@@ -65,7 +133,9 @@ export default function SessionPage({
     sNo: 1,
     title: "Class 1",
     description: "Session 1 Class 1 Video",
-    embedUrl: defaultEmbedUrl
+    embedUrl: defaultEmbedUrl,
+    videoUrl: "./sample-lecture.mp4",
+    parsed: parseVideoUrl(defaultEmbedUrl)
   });
 
   // Video playback engine: 'direct' (unrestricted on mdsajid-ui.github.io), 'vdocipher' (encrypted DRM), 'drive' (Google Drive)
@@ -194,36 +264,45 @@ export default function SessionPage({
 
   const handleOpenVideos = (session) => {
     setSelectedSession(session);
-    setPlayerEngine('direct');
-    // Find class video items or synthesize class 1
-    const classVideos = (session.items || []).filter(item => item.type === 'video');
-    if (classVideos.length > 0) {
-      setActiveVideo({
-        sNo: 1,
-        title: classVideos[0].title || "Class 1",
-        description: classVideos[0].title || "Class 1 Video Stream",
-        embedUrl: session.vdocipherEmbedUrl || defaultEmbedUrl
-      });
-    } else {
-      setActiveVideo({
-        sNo: 1,
-        title: `${session.title} - Class 1`,
-        description: `${session.title} Class 1 Video Lecture`,
-        embedUrl: session.vdocipherEmbedUrl || defaultEmbedUrl
-      });
-    }
+    // Find class video items or synthesize from session properties
+    const vItems = (session.items || []).filter(item => item.type === 'video');
+    const targetUrl = (vItems.length > 0 && (vItems[0].videoUrl || vItems[0].embedUrl)) || session.videoUrl || session.vdocipherEmbedUrl || defaultEmbedUrl;
+    const targetTitle = (vItems.length > 0 && vItems[0].title) || `${session.title} - Class 1`;
+    const targetDesc = (vItems.length > 0 && (vItems[0].fileName || vItems[0].description)) || session.videoFileName || `${session.title} Class 1 Video Lecture`;
+    const parsed = parseVideoUrl(targetUrl);
+
+    if (parsed.type === 'vdocipher') setPlayerEngine('vdocipher');
+    else if (parsed.type === 'drive') setPlayerEngine('drive');
+    else setPlayerEngine('direct');
+
+    setActiveVideo({
+      sNo: 1,
+      title: targetTitle,
+      description: targetDesc,
+      embedUrl: targetUrl,
+      videoUrl: targetUrl,
+      parsed
+    });
     setViewMode('videos');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handlePlayClass = (sNo, title, description) => {
+  const handlePlayClass = (sNo, title, description, customUrl) => {
+    const targetUrl = customUrl || selectedSession.videoUrl || selectedSession.vdocipherEmbedUrl || defaultEmbedUrl;
+    const parsed = parseVideoUrl(targetUrl);
+
+    if (parsed.type === 'vdocipher') setPlayerEngine('vdocipher');
+    else if (parsed.type === 'drive') setPlayerEngine('drive');
+    else setPlayerEngine('direct');
+
     setActiveVideo({
       sNo,
       title,
       description: description || `${selectedSession.title} ${title} Video`,
-      embedUrl: selectedSession.vdocipherEmbedUrl || defaultEmbedUrl
+      embedUrl: targetUrl,
+      videoUrl: targetUrl,
+      parsed
     });
-    setPlayerEngine('direct');
     setIsVideoPlaying(true);
     setTimeout(() => {
       if (videoRef.current) {
@@ -471,45 +550,64 @@ export default function SessionPage({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {/* Class 1 Row */}
-                    <tr className={`hover:bg-slate-50 transition-colors ${activeVideo.sNo === 1 ? 'bg-teal-50/40' : ''}`}>
-                      <td className="py-3 px-4 font-mono font-medium text-slate-600">1</td>
-                      <td className="py-3 px-4 font-medium text-slate-800">
-                        Class 1
-                        <span className="block text-[10px] text-slate-400 font-normal">
-                          {selectedSession.videoFileName || "Class Lecture Stream"}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <button
-                          onClick={() => handlePlayClass(1, "Class 1", `${selectedSession.title} Class 1 Video`)}
-                          className="inline-flex items-center justify-center gap-1.5 bg-[#2dbd9f] hover:bg-[#25a78c] text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-2xs transition-all cursor-pointer active:scale-95"
-                        >
-                          <Play className="w-3 h-3 fill-white" />
-                          <span>Play</span>
-                        </button>
-                      </td>
-                    </tr>
+                    {(() => {
+                      const vItems = (selectedSession.items || []).filter(item => item.type === 'video');
+                      const list = vItems.length > 0
+                        ? vItems.map((v, i) => ({
+                            sNo: i + 1,
+                            title: v.title || `Class ${i + 1}`,
+                            description: v.fileName || selectedSession.videoFileName || `${selectedSession.title} Video Stream`,
+                            url: v.videoUrl || v.embedUrl || selectedSession.videoUrl || selectedSession.vdocipherEmbedUrl,
+                            isLiveUpdated: v.isLiveUpdated || selectedSession.isLiveUpdated
+                          }))
+                        : [
+                            {
+                              sNo: 1,
+                              title: "Class 1",
+                              description: selectedSession.videoFileName || `${selectedSession.title} Class 1 Video`,
+                              url: selectedSession.videoUrl || selectedSession.vdocipherEmbedUrl || defaultEmbedUrl,
+                              isLiveUpdated: selectedSession.isLiveUpdated
+                            },
+                            {
+                              sNo: 2,
+                              title: "Class 2",
+                              description: "Hands-on Problem Solving & Review",
+                              url: selectedSession.videoUrl || selectedSession.vdocipherEmbedUrl || defaultEmbedUrl,
+                              isLiveUpdated: false
+                            }
+                          ];
 
-                    {/* Class 2 Row (For multi-part lectures) */}
-                    <tr className={`hover:bg-slate-50 transition-colors ${activeVideo.sNo === 2 ? 'bg-teal-50/40' : ''}`}>
-                      <td className="py-3 px-4 font-mono font-medium text-slate-600">2</td>
-                      <td className="py-3 px-4 font-medium text-slate-800">
-                        Class 2
-                        <span className="block text-[10px] text-slate-400 font-normal">
-                          Hands-on Problem Solving & Review
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <button
-                          onClick={() => handlePlayClass(2, "Class 2", `${selectedSession.title} Class 2 Advanced Cases`)}
-                          className="inline-flex items-center justify-center gap-1.5 bg-[#2dbd9f] hover:bg-[#25a78c] text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-2xs transition-all cursor-pointer active:scale-95"
+                      return list.map((video) => (
+                        <tr 
+                          key={video.sNo} 
+                          className={`hover:bg-slate-50 transition-colors ${activeVideo.sNo === video.sNo ? 'bg-teal-50/50 font-medium' : ''}`}
                         >
-                          <Play className="w-3 h-3 fill-white" />
-                          <span>Play</span>
-                        </button>
-                      </td>
-                    </tr>
+                          <td className="py-3 px-4 font-mono font-medium text-slate-600">{video.sNo}</td>
+                          <td className="py-3 px-4 font-medium text-slate-800">
+                            <div className="flex items-center gap-2">
+                              <span>{video.title}</span>
+                              {video.isLiveUpdated && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                  LIVE • SYNCED
+                                </span>
+                              )}
+                            </div>
+                            <span className="block text-[10px] text-slate-400 font-normal truncate max-w-xs">
+                              {video.description}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <button
+                              onClick={() => handlePlayClass(video.sNo, video.title, video.description, video.url)}
+                              className="inline-flex items-center justify-center gap-1.5 bg-[#2dbd9f] hover:bg-[#25a78c] text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-2xs transition-all cursor-pointer active:scale-95"
+                            >
+                              <Play className="w-3 h-3 fill-white" />
+                              <span>Play</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ));
+                    })()}
                   </tbody>
                 </table>
               </div>
@@ -628,11 +726,71 @@ export default function SessionPage({
 
                 {/* 3. Secure Video Stream Player */}
                 <div style={{ paddingTop: '56.25%', position: 'relative' }}>
-                  {playerEngine === 'direct' && (
+                  {/* YouTube or Vimeo Embed */}
+                  {(activeVideo.parsed?.type === 'youtube' || activeVideo.parsed?.type === 'vimeo') && (
+                    <iframe 
+                      src={activeVideo.parsed.embedUrl}
+                      referrerPolicy="no-referrer"
+                      style={{ 
+                        border: 0, 
+                        maxWidth: '100%', 
+                        position: 'absolute', 
+                        top: 0, 
+                        left: 0, 
+                        height: '100%', 
+                        width: '100%' 
+                      }} 
+                      allowFullScreen={true} 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      title={activeVideo.title}
+                    />
+                  )}
+
+                  {/* Google Drive Video Stream Embed */}
+                  {activeVideo.parsed?.type === 'drive' && (
+                    <iframe 
+                      src={activeVideo.parsed.embedUrl}
+                      style={{ 
+                        border: 0, 
+                        maxWidth: '100%', 
+                        position: 'absolute', 
+                        top: 0, 
+                        left: 0, 
+                        height: '100%', 
+                        width: '100%' 
+                      }} 
+                      allowFullScreen={true} 
+                      allow="autoplay"
+                      title={activeVideo.title}
+                    />
+                  )}
+
+                  {/* VdoCipher DRM Player */}
+                  {(activeVideo.parsed?.type === 'vdocipher' || playerEngine === 'vdocipher') && activeVideo.parsed?.type !== 'youtube' && activeVideo.parsed?.type !== 'drive' && (
+                    <iframe 
+                      src={activeVideo.embedUrl || defaultEmbedUrl}
+                      referrerPolicy="no-referrer"
+                      style={{ 
+                        border: 0, 
+                        maxWidth: '100%', 
+                        position: 'absolute', 
+                        top: 0, 
+                        left: 0, 
+                        height: '100%', 
+                        width: '100%' 
+                      }} 
+                      allowFullScreen={true} 
+                      allow="encrypted-media *; autoplay *; fullscreen *"
+                      title={activeVideo.title}
+                    />
+                  )}
+
+                  {/* Direct HTML5 Player (MP4 / WebM / Blob / Uploaded File) */}
+                  {(!activeVideo.parsed || activeVideo.parsed.type === 'direct' || activeVideo.parsed.type === 'default') && playerEngine !== 'vdocipher' && (
                     <div className="absolute inset-0 w-full h-full bg-black">
                       <video
                         ref={videoRef}
-                        key={`${activeVideo.sNo}-${activeVideo.title}`}
+                        key={`${activeVideo.sNo}-${activeVideo.title}-${activeVideo.videoUrl || activeVideo.embedUrl}`}
                         controls
                         playsInline
                         controlsList="nodownload noplaybackrate"
@@ -652,6 +810,12 @@ export default function SessionPage({
                         className="bg-black w-full h-full object-contain"
                         poster="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80"
                       >
+                        {activeVideo.videoUrl && activeVideo.videoUrl !== './sample-lecture.mp4' && (
+                          <source src={activeVideo.videoUrl} type="video/mp4" />
+                        )}
+                        {activeVideo.embedUrl && activeVideo.embedUrl.startsWith('blob:') && (
+                          <source src={activeVideo.embedUrl} type="video/mp4" />
+                        )}
                         <source src="./sample-lecture.mp4" type="video/mp4" />
                         <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
                         Your browser does not support HTML5 video playback.
@@ -676,25 +840,6 @@ export default function SessionPage({
                         </div>
                       )}
                     </div>
-                  )}
-
-                  {playerEngine === 'vdocipher' && (
-                    <iframe 
-                      src={activeVideo.embedUrl || defaultEmbedUrl}
-                      referrerPolicy="no-referrer"
-                      style={{ 
-                        border: 0, 
-                        maxWidth: '100%', 
-                        position: 'absolute', 
-                        top: 0, 
-                        left: 0, 
-                        height: '100%', 
-                        width: '100%' 
-                      }} 
-                      allowFullScreen={true} 
-                      allow="encrypted-media *; autoplay *; fullscreen *"
-                      title={activeVideo.title}
-                    />
                   )}
 
                   {playerEngine === 'drive' && (

@@ -85,10 +85,11 @@ import {
   getStoredFees, 
   saveAdminFee, 
   getStoredStudents, 
-  saveAdminStudent 
+  saveAdminStudent,
+  subscribeToDataUpdates
 } from '../utils/lmsStorage';
 
-export default function AdminPortalPage() {
+export default function AdminPortalPage({ onBackToStudentLms }) {
   // Authentication State (Independent Admin Session)
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [adminUser, setAdminUser] = useState({
@@ -1076,31 +1077,60 @@ export default function AdminPortalPage() {
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* User Profile in Top Right Header */}
-          <div className="relative">
-            <button
-              onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-              className="flex items-center gap-2 p-1 rounded hover:bg-slate-200 transition-colors cursor-pointer"
-            >
-              <img src="./student-avatar.jpg" alt="Profile" className="w-7 h-7 rounded-full object-cover border border-slate-400" />
-              <span className="text-xs font-bold text-slate-700">{adminUser.displayName}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
-            </button>
+          {/* Right Action Bar: Live Sync Status, Switch to Student LMS, and User Profile */}
+          <div className="flex items-center gap-3">
+            {/* Live Sync Status Indicator */}
+            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100/80 border border-emerald-300 text-emerald-800 text-[11px] font-semibold">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Live Synced to Student LMS</span>
+            </div>
 
-            {profileDropdownOpen && (
-              <div className="absolute right-0 mt-1 w-44 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50 text-xs">
-                <div className="px-3 py-2 border-b border-slate-100 font-bold text-slate-800">
-                  {adminUser.displayName}
-                </div>
-                <button
-                  onClick={() => setIsAuthenticated(false)}
-                  className="w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 flex items-center gap-2 cursor-pointer"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Log Out</span>
-                </button>
-              </div>
+            {/* Direct Switch to Student LMS Button */}
+            {onBackToStudentLms && (
+              <button
+                onClick={onBackToStudentLms}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+                title="Switch view to Student Access"
+              >
+                <span>🎓 Switch to Student LMS</span>
+              </button>
             )}
+
+            {/* User Profile in Top Right Header */}
+            <div className="relative">
+              <button
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                className="flex items-center gap-2 p-1 rounded hover:bg-slate-200 transition-colors cursor-pointer"
+              >
+                <img src="./student-avatar.jpg" alt="Profile" className="w-7 h-7 rounded-full object-cover border border-slate-400" />
+                <span className="text-xs font-bold text-slate-700">{adminUser.displayName}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+              </button>
+
+              {profileDropdownOpen && (
+                <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50 text-xs">
+                  <div className="px-3 py-2 border-b border-slate-100 font-bold text-slate-800">
+                    {adminUser.displayName}
+                    <div className="text-[10px] text-slate-400 font-normal">{adminUser.role}</div>
+                  </div>
+                  {onBackToStudentLms && (
+                    <button
+                      onClick={onBackToStudentLms}
+                      className="w-full text-left px-3 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
+                    >
+                      <span>🎓 Go to Student Portal</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setIsAuthenticated(false)}
+                    className="w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 flex items-center gap-2 cursor-pointer border-t border-slate-100"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Log Out</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 

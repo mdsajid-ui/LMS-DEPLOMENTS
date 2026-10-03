@@ -92,6 +92,20 @@ export default function App() {
     return (
       <ErrorBoundary onReset={handleBackToStudentLms}>
         <AdminPortalPage onBackToStudentLms={handleBackToStudentLms} />
+        {/* Floating Quick Switcher Pill (Admin Mode) */}
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 bg-slate-950/90 text-white p-1.5 pl-3.5 rounded-full shadow-2xl border border-teal-500/50 backdrop-blur-md text-xs select-none animate-in fade-in duration-300">
+          <div className="flex items-center gap-1.5 pr-1">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="text-[11px] font-semibold text-teal-300">Admin Access Active</span>
+          </div>
+          <button
+            onClick={handleBackToStudentLms}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-white hover:bg-slate-100 text-slate-900 font-bold text-xs shadow-md transition-all cursor-pointer active:scale-95"
+            title="Return to Student LMS to verify student reflection"
+          >
+            <span>View Student LMS ➔</span>
+          </button>
+        </div>
       </ErrorBoundary>
     );
   }
@@ -105,6 +119,7 @@ export default function App() {
         collapsed={sidebarCollapsed}
         setCollapsed={setSidebarCollapsed}
         student={studentProfile}
+        onOpenAdmin={handleOpenAdmin}
       />
 
       {/* Main Content Area */}
@@ -122,6 +137,7 @@ export default function App() {
           onOpenSchedule={() => setScheduleOpen(true)}
           onOpenSupport={handleOpenSupport}
           onOpenChat={handleOpenChat}
+          onOpenAdmin={handleOpenAdmin}
           selectedBatch={selectedBatch}
           setSelectedBatch={setSelectedBatch}
         />
@@ -274,6 +290,21 @@ export default function App() {
         currentTab={currentTab}
         onNavigate={(tab) => setCurrentTab(tab)}
       />
+
+      {/* Floating Quick Switcher Pill (Student Mode) */}
+      <div className="fixed bottom-5 right-5 z-40 flex items-center gap-2 bg-slate-950/90 text-white p-1.5 pl-3.5 rounded-full shadow-2xl border border-slate-700/80 backdrop-blur-md text-xs select-none animate-in fade-in duration-300">
+        <div className="flex items-center gap-1.5 pr-1">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span className="text-[11px] font-semibold text-slate-300">Student Access Active</span>
+        </div>
+        <button
+          onClick={handleOpenAdmin}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-slate-950 font-bold text-xs shadow-md transition-all cursor-pointer active:scale-95"
+          title="Open Admin Portal to upload videos, manage sessions, and update records"
+        >
+          <span>Admin Portal ➔</span>
+        </button>
+      </div>
     </div>
   );
 }

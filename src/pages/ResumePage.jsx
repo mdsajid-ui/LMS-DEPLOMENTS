@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FileText, 
   Calendar, 
@@ -11,10 +11,26 @@ import {
   Sparkles,
   HelpCircle
 } from 'lucide-react';
+import { getStoredResumes, subscribeToDataUpdates } from '../utils/lmsStorage';
 
 export default function ResumePage({ student }) {
-  const [hasResume, setHasResume] = useState(false);
+  const [resumeData, setResumeData] = useState(() => {
+    const list = getStoredResumes();
+    return list.find(r => r.studentName?.toLowerCase().includes('sajid') || r.studentId === student?.studentId) || list[0] || null;
+  });
+
+  const [hasResume, setHasResume] = useState(() => !!resumeData);
   const [uploadMessage, setUploadMessage] = useState(false);
+
+  useEffect(() => {
+    const unsub = subscribeToDataUpdates(() => {
+      const list = getStoredResumes();
+      const match = list.find(r => r.studentName?.toLowerCase().includes('sajid') || r.studentId === student?.studentId) || list[0] || null;
+      setResumeData(match);
+      setHasResume(!!match);
+    });
+    return () => unsub();
+  }, [student]);
 
   const handleDownloadWordFile = () => {
     // Simulated download of template

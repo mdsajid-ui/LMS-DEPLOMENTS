@@ -30,7 +30,8 @@ export default function Sidebar({
   setCurrentTab, 
   collapsed, 
   setCollapsed,
-  student
+  student,
+  onOpenAdmin
 }) {
   const menuItems = [
     { id: 'welcome', label: 'WELCOME & OVERVIEW', icon: Compass, badge: 'Info' },
@@ -143,6 +144,25 @@ export default function Sidebar({
             </button>
           );
         })}
+
+        {/* Switch to Admin Portal Button */}
+        {onOpenAdmin && (
+          <button
+            onClick={onOpenAdmin}
+            className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl transition-all group cursor-pointer mt-3 bg-gradient-to-r from-teal-950/70 to-slate-900 border border-teal-500/30 text-teal-300 hover:text-white hover:border-teal-400 shadow-xs"
+            title="Switch to Admin Portal Control"
+          >
+            <Settings className="w-4 h-4 text-teal-400 shrink-0 group-hover:rotate-90 transition-transform" />
+            {!collapsed && (
+              <div className="flex-1 flex items-center justify-between text-left">
+                <span className="font-semibold text-xs tracking-wide">ADMIN ACCESS</span>
+                <span className="px-1.5 py-0.5 text-[9px] font-bold bg-teal-500 text-slate-950 rounded uppercase">
+                  Portal
+                </span>
+              </div>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Bottom Footer Actions */}

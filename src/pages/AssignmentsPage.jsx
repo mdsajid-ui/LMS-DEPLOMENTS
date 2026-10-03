@@ -18,9 +18,45 @@ import {
 } from 'lucide-react';
 import { assignmentsList, studentProfile } from '../data/mockData';
 import { downloadFile } from '../utils/excelHelper';
+import { getStoredAssignmentsList, subscribeToDataUpdates } from '../utils/lmsStorage';
 
 export default function AssignmentsPage({ student = studentProfile }) {
-  const [assignments, setAssignments] = useState(assignmentsList);
+  const [assignments, setAssignments] = useState(() => {
+    const stored = getStoredAssignmentsList();
+    // Merge stored admin assignments with mock list
+    if (stored && stored.length > 0) {
+      return stored.map((item, idx) => ({
+        id: item.id || idx + 1,
+        title: item.title || `Assignment ${idx + 1}`,
+        module: item.application || "EXCEL BASE AND ADVANCED",
+        deadline: item.submittedDate || "30-10-2026",
+        status: item.status === 'Approved' ? 'Submitted' : (item.status || 'Pending'),
+        marks: item.grade || (item.status === 'Approved' ? '95/100' : null),
+        remarks: item.remarks || '',
+        submittedFile: item.submittedFile || null
+      }));
+    }
+    return assignmentsList;
+  });
+
+  React.useEffect(() => {
+    const unsub = subscribeToDataUpdates((detail) => {
+      const stored = getStoredAssignmentsList();
+      if (stored && stored.length > 0) {
+        setAssignments(stored.map((item, idx) => ({
+          id: item.id || idx + 1,
+          title: item.title || `Assignment ${idx + 1}`,
+          module: item.application || "EXCEL BASE AND ADVANCED",
+          deadline: item.submittedDate || "30-10-2026",
+          status: item.status === 'Approved' ? 'Submitted' : (item.status || 'Pending'),
+          marks: item.grade || (item.status === 'Approved' ? '95/100' : null),
+          remarks: item.remarks || '',
+          submittedFile: item.submittedFile || null
+        })));
+      }
+    });
+    return () => unsub();
+  }, []);
   const [filter, setFilter] = useState('all');
   
   // Currently active assignment being submitted/viewed
