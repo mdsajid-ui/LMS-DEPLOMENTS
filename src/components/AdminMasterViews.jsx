@@ -258,7 +258,7 @@ export function UserMasterView({ showToast }) {
       <div>
         <button
           onClick={() => setCreateModalOpen(true)}
-          className="bg-[#26B99A] hover:bg-[#1f967d] text-white text-xs font-semibold px-3 py-1.5 rounded-[3px] shadow-2xs cursor-pointer inline-flex items-center gap-1 transition-colors"
+          className="mac-btn mac-btn-orange text-white text-xs font-semibold px-3.5 py-1.5 rounded-xl shadow-xs cursor-pointer inline-flex items-center gap-1.5 transition-all active:scale-95"
         >
           Create User
         </button>
@@ -459,7 +459,7 @@ export function UserMasterView({ showToast }) {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-[#26B99A] text-white rounded font-bold hover:bg-[#1f967d]"
+                  className="mac-btn mac-btn-orange px-4 py-2 text-white rounded-xl font-bold shadow-xs cursor-pointer active:scale-95"
                 >
                   Save User
                 </button>
@@ -659,7 +659,7 @@ export function BranchMasterView({ showToast }) {
       <div>
         <button
           onClick={() => setCreateModalOpen(true)}
-          className="bg-[#26B99A] hover:bg-[#1f967d] text-white text-xs font-semibold px-3 py-1.5 rounded-[3px] shadow-2xs cursor-pointer inline-flex items-center gap-1 transition-colors"
+          className="mac-btn mac-btn-orange text-white text-xs font-semibold px-3.5 py-1.5 rounded-xl shadow-xs cursor-pointer inline-flex items-center gap-1.5 transition-all active:scale-95"
         >
           Create Branch
         </button>
@@ -854,7 +854,7 @@ export function BranchMasterView({ showToast }) {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-[#26B99A] text-white rounded font-bold hover:bg-[#1f967d]"
+                  className="mac-btn mac-btn-orange px-4 py-2 text-white rounded-xl font-bold shadow-xs cursor-pointer active:scale-95"
                 >
                   Save Branch
                 </button>
@@ -998,7 +998,7 @@ export function SkillMasterView({ showToast }) {
       <div>
         <button
           onClick={() => setCreateModalOpen(true)}
-          className="bg-[#26B99A] hover:bg-[#1f967d] text-white text-xs font-semibold px-3 py-1.5 rounded-[3px] shadow-2xs cursor-pointer inline-flex items-center gap-1 transition-colors"
+          className="mac-btn mac-btn-orange text-white text-xs font-semibold px-3.5 py-1.5 rounded-xl shadow-xs cursor-pointer inline-flex items-center gap-1.5 transition-all active:scale-95"
         >
           Create Skill
         </button>
@@ -1099,7 +1099,7 @@ export function SkillMasterView({ showToast }) {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-[#26B99A] text-white rounded font-bold hover:bg-[#1f967d]"
+                  className="mac-btn mac-btn-orange px-4 py-2 text-white rounded-xl font-bold shadow-xs cursor-pointer active:scale-95"
                 >
                   Save Skill
                 </button>
@@ -1205,7 +1205,7 @@ export function AppMasterView({ showToast }) {
       <div>
         <button
           onClick={() => setCreateModalOpen(true)}
-          className="bg-[#26B99A] hover:bg-[#1f967d] text-white text-xs font-semibold px-3 py-1.5 rounded-[3px] shadow-2xs cursor-pointer inline-flex items-center gap-1 transition-colors"
+          className="mac-btn mac-btn-orange text-white text-xs font-semibold px-3.5 py-1.5 rounded-xl shadow-xs cursor-pointer inline-flex items-center gap-1.5 transition-all active:scale-95"
         >
           Create Application
         </button>
@@ -1327,7 +1327,7 @@ export function AppMasterView({ showToast }) {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-[#26B99A] text-white rounded font-bold hover:bg-[#1f967d]"
+                  className="mac-btn mac-btn-orange px-4 py-2 text-white rounded-xl font-bold shadow-xs cursor-pointer active:scale-95"
                 >
                   Save Application
                 </button>
@@ -1445,7 +1445,7 @@ export function CourseMasterView({ showToast }) {
       <div>
         <button
           onClick={() => setCreateModalOpen(true)}
-          className="bg-[#26B99A] hover:bg-[#1f967d] text-white text-xs font-semibold px-3 py-1.5 rounded-[3px] shadow-2xs cursor-pointer inline-flex items-center gap-1 transition-colors"
+          className="mac-btn mac-btn-orange text-white text-xs font-semibold px-3.5 py-1.5 rounded-xl shadow-xs cursor-pointer inline-flex items-center gap-1.5 transition-all active:scale-95"
         >
           Create Course
         </button>
@@ -1565,7 +1565,7 @@ export function CourseMasterView({ showToast }) {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-[#26B99A] text-white rounded font-bold hover:bg-[#1f967d]"
+                  className="mac-btn mac-btn-orange px-4 py-2 text-white rounded-xl font-bold shadow-xs cursor-pointer active:scale-95"
                 >
                   Save Course
                 </button>
@@ -1684,7 +1684,7 @@ export function BatchMasterView({ showToast }) {
       <div>
         <button
           onClick={() => setCreateModalOpen(true)}
-          className="bg-[#26B99A] hover:bg-[#1f967d] text-white text-xs font-semibold px-3 py-1.5 rounded-[3px] shadow-2xs cursor-pointer inline-flex items-center gap-1 transition-colors"
+          className="mac-btn mac-btn-orange text-white text-xs font-semibold px-3.5 py-1.5 rounded-xl shadow-xs cursor-pointer inline-flex items-center gap-1.5 transition-all active:scale-95"
         >
           Create Batch
         </button>
@@ -1821,7 +1821,7 @@ export function BatchMasterView({ showToast }) {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-[#26B99A] text-white rounded font-bold hover:bg-[#1f967d]"
+                  className="mac-btn mac-btn-orange px-4 py-2 text-white rounded-xl font-bold shadow-xs cursor-pointer active:scale-95"
                 >
                   Save Batch
                 </button>
@@ -1957,7 +1957,7 @@ export function MentorMasterView({ showToast }) {
       <div>
         <button
           onClick={() => setCreateModalOpen(true)}
-          className="bg-[#26B99A] hover:bg-[#1f967d] text-white text-xs font-semibold px-3 py-1.5 rounded-[3px] shadow-2xs cursor-pointer inline-flex items-center gap-1 transition-colors"
+          className="mac-btn mac-btn-orange text-white text-xs font-semibold px-3.5 py-1.5 rounded-xl shadow-xs cursor-pointer inline-flex items-center gap-1.5 transition-all active:scale-95"
         >
           Create Mentor
         </button>
@@ -2093,7 +2093,7 @@ export function MentorMasterView({ showToast }) {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-[#26B99A] text-white rounded font-bold hover:bg-[#1f967d]"
+                  className="mac-btn mac-btn-orange px-4 py-2 text-white rounded-xl font-bold shadow-xs cursor-pointer active:scale-95"
                 >
                   Save Mentor
                 </button>
@@ -2200,7 +2200,7 @@ export function SelfPaceMasterView({ showToast }) {
       <div>
         <button
           onClick={() => setCreateModalOpen(true)}
-          className="bg-[#26B99A] hover:bg-[#1f967d] text-white text-xs font-semibold px-3 py-1.5 rounded-[3px] shadow-2xs cursor-pointer inline-flex items-center gap-1 transition-colors"
+          className="mac-btn mac-btn-orange text-white text-xs font-semibold px-3.5 py-1.5 rounded-xl shadow-xs cursor-pointer inline-flex items-center gap-1.5 transition-all active:scale-95"
         >
           Create New
         </button>
@@ -2301,7 +2301,7 @@ export function SelfPaceMasterView({ showToast }) {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-[#26B99A] text-white rounded font-bold hover:bg-[#1f967d]"
+                  className="mac-btn mac-btn-orange px-4 py-2 text-white rounded-xl font-bold shadow-xs cursor-pointer active:scale-95"
                 >
                   Save Item
                 </button>
@@ -2576,7 +2576,7 @@ export function PaymentApprovalView({ showToast }) {
                   handleApprove(viewDetailItem.id, viewDetailItem.studentName);
                   setViewDetailItem(null);
                 }}
-                className="px-4 py-1.5 bg-[#26B99A] text-white rounded font-bold hover:bg-[#1f967d]"
+                className="mac-btn mac-btn-orange px-4 py-2 text-white rounded-xl font-bold shadow-xs cursor-pointer active:scale-95"
               >
                 Approve Payment
               </button>
@@ -3562,7 +3562,7 @@ export function RegistrationView({ showToast }) {
       <div>
         <button
           onClick={() => setViewMode('add')}
-          className="bg-[#26B99A] hover:bg-[#1f967d] text-white text-xs font-semibold px-3 py-1.5 rounded-[3px] shadow-2xs cursor-pointer inline-flex items-center gap-1 transition-colors"
+          className="mac-btn mac-btn-orange text-white text-xs font-semibold px-3.5 py-1.5 rounded-xl shadow-xs cursor-pointer inline-flex items-center gap-1.5 transition-all active:scale-95"
         >
           Create Registration
         </button>

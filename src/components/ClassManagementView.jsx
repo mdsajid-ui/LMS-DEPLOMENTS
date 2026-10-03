@@ -183,7 +183,7 @@ export default function ClassManagementView({ showToast, onNavigateToSession }) 
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleOpenScheduleModal()}
-            className="bg-[#26B99A] hover:bg-[#1f967d] text-white px-3.5 py-1.5 rounded font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+            className="mac-btn mac-btn-orange text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer active:scale-95"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Schedule Live Class</span>

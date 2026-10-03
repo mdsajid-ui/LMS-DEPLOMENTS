@@ -770,33 +770,55 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
         </div>
       )}
 
-      {/* Admin Sidebar (Dark Navy `#2A3F54` matching edu.dvanalyticsmds.com/admin screenshots) */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-[#2A3F54] text-[#E7E7E7] flex flex-col transition-all duration-300 shrink-0 border-r border-[#1e2f3e] z-40 select-none`}>
-        {/* Profile Card inside Sidebar (Matches Screenshot 1-5) */}
-        <div className="p-4 border-b border-[#374f67] flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-600 overflow-hidden flex items-center justify-center shrink-0">
-            <img src="./student-avatar.jpg" alt="Admin" className="w-full h-full object-cover" />
+      {/* Admin Sidebar - DV Deep Navy & macOS MacBook Design System */}
+      <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gradient-to-b from-[#081220] via-[#0d1d36] to-[#060c17] text-slate-200 flex flex-col transition-all duration-300 shrink-0 border-r border-slate-800/80 z-40 select-none shadow-xl`}>
+        {/* macOS Traffic Lights & Top Brand Logo */}
+        <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800/80 bg-[#081220]/75 backdrop-blur-xl">
+          <div className="flex items-center gap-3">
+            {sidebarOpen ? (
+              <div className="mac-traffic-lights mr-1.5" title="macOS Window Controls">
+                <span className="mac-dot mac-dot-red" title="Close"></span>
+                <span className="mac-dot mac-dot-yellow" title="Minimize"></span>
+                <span className="mac-dot mac-dot-green" title="Expand"></span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1 items-center mr-1" title="macOS Window Controls">
+                <span className="w-2 h-2 rounded-full bg-[#ff5f56]"></span>
+                <span className="w-2 h-2 rounded-full bg-[#ffbd2e]"></span>
+                <span className="w-2 h-2 rounded-full bg-[#27c93f]"></span>
+              </div>
+            )}
+            <Logo collapsed={!sidebarOpen} />
           </div>
-          {sidebarOpen && (
-            <div className="overflow-hidden">
-              <span className="text-xs text-slate-400 block">Welcome,</span>
-              <span className="font-bold text-sm text-white truncate block">
-                {adminUser.displayName}
-              </span>
-            </div>
-          )}
         </div>
 
-        {/* Accordion Sidebar Menu (Exact Gentelella layout matching screenshots) */}
-        <nav className="flex-1 overflow-y-auto py-2 text-xs divide-y divide-[#374f67]/40">
+        {/* Profile Card inside Sidebar - macOS Frosted Navy Card */}
+        <div className="p-3 border-b border-slate-800/80">
+          <div className="rounded-2xl bg-gradient-to-b from-[#0f2347]/70 to-[#0b1728]/80 border border-slate-700/60 p-3 flex items-center gap-3 shadow-inner">
+            <div className="w-10 h-10 rounded-full bg-slate-800 border-2 border-orange-500/50 overflow-hidden flex items-center justify-center shrink-0 shadow-xs">
+              <img src="./student-avatar.jpg" alt="Admin" className="w-full h-full object-cover" />
+            </div>
+            {sidebarOpen && (
+              <div className="overflow-hidden">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-orange-400 block">System Admin</span>
+                <span className="font-bold text-xs text-white truncate block">
+                  {adminUser.displayName}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Accordion Sidebar Menu with macOS Highlighting */}
+        <nav className="flex-1 overflow-y-auto py-2 text-xs divide-y divide-slate-800/60 scrollbar-thin">
           {/* 1. Dashboard Accordion */}
-          <div className={openAccordions.dashboard ? "border-r-[4px] border-[#1abb9c] bg-[#233342]" : ""}>
+          <div className={openAccordions.dashboard ? "border-r-[4px] border-orange-500 bg-[#0f2347]/50" : ""}>
             <button
               onClick={() => toggleAccordion('dashboard')}
-              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-[#34495E] transition-colors cursor-pointer"
+              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
-                <Gauge className="w-4 h-4 text-slate-400" />
+                <Gauge className="w-4 h-4 text-orange-400" />
                 {sidebarOpen && <span className="font-semibold">Dashboard</span>}
               </div>
               {sidebarOpen && (
@@ -804,19 +826,19 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
               )}
             </button>
             {sidebarOpen && openAccordions.dashboard && (
-              <div className="relative pl-5 py-1 text-[11px] bg-[#202d3d] before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-teal-500/30">
+              <div className="relative pl-5 py-1 text-[11px] bg-[#091526]/80 before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-orange-500/30">
                 <button
                   onClick={() => handleSelectMenu('monthly-collection')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'monthly-collection' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded-lg transition-all text-left group cursor-pointer ${activeMenu === 'monthly-collection' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'monthly-collection' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'monthly-collection' ? 'bg-white' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Monthly Collection</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('daily-collection')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'daily-collection' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded-lg transition-all text-left group cursor-pointer ${activeMenu === 'daily-collection' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'daily-collection' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'daily-collection' ? 'bg-white' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Daily Collection</span>
                 </button>
               </div>
@@ -824,10 +846,10 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
           </div>
 
           {/* 2. Master Accordion */}
-          <div className={openAccordions.master ? "border-r-[4px] border-[#1abb9c] bg-[#233342]" : ""}>
+          <div className={openAccordions.master ? "border-r-[4px] border-orange-500 bg-[#0f2347]/50" : ""}>
             <button
               onClick={() => toggleAccordion('master')}
-              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-[#34495E] transition-colors cursor-pointer"
+              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
                 <Monitor className="w-4 h-4 text-slate-400" />
@@ -838,7 +860,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
               )}
             </button>
             {sidebarOpen && openAccordions.master && (
-              <div className="relative pl-5 py-1 text-[11px] bg-[#202d3d] before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-teal-500/30">
+              <div className="relative pl-5 py-1 text-[11px] bg-[#091526]/80 before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-orange-500/30">
                 {[
                   { key: 'user-master', name: 'User Master' },
                   { key: 'branch-master', name: 'Branch Master' },
@@ -857,12 +879,12 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                     onClick={() => handleSelectMenu(m.key)}
                     className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${
                       activeMenu === m.key 
-                        ? 'text-teal-300 font-bold bg-[#1abb9c]/20' 
-                        : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'
+                        ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' 
+                        : 'text-slate-300 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 transition-colors ${
-                      activeMenu === m.key ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'
+                      activeMenu === m.key ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'
                     }`} />
                     <span>{m.name}</span>
                   </button>
@@ -872,10 +894,10 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
           </div>
 
           {/* 3. Approval Accordion */}
-          <div className={openAccordions.approval ? "border-r-[4px] border-[#1abb9c] bg-[#233342]" : ""}>
+          <div className={openAccordions.approval ? "border-r-[4px] border-orange-500 bg-[#0f2347]/50" : ""}>
             <button
               onClick={() => toggleAccordion('approval')}
-              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-[#34495E] transition-colors cursor-pointer"
+              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-slate-400" />
@@ -886,7 +908,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
               )}
             </button>
             {sidebarOpen && openAccordions.approval && (
-              <div className="relative pl-5 py-1 text-[11px] bg-[#202d3d] before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-teal-500/30">
+              <div className="relative pl-5 py-1 text-[11px] bg-[#091526]/80 before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-orange-500/30">
                 {[
                   { key: 'pay-approval', name: 'Payment Approval' },
                   { key: 'reg-approval', name: 'Registration Approval' },
@@ -899,12 +921,12 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                     onClick={() => handleSelectMenu(a.key)}
                     className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${
                       activeMenu === a.key 
-                        ? 'text-teal-300 font-bold bg-[#1abb9c]/20' 
-                        : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'
+                        ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' 
+                        : 'text-slate-300 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 transition-colors ${
-                      activeMenu === a.key ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'
+                      activeMenu === a.key ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'
                     }`} />
                     <span>{a.name}</span>
                   </button>
@@ -914,10 +936,10 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
           </div>
 
           {/* 4. Transaction Accordion */}
-          <div className={openAccordions.transaction ? "border-r-[4px] border-[#1abb9c] bg-[#233342]" : ""}>
+          <div className={openAccordions.transaction ? "border-r-[4px] border-orange-500 bg-[#0f2347]/50" : ""}>
             <button
               onClick={() => toggleAccordion('transaction')}
-              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-[#34495E] transition-colors cursor-pointer"
+              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
                 <Folder className="w-4 h-4 text-slate-400" />
@@ -928,152 +950,152 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
               )}
             </button>
             {sidebarOpen && openAccordions.transaction && (
-              <div className="relative pl-5 py-1 text-[11px] bg-[#202d3d] before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-teal-500/30">
+              <div className="relative pl-5 py-1 text-[11px] bg-[#091526]/80 before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-orange-500/30">
                 <button
                   onClick={() => handleSelectMenu('external-link')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'external-link' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'external-link' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'external-link' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'external-link' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Registration Web Link</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('reg')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'reg' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'reg' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'reg' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'reg' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Registration (Reg.aspx)</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('fee')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'fee' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'fee' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'fee' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'fee' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Fee (Fee.aspx)</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('session')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'session' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'session' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'session' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'session' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Live Session (Session.aspx)</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('session-delete')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'session-delete' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'session-delete' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'session-delete' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'session-delete' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Live Session - Delete</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('assignment')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'assignment' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'assignment' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'assignment' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'assignment' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Assignment</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('resume')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'resume' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'resume' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'resume' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'resume' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Resume</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('interview-kit')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'interview-kit' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'interview-kit' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'interview-kit' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'interview-kit' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>My Interview Kit</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('non-live-session')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'non-live-session' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'non-live-session' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'non-live-session' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'non-live-session' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Non Live Session</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('assign-non-live')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'assign-non-live' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'assign-non-live' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'assign-non-live' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'assign-non-live' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Assign Student for Non live sessions</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('release-user')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'release-user' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'release-user' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'release-user' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'release-user' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Release User</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('exe-users')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'exe-users' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'exe-users' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'exe-users' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'exe-users' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>EXE Users</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('assign-batch')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'assign-batch' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'assign-batch' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'assign-batch' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'assign-batch' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Assign Students for Batch</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('mock-interview')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'mock-interview' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'mock-interview' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'mock-interview' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'mock-interview' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Mock Interview</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('class')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'class' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'class' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'class' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'class' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Class</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('discussion-forum')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'discussion-forum' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'discussion-forum' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'discussion-forum' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'discussion-forum' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Discussion Forum</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('app-users')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'app-users' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'app-users' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'app-users' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'app-users' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>App Users</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('import-lead')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'import-lead' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'import-lead' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'import-lead' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'import-lead' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Import Lead</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('batch-completion')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'batch-completion' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'batch-completion' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'batch-completion' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'batch-completion' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Batch Completion</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('assign-batch-collection')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'assign-batch-collection' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'assign-batch-collection' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'assign-batch-collection' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'assign-batch-collection' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Assign Batch For Collection</span>
                 </button>
                 <button
                   onClick={() => handleSelectMenu('expense')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'expense' ? 'text-teal-300 font-bold bg-[#1abb9c]/20' : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'}`}
+                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'expense' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'expense' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-[#1abb9c]'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'expense' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
                   <span>Expense</span>
                 </button>
               </div>
@@ -1081,10 +1103,10 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
           </div>
 
           {/* 5. Application Test Accordion (Matches Screenshot media_1790833990861.png) */}
-          <div className={openAccordions.applicationTest ? "border-r-[4px] border-[#1abb9c] bg-[#233342]" : ""}>
+          <div className={openAccordions.applicationTest ? "border-r-[4px] border-orange-500 bg-[#0f2347]/50" : ""}>
             <button
               onClick={() => toggleAccordion('applicationTest')}
-              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-[#34495E] transition-colors cursor-pointer"
+              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
                 <Type className="w-4 h-4 text-slate-400 font-serif" />
@@ -1095,7 +1117,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
               )}
             </button>
             {sidebarOpen && openAccordions.applicationTest && (
-              <div className="relative pl-5 py-1 text-[11px] bg-[#202d3d] before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-teal-500/30">
+              <div className="relative pl-5 py-1 text-[11px] bg-[#091526]/80 before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-orange-500/30">
                 {[
                   { name: "Practical Test Questions", url: "PracticalTestQuestions.aspx" },
                   { name: "MCQ", url: "MCQMaster.aspx" },
@@ -1113,9 +1135,9 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                       showToast(`Navigated to ${at.name} (${at.url})`);
                     }}
                     title={`https://edu.dvanalyticsmds.com/admin/${at.url}`}
-                    className="w-full flex items-center gap-2.5 py-1.5 px-3 rounded text-slate-300 hover:text-white hover:bg-[#1f2b37] transition-colors text-left group cursor-pointer"
+                    className="w-full flex items-center gap-2.5 py-1.5 px-3 rounded text-slate-300 hover:text-white hover:bg-white/10 transition-colors text-left group cursor-pointer"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-500 group-hover:bg-[#1abb9c] shrink-0 -ml-1 transition-colors" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-500 group-hover:bg-orange-400 shrink-0 -ml-1 transition-colors" />
                     <span>{at.name}</span>
                   </button>
                 ))}
@@ -1124,10 +1146,10 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
           </div>
 
           {/* 6. Reports Accordion (Matches Screenshot media_1790834000571.png) */}
-          <div className={openAccordions.reports ? "border-r-[4px] border-[#1abb9c] bg-[#233342]" : ""}>
+          <div className={openAccordions.reports ? "border-r-[4px] border-orange-500 bg-[#0f2347]/50" : ""}>
             <button
               onClick={() => toggleAccordion('reports')}
-              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-[#34495E] transition-colors cursor-pointer"
+              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-slate-400" />
@@ -1138,7 +1160,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
               )}
             </button>
             {sidebarOpen && openAccordions.reports && (
-              <div className="relative pl-5 py-1 text-[11px] bg-[#202d3d] before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-teal-500/30">
+              <div className="relative pl-5 py-1 text-[11px] bg-[#091526]/80 before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-orange-500/30">
                 {[
                   { name: "Invoice", url: "rpt_Invoice.aspx", key: "report-invoice" },
                   { name: "Student", url: "rpt_Student.aspx", key: "report-student" },
@@ -1163,13 +1185,13 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                       title={`https://edu.dvanalyticsmds.com/admin/${r.url}`}
                       className={`w-full flex items-center justify-between py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${
                         isActive 
-                          ? 'bg-[#1abb9c] text-white font-bold shadow-xs' 
-                          : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'
+                          ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' 
+                          : 'text-slate-300 hover:text-white hover:bg-white/10'
                       }`}
                     >
                       <div className="flex items-center gap-2">
                         <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 transition-colors ${
-                          isActive ? 'bg-white' : 'bg-slate-500 group-hover:bg-[#1abb9c]'
+                          isActive ? 'bg-white' : 'bg-slate-500 group-hover:bg-orange-400'
                         }`} />
                         <span>{r.name}</span>
                       </div>
@@ -1197,63 +1219,64 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white">
-        {/* Top Navbar Header (Matches Screenshot 1 Header) */}
-        <header className="h-14 bg-[#EDEDED] border-b border-slate-300 px-4 flex items-center justify-between shadow-2xs">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#f8fafc]">
+        {/* Top Navbar Header - macOS Frosted Glass */}
+        <header className="h-16 bg-white/80 backdrop-blur-2xl border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-1.5 rounded text-slate-600 hover:bg-slate-200 cursor-pointer"
+            className="mac-btn mac-btn-glass p-2 rounded-xl text-slate-700 hover:text-slate-900 cursor-pointer"
+            title="Toggle Admin Sidebar"
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="w-4 h-4" />
           </button>
 
           {/* Right Action Bar: Live Sync Status, Switch to Student LMS, and User Profile */}
           <div className="flex items-center gap-3">
             {/* Live Sync Status Indicator */}
-            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100/80 border border-emerald-300 text-emerald-800 text-[11px] font-semibold">
+            <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[11px] font-semibold shadow-2xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               <span>Live Synced to Student LMS</span>
             </div>
 
-            {/* Direct Switch to Student LMS Button */}
+            {/* Direct Switch to Student LMS Button - MacBook Orange Push Button */}
             {onBackToStudentLms && (
               <button
                 onClick={onBackToStudentLms}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+                className="mac-btn mac-btn-orange px-3.5 py-1.5 rounded-xl text-white text-xs font-bold gap-1.5 shadow-sm cursor-pointer active:scale-95"
                 title="Switch view to Student Access"
               >
                 <span>🎓 Switch to Student LMS</span>
               </button>
             )}
 
-            {/* User Profile in Top Right Header */}
+            {/* User Profile in Top Right Header with MacBook Glass styling */}
             <div className="relative">
               <button
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className="flex items-center gap-2 p-1 rounded hover:bg-slate-200 transition-colors cursor-pointer"
+                className="mac-btn mac-btn-glass p-1 pl-1.5 pr-2.5 rounded-full flex items-center gap-2 group cursor-pointer border border-slate-200/80"
               >
-                <img src="./student-avatar.jpg" alt="Profile" className="w-7 h-7 rounded-full object-cover border border-slate-400" />
-                <span className="text-xs font-bold text-slate-700">{adminUser.displayName}</span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                <img src="./student-avatar.jpg" alt="Profile" className="w-7 h-7 rounded-full object-cover border border-orange-500/40" />
+                <span className="text-xs font-bold text-slate-800">{adminUser.displayName}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 transition-transform" />
               </button>
 
               {profileDropdownOpen && (
-                <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50 text-xs">
-                  <div className="px-3 py-2 border-b border-slate-100 font-bold text-slate-800">
-                    {adminUser.displayName}
-                    <div className="text-[10px] text-slate-400 font-normal">{adminUser.role}</div>
+                <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-200/80 py-2 z-50 text-xs animate-in fade-in slide-in-from-top-2">
+                  <div className="px-4 py-2.5 border-b border-slate-100 font-bold text-slate-800">
+                    <span className="block text-slate-900">{adminUser.displayName}</span>
+                    <span className="text-[10px] text-orange-600 font-semibold uppercase">{adminUser.role}</span>
                   </div>
                   {onBackToStudentLms && (
                     <button
                       onClick={onBackToStudentLms}
-                      className="w-full text-left px-3 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
+                      className="w-full text-left px-4 py-2 text-slate-700 hover:bg-orange-50 hover:text-orange-700 flex items-center gap-2 cursor-pointer font-medium transition-colors"
                     >
                       <span>🎓 Go to Student Portal</span>
                     </button>
                   )}
                   <button
                     onClick={() => setIsAuthenticated(false)}
-                    className="w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 flex items-center gap-2 cursor-pointer border-t border-slate-100"
+                    className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 flex items-center gap-2 cursor-pointer border-t border-slate-100 transition-colors"
                   >
                     <LogOut className="w-3.5 h-3.5" />
                     <span>Log Out</span>
@@ -1266,12 +1289,12 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
 
         {/* Scrollable Page Body */}
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Header Row: Breadcrumb on left + DV Analytics Logo on right (Matches Screenshot 1) */}
-          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+          {/* Header Row: Breadcrumb on left + DV Analytics Logo on right - macOS Frosted Card */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
             <div className="flex items-center gap-2 text-slate-600 text-sm font-semibold">
-              <Edit3 className="w-4 h-4 text-slate-400" />
+              <Edit3 className="w-4 h-4 text-orange-500" />
               <span>/</span>
-              <span className="text-slate-800 font-bold">
+              <span className="text-slate-900 font-bold">
                 {activeMenu === 'user-master' && "User Master"}
                 {activeMenu === 'branch-master' && "Branch Master"}
                 {activeMenu === 'skill-master' && "Skill Master"}
@@ -1372,7 +1395,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
             <div className="bg-white p-6 rounded border border-slate-200 text-xs space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-sm text-slate-800">TeleCaller Master</h3>
-                <button onClick={() => showToast("Create TeleCaller clicked")} className="bg-[#26B99A] text-white px-3 py-1.5 rounded text-xs font-semibold">Create TeleCaller</button>
+                <button onClick={() => showToast("Create TeleCaller clicked")} className="mac-btn mac-btn-orange text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-xs cursor-pointer active:scale-95">Create TeleCaller</button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {["PRIYANKA MISHRA", "PRABHAT KUMAR SAHOO", "SANGHAMITRA PARIDA", "ROHIT VERMA", "POOJA ACHARYA", "PALLAVI DASH", "DIPAK BEHERA", "SNEHA PRADHAN", "RUNU BALA NAYAK"].map(tc => (
@@ -1389,7 +1412,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
             <div className="bg-white p-6 rounded border border-slate-200 text-xs space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-sm text-slate-800">Department Master</h3>
-                <button onClick={() => showToast("Create Department clicked")} className="bg-[#26B99A] text-white px-3 py-1.5 rounded text-xs font-semibold">Create Department</button>
+                <button onClick={() => showToast("Create Department clicked")} className="mac-btn mac-btn-orange text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-xs cursor-pointer active:scale-95">Create Department</button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {["DATA SCIENCE & AI", "DATA ENGINEERING", "CYBER SECURITY", "BUSINESS INTELLIGENCE", "FULL STACK WEB", "CORPORATE TRAINING", "ADMIN & OPERATIONS", "ACCOUNTS & FINANCE"].map(dep => (
@@ -1406,7 +1429,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
             <div className="bg-white p-6 rounded border border-slate-200 text-xs space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-sm text-slate-800">Designation Master</h3>
-                <button onClick={() => showToast("Create Designation clicked")} className="bg-[#26B99A] text-white px-3 py-1.5 rounded text-xs font-semibold">Create Designation</button>
+                <button onClick={() => showToast("Create Designation clicked")} className="mac-btn mac-btn-orange text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-xs cursor-pointer active:scale-95">Create Designation</button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {["SUPER ADMIN", "DIRECTOR", "ADMINISTRATOR", "SENIOR MENTOR", "MENTOR", "L&D LEAD", "PAYROLL ADMIN", "ACCOUNTS MANAGER", "ACCOUNTS EXECUTIVE", "SENIOR COUNSELOR", "TELECALLER", "PLACEMENT HEAD"].map(des => (
@@ -1645,7 +1668,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleSelectMenu('daily-collection')}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#2A3F54] hover:bg-[#1f2b37] text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#2A3F54] hover:bg-white/10 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
                   >
                     <span>View Daily Collection Ledger</span>
                     <ChevronRight className="w-3.5 h-3.5" />
@@ -2252,7 +2275,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
               </div>
               <div className="flex justify-end gap-2 pt-3 border-t">
                 <button type="button" onClick={() => setCreateRegOpen(false)} className="px-3 py-1.5 border rounded">Cancel</button>
-                <button type="submit" className="px-5 py-1.5 bg-[#26B99A] text-white rounded font-bold">Register Student</button>
+                <button type="submit" className="mac-btn mac-btn-orange px-5 py-2 text-white rounded-xl font-bold shadow-xs cursor-pointer active:scale-95">Register Student</button>
               </div>
             </form>
           </div>
@@ -2312,7 +2335,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
             </div>
             <div className="flex justify-end gap-2">
               <button onClick={() => setReviewModalItem(null)} className="px-3 py-1.5 border rounded">Cancel</button>
-              <button onClick={handleApproveAssignment} className="px-4 py-1.5 bg-[#26B99A] text-white font-bold rounded">Approve & Publish Score</button>
+              <button onClick={handleApproveAssignment} className="mac-btn mac-btn-orange px-4 py-2 text-white font-bold rounded-xl shadow-xs cursor-pointer active:scale-95">Approve & Publish Score</button>
             </div>
           </div>
         </div>
