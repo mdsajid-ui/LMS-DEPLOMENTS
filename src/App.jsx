@@ -111,7 +111,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex font-sans antialiased">
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex font-sans antialiased overflow-x-hidden">
       {/* Left Navigation Sidebar */}
       <Sidebar
         currentTab={currentTab}
@@ -123,11 +123,7 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <div 
-        className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${
-          sidebarCollapsed ? 'pl-20' : 'pl-72'
-        }`}
-      >
+      <div className="flex-1 flex flex-col min-h-screen min-w-0 transition-all duration-300">
         {/* Top Navbar Header */}
         <Header
           collapsed={sidebarCollapsed}
