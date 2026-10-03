@@ -33,7 +33,8 @@ import {
   Shuffle,
   Download,
   Video,
-  Play
+  Play,
+  PlayCircle
 } from 'lucide-react';
 import { 
   getStoredStudents, 

@@ -13,7 +13,9 @@ import {
   Settings, 
   ExternalLink,
   HelpCircle,
-  Sparkles
+  Sparkles,
+  Video,
+  BarChart3
 } from 'lucide-react';
 import Logo from './Logo';
 
