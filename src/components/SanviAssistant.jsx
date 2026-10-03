@@ -91,21 +91,35 @@ export default function SanviAssistant({
 
   const checkWakeWord = (text) => {
     if (!text) return false;
-    const l = text.toLowerCase();
+    const l = text.toLowerCase().trim();
+    const clean = l.replace(/[.,/#!$%^&*;:{}=\-_`~()?]/g, "").trim();
+
+    // Exact or direct prefix match
+    if (
+      clean === 'hey saanvi' || clean === 'hey sanvi' || clean === 'hey sunvi' ||
+      clean === 'saanvi' || clean === 'sanvi' || clean === 'sunvi' ||
+      clean === 'shanvi' || clean === 'shaanvi' || clean === 'samvi' ||
+      clean === 'hey sajid' || clean === 'sajid' ||
+      clean === 'hey chatgpt' || clean === 'hey gemini' || clean === 'jarvis'
+    ) return true;
+
+    // Phonetic regex for Indian English and international voice variations
+    const wakeRegex = /\b(hey|hi|hello|ok|okay|a)?\s*(s[a-z]{1,4}[nvw][iey]|s[a-z]{1,3}v[iey]|san\s*vi|sun\s*vi|saan\s*vi|shan\s*vi|shanti|samvi|tanvi|sonvi|sami|sandi|sandy|jarvis|gemini|chatgpt|sajid)\b/i;
+    if (wakeRegex.test(l) || wakeRegex.test(clean)) return true;
+
     return (
-      l.includes('hey sanvi') || 
-      l.includes('hey sunvi') || 
-      l.includes('hey saanvi') || 
-      l.includes('hey shanvi') || 
-      l.includes('hey chatgpt') || 
-      l.includes('hey gemini') || 
-      l.includes('hey sajid') || 
       l.includes('sanvi') || 
-      l.includes('sunvi') || 
       l.includes('saanvi') || 
+      l.includes('sunvi') || 
       l.includes('shanvi') || 
-      l.includes('sonvi') || 
-      l.includes('jarvis')
+      l.includes('shaanvi') || 
+      l.includes('samvi') ||
+      l.includes('sonvi') ||
+      l.includes('sami') ||
+      l.includes('sajid') ||
+      l.includes('jarvis') ||
+      l.includes('chatgpt') ||
+      l.includes('gemini')
     );
   };
 
@@ -117,6 +131,61 @@ export default function SanviAssistant({
       isWakeActiveRef.current = false;
       setIsWakeActive(false);
     }, durationMs);
+  };
+
+  // Explicit user-driven mic activation (bypasses browser autoplay & background mic blocking)
+  const activateMicrophoneAndVoice = async () => {
+    try {
+      if (typeof window !== 'undefined' && navigator?.mediaDevices?.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Release stream so Web Speech API has exclusive access to the audio hardware
+        stream.getTracks().forEach(track => track.stop());
+      }
+    } catch (err) {
+      console.warn('[Saanvi Voice] UserMedia request note:', err);
+    }
+
+    // Unlock Web Audio Context & SpeechSynthesis
+    try {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+      }
+      playWakeChime();
+    } catch (_e) {}
+
+    // Start recognition safely
+    setAlwaysListening(true);
+    alwaysListeningRef.current = true;
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (_e) {}
+    }
+  };
+
+  // Auto-unlock microphone & audio on user's first click or touch anywhere on the page
+  useEffect(() => {
+    const handleFirstGesture = () => {
+      activateMicrophoneAndVoice();
+    };
+    window.addEventListener('click', handleFirstGesture, { once: true });
+    window.addEventListener('keydown', handleFirstGesture, { once: true });
+    window.addEventListener('touchstart', handleFirstGesture, { once: true });
+    return () => {
+      window.removeEventListener('click', handleFirstGesture);
+      window.removeEventListener('keydown', handleFirstGesture);
+      window.removeEventListener('touchstart', handleFirstGesture);
+    };
+  }, []);
+
+  // One-click instant voice activator & greeting
+  const handleFloatingButtonClick = async () => {
+    setIsOpen(true);
+    setIsMinimized(false);
+    refreshWakeSession(120000);
+    await activateMicrophoneAndVoice();
+    speakSanviResponse("Hello Sajid, I'm listening. How can I help you today?");
   };
 
   // 24/7 Resilient Voice Watchdog - Auto-recovers from browser pauses or mic dropouts
@@ -241,7 +310,7 @@ export default function SanviAssistant({
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
-        recognition.lang = 'en-US';
+        recognition.lang = (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : 'en-IN';
 
         recognition.onstart = () => {
           setIsListening(true);
@@ -937,8 +1006,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
       cleanLower === 'hey chatgpt' || cleanLower === 'hey gemini' || cleanLower === 'hey sajid' ||
       cleanLower.startsWith('hey saanvi') || cleanLower.startsWith('hey sanvi') || cleanLower.startsWith('hey sunvi') ||
       cleanLower.startsWith('hi saanvi') || cleanLower.startsWith('hi sanvi') || cleanLower.startsWith('hi sunvi') ||
-      cleanLower.startsWith('hello saanvi') || cleanLower.startsWith('hello sanvi') ||
-      (hasSunviOrSanvi && (cleanLower.includes('there') || cleanLower.includes('listen') || cleanLower.split(' ').length <= 2))
+      (checkWakeWord(cleanLower) && (cleanLower.split(' ').length <= 4 || cleanLower.includes('there') || cleanLower.includes('listen') || cleanLower.includes('help') || hasSunviOrSanvi))
     ) {
       replyText = "Hello Sajid, I'm listening. How can I help you today?";
       spokenVoiceText = "Hello Sajid, I'm listening.";
@@ -1105,28 +1173,35 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
       {/* Floating Futuristic Saanvi Voice Assistant Button */}
       {!isOpen && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
-          {/* Pulsing Helper Tooltip */}
+          {/* Pulsing Helper Tooltip with Live Mic Status */}
           <div 
-            onClick={() => {
-              setIsOpen(true);
-              setAlwaysListening(true);
-              playWakeChime();
-            }}
-            className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 text-white border border-rose-500/30 shadow-xl backdrop-blur-md cursor-pointer hover:border-rose-400 transition-all group"
+            onClick={handleFloatingButtonClick}
+            className={`hidden sm:flex items-center gap-2.5 px-3.5 py-1.5 rounded-full text-white border shadow-xl backdrop-blur-md cursor-pointer transition-all group ${
+              isListening 
+                ? 'bg-slate-900/90 border-emerald-500/50 hover:border-emerald-400' 
+                : 'bg-slate-900/90 border-rose-500/40 hover:border-rose-400'
+            }`}
           >
-            <span className="w-2 h-2 rounded-full bg-rose-400 animate-ping"></span>
-            <span className="text-xs font-semibold tracking-wide">
-              Say <span className="text-rose-400 font-bold">"Hey Saanvi"</span>
-            </span>
+            {isListening ? (
+              <>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span className="text-xs font-semibold tracking-wide flex items-center gap-1">
+                  🟢 Listening • Say <span className="text-emerald-400 font-bold">"Hey Saanvi"</span>
+                </span>
+              </>
+            ) : (
+              <>
+                <Mic className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+                <span className="text-xs font-semibold tracking-wide flex items-center gap-1">
+                  🎙️ Tap to Activate Voice • Say <span className="text-rose-400 font-bold">"Hey Saanvi"</span>
+                </span>
+              </>
+            )}
           </div>
 
           {/* Holographic Glowing Button */}
           <button
-            onClick={() => {
-              setIsOpen(true);
-              setAlwaysListening(true);
-              playWakeChime();
-            }}
+            onClick={handleFloatingButtonClick}
             aria-label="Open Saanvi AI Assistant"
             className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-slate-950 via-slate-900 to-rose-950 text-white flex items-center justify-center shadow-2xl shadow-rose-500/30 border-2 border-rose-400/60 hover:scale-105 active:scale-95 transition-all group cursor-pointer"
           >

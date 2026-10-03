@@ -15,21 +15,35 @@ global.localStorage = {
 // -------------------------------------------------------------
 const checkWakeWord = (text) => {
   if (!text) return false;
-  const l = text.toLowerCase();
+  const l = text.toLowerCase().trim();
+  const clean = l.replace(/[.,/#!$%^&*;:{}=\-_`~()?]/g, "").trim();
+
+  // Exact or direct prefix match
+  if (
+    clean === 'hey saanvi' || clean === 'hey sanvi' || clean === 'hey sunvi' ||
+    clean === 'saanvi' || clean === 'sanvi' || clean === 'sunvi' ||
+    clean === 'shanvi' || clean === 'shaanvi' || clean === 'samvi' ||
+    clean === 'hey sajid' || clean === 'sajid' ||
+    clean === 'hey chatgpt' || clean === 'hey gemini' || clean === 'jarvis'
+  ) return true;
+
+  // Phonetic regex for Indian English and international voice variations
+  const wakeRegex = /\b(hey|hi|hello|ok|okay|a)?\s*(s[a-z]{1,4}[nvw][iey]|s[a-z]{1,3}v[iey]|san\s*vi|sun\s*vi|saan\s*vi|shan\s*vi|shanti|samvi|tanvi|sonvi|sami|sandi|sandy|jarvis|gemini|chatgpt|sajid)\b/i;
+  if (wakeRegex.test(l) || wakeRegex.test(clean)) return true;
+
   return (
-    l.includes('hey sanvi') || 
-    l.includes('hey sunvi') || 
-    l.includes('hey saanvi') || 
-    l.includes('hey shanvi') || 
-    l.includes('hey chatgpt') || 
-    l.includes('hey gemini') || 
-    l.includes('hey sajid') || 
     l.includes('sanvi') || 
-    l.includes('sunvi') || 
     l.includes('saanvi') || 
+    l.includes('sunvi') || 
     l.includes('shanvi') || 
-    l.includes('sonvi') || 
-    l.includes('jarvis')
+    l.includes('shaanvi') || 
+    l.includes('samvi') ||
+    l.includes('sonvi') ||
+    l.includes('sami') ||
+    l.includes('sajid') ||
+    l.includes('jarvis') ||
+    l.includes('chatgpt') ||
+    l.includes('gemini')
   );
 };
 
@@ -37,6 +51,10 @@ test('Voice Activation: Wake word detection identifies all user variations', () 
   assert.equal(checkWakeWord('Hey Saanvi'), true);
   assert.equal(checkWakeWord('hey saanvi can you help me'), true);
   assert.equal(checkWakeWord('Hey Sanvi'), true);
+  assert.equal(checkWakeWord('hey sanvi.'), true);
+  assert.equal(checkWakeWord('hey samvi'), true);
+  assert.equal(checkWakeWord('hey shaanvi'), true);
+  assert.equal(checkWakeWord('hey san vi'), true);
   assert.equal(checkWakeWord('Saanvi are you there?'), true);
   assert.equal(checkWakeWord('Hey Sajid'), true);
   assert.equal(checkWakeWord('hey gemini please check this'), true);
