@@ -77,6 +77,17 @@ import {
   AssignBatchView,
   MockInterviewFeedbackView
 } from '../components/AdminMasterViews';
+import {
+  ReportInvoiceView,
+  ReportStudentView,
+  ReportOutstandingView,
+  ReportAttendanceView,
+  ReportAssignmentView,
+  ReportFeedbackView,
+  ReportMCQView,
+  ReportPracticalView,
+  ReportExpenseView
+} from '../components/AdminReportViews';
 import collectionData from '../data/collectionReportData.json';
 import { 
   saveAdminSession, 
@@ -148,6 +159,17 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     if (url.includes('external_link') || url.includes('registrationlink')) return 'external-link';
     if (url.includes('dailycollection') || url.includes('daily-collection')) return 'daily-collection';
     if (url.includes('monthlycollection') || url.includes('monthly-collection')) return 'monthly-collection';
+    if (url.includes('rpt_invoice') || url.includes('report-invoice')) return 'report-invoice';
+    if (url.includes('rpt_student') || url.includes('report-student')) return 'report-student';
+    if (url.includes('rpt_collection') || url.includes('report-collection')) return 'daily-collection';
+    if (url.includes('rpt_collectionsummary') || url.includes('report-collection-summary')) return 'monthly-collection';
+    if (url.includes('rpt_outstanding') || url.includes('report-outstanding')) return 'report-outstanding';
+    if (url.includes('rpt_feedback') || url.includes('report-feedback')) return 'report-feedback';
+    if (url.includes('rpt_attendance') || url.includes('report-attendance')) return 'report-attendance';
+    if (url.includes('rpt_assignment') || url.includes('report-assignment')) return 'report-assignment';
+    if (url.includes('rpt_mcq') || url.includes('report-mcq')) return 'report-mcq';
+    if (url.includes('rpt_practical') || url.includes('report-practical')) return 'report-practical';
+    if (url.includes('rpt_expense') || url.includes('report-expense')) return 'report-expense';
     if (url.includes('fee')) return 'fee';
     if (url.includes('sessiondelete')) return 'session-delete';
     if (url.includes('sessionsp')) return 'non-live-session';
@@ -199,6 +221,15 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     else if (menuKey === 'mock-interview') window.location.hash = '/admin/MockinterviewFeedback.aspx';
     else if (menuKey === 'daily-collection') window.location.hash = '/admin/DailyCollection.aspx';
     else if (menuKey === 'monthly-collection') window.location.hash = '/admin/MonthlyCollection.aspx';
+    else if (menuKey === 'report-invoice') window.location.hash = '/admin/rpt_Invoice.aspx';
+    else if (menuKey === 'report-student') window.location.hash = '/admin/rpt_Student.aspx';
+    else if (menuKey === 'report-outstanding') window.location.hash = '/admin/rpt_Outstanding.aspx';
+    else if (menuKey === 'report-feedback') window.location.hash = '/admin/rpt_Feedback.aspx';
+    else if (menuKey === 'report-attendance') window.location.hash = '/admin/rpt_Attendance.aspx';
+    else if (menuKey === 'report-assignment') window.location.hash = '/admin/rpt_Assignment.aspx';
+    else if (menuKey === 'report-mcq') window.location.hash = '/admin/rpt_MCQ.aspx';
+    else if (menuKey === 'report-practical') window.location.hash = '/admin/rpt_Practical.aspx';
+    else if (menuKey === 'report-expense') window.location.hash = '/admin/rpt_Expense.aspx';
     else if (menuKey === 'dashboard') window.location.hash = '/admin/dashboard.aspx';
     else window.location.hash = `/admin/${menuKey}.aspx`;
   };
@@ -1020,35 +1051,45 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
             {sidebarOpen && openAccordions.reports && (
               <div className="relative pl-5 py-1 text-[11px] bg-[#202d3d] before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-teal-500/30">
                 {[
-                  { name: "Invoice", url: "rpt_Invoice.aspx" },
-                  { name: "Student", url: "rpt_Student.aspx" },
-                  { name: "Collection", url: "rpt_Collection.aspx" },
-                  { name: "Collection Summary", url: "rpt_CollectionSummary.aspx" },
-                  { name: "Outstanding", url: "rpt_Outstanding.aspx" },
-                  { name: "Feedback", url: "rpt_Feedback.aspx" },
-                  { name: "Attendance", url: "rpt_Attendance.aspx" },
-                  { name: "Assignment", url: "rpt_Assignment.aspx" },
-                  { name: "MCQ", url: "rpt_MCQ.aspx" },
-                  { name: "Practical", url: "rpt_Practical.aspx" },
-                  { name: "Expense", url: "rpt_Expense.aspx" }
-                ].map(r => (
-                  <button
-                    key={r.name}
-                    onClick={() => {
-                      if (r.name === 'Collection' || r.name === 'Collection Summary') {
-                        handleSelectMenu('daily-collection');
-                        showToast(`Opened ${r.name} Report`);
-                      } else {
-                        showToast(`Viewing Report: ${r.name} (${r.url})`);
-                      }
-                    }}
-                    title={`https://edu.dvanalyticsmds.com/admin/${r.url}`}
-                    className="w-full flex items-center gap-2.5 py-1.5 px-3 rounded text-slate-300 hover:text-white hover:bg-[#1f2b37] transition-colors text-left group cursor-pointer"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-500 group-hover:bg-[#1abb9c] shrink-0 -ml-1 transition-colors" />
-                    <span>{r.name}</span>
-                  </button>
-                ))}
+                  { name: "Invoice", url: "rpt_Invoice.aspx", key: "report-invoice" },
+                  { name: "Student", url: "rpt_Student.aspx", key: "report-student" },
+                  { name: "Collection", url: "rpt_Collection.aspx", key: "daily-collection" },
+                  { name: "Collection Summary", url: "rpt_CollectionSummary.aspx", key: "monthly-collection" },
+                  { name: "Outstanding", url: "rpt_Outstanding.aspx", key: "report-outstanding" },
+                  { name: "Feedback", url: "rpt_Feedback.aspx", key: "report-feedback" },
+                  { name: "Attendance", url: "rpt_Attendance.aspx", key: "report-attendance" },
+                  { name: "Assignment", url: "rpt_Assignment.aspx", key: "report-assignment" },
+                  { name: "MCQ", url: "rpt_MCQ.aspx", key: "report-mcq" },
+                  { name: "Practical", url: "rpt_Practical.aspx", key: "report-practical" },
+                  { name: "Expense", url: "rpt_Expense.aspx", key: "report-expense" }
+                ].map(r => {
+                  const isActive = activeMenu === r.key;
+                  return (
+                    <button
+                      key={r.name}
+                      onClick={() => {
+                        handleSelectMenu(r.key);
+                        showToast(`Opened ${r.name} Report (${r.url})`);
+                      }}
+                      title={`https://edu.dvanalyticsmds.com/admin/${r.url}`}
+                      className={`w-full flex items-center justify-between py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${
+                        isActive 
+                          ? 'bg-[#1abb9c] text-white font-bold shadow-xs' 
+                          : 'text-slate-300 hover:text-white hover:bg-[#1f2b37]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 transition-colors ${
+                          isActive ? 'bg-white' : 'bg-slate-500 group-hover:bg-[#1abb9c]'
+                        }`} />
+                        <span>{r.name}</span>
+                      </div>
+                      <span className={`text-[9px] font-mono ${isActive ? 'text-teal-100' : 'text-slate-500'}`}>
+                        {r.url.replace('.aspx', '')}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -1168,8 +1209,17 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                 {activeMenu === 'exe-users' && "Release User"}
                 {activeMenu === 'assign-batch' && "Assign Batch"}
                 {activeMenu === 'mock-interview' && "Mock Interview Feedback"}
-                {activeMenu === 'monthly-collection' && "Monthly Collection"}
-                {activeMenu === 'daily-collection' && "Daily Collection"}
+                {activeMenu === 'monthly-collection' && "Monthly Collection (rpt_CollectionSummary.aspx)"}
+                {activeMenu === 'daily-collection' && "Daily Collection Ledger (rpt_Collection.aspx)"}
+                {activeMenu === 'report-invoice' && "Fee Invoice Register (rpt_Invoice.aspx)"}
+                {activeMenu === 'report-student' && "Student Enrollment Report (rpt_Student.aspx)"}
+                {activeMenu === 'report-outstanding' && "Outstanding Fees & Receivables (rpt_Outstanding.aspx)"}
+                {activeMenu === 'report-feedback' && "Faculty & Course Feedback Matrix (rpt_Feedback.aspx)"}
+                {activeMenu === 'report-attendance' && "Biometric & Lecture Attendance Compliance (rpt_Attendance.aspx)"}
+                {activeMenu === 'report-assignment' && "Assignment Evaluation & Grading Register (rpt_Assignment.aspx)"}
+                {activeMenu === 'report-mcq' && "MCQ & CAT Online Examination Report (rpt_MCQ.aspx)"}
+                {activeMenu === 'report-practical' && "Practical Lab & Industry Capstone Defense (rpt_Practical.aspx)"}
+                {activeMenu === 'report-expense' && "Center Operations Expenditure Ledger (rpt_Expense.aspx)"}
                 {activeMenu === 'dashboard' && "Monthly Collection"}
               </span>
             </div>
@@ -1905,6 +1955,45 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                 </div>
               )}
             </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* REPORT VIEWS (rpt_*.aspx)                                 */}
+          {/* ========================================================= */}
+          {activeMenu === 'report-invoice' && (
+            <ReportInvoiceView showToast={showToast} />
+          )}
+
+          {activeMenu === 'report-student' && (
+            <ReportStudentView showToast={showToast} />
+          )}
+
+          {activeMenu === 'report-outstanding' && (
+            <ReportOutstandingView showToast={showToast} />
+          )}
+
+          {activeMenu === 'report-attendance' && (
+            <ReportAttendanceView showToast={showToast} />
+          )}
+
+          {activeMenu === 'report-assignment' && (
+            <ReportAssignmentView showToast={showToast} />
+          )}
+
+          {activeMenu === 'report-feedback' && (
+            <ReportFeedbackView showToast={showToast} />
+          )}
+
+          {activeMenu === 'report-mcq' && (
+            <ReportMCQView showToast={showToast} />
+          )}
+
+          {activeMenu === 'report-practical' && (
+            <ReportPracticalView showToast={showToast} />
+          )}
+
+          {activeMenu === 'report-expense' && (
+            <ReportExpenseView showToast={showToast} />
           )}
         </main>
       </div>

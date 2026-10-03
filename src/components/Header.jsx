@@ -26,6 +26,7 @@ export default function Header({
   onOpenSupport,
   onOpenChat,
   onOpenAdmin,
+  onNavigateToProgressReport,
   selectedBatch,
   setSelectedBatch
 }) {
@@ -153,8 +154,19 @@ export default function Header({
                     <Settings className="w-4 h-4 text-teal-600" /> Switch to Admin Access
                   </button>
                 )}
-                <button className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2.5">
-                  <User className="w-4 h-4 text-slate-400" /> My Profile & Enrollment
+                {onNavigateToProgressReport && (
+                  <button 
+                    onClick={() => { setProfileOpen(false); onNavigateToProgressReport(); }} 
+                    className="w-full text-left px-4 py-2 hover:bg-orange-50 text-orange-700 font-bold flex items-center gap-2.5 border-b border-slate-100 cursor-pointer"
+                  >
+                    <BarChart3 className="w-4 h-4 text-orange-600" /> Progress Report &amp; Grade Card
+                  </button>
+                )}
+                <button 
+                  onClick={() => { setProfileOpen(false); onNavigateToProgressReport?.(); }}
+                  className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer"
+                >
+                  <User className="w-4 h-4 text-slate-400" /> My Profile &amp; Enrollment
                 </button>
                 <button className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2.5">
                   <Settings className="w-4 h-4 text-slate-400" /> Account Preferences

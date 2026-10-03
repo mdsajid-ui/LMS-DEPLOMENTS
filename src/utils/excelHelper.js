@@ -79,3 +79,29 @@ export function downloadFile(filename = "Material_Archive.zip", customContent = 
   URL.revokeObjectURL(url);
   return true;
 }
+
+export function exportArrayToCsv(headers = [], rows = [], filename = "DV_Analytics_Report.csv") {
+  const sanitizedHeaders = headers.map(h => `"${String(h).replace(/"/g, '""')}"`);
+  const csvRows = [
+    sanitizedHeaders.join(","),
+    ...rows.map(row => 
+      row.map(val => {
+        if (val === null || val === undefined) return '""';
+        const str = String(val);
+        return `"${str.replace(/"/g, '""')}"`;
+      }).join(",")
+    )
+  ];
+
+  const csvString = csvRows.join("\r\n");
+  const blob = new Blob(["\uFEFF" + csvString], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", filename.endsWith('.csv') ? filename : `${filename}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  return true;
+}

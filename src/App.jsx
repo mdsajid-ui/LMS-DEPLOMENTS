@@ -140,6 +140,7 @@ export default function App() {
           onOpenAdmin={handleOpenAdmin}
           selectedBatch={selectedBatch}
           setSelectedBatch={setSelectedBatch}
+          onNavigateToProgressReport={() => setCurrentTab('progress-report')}
         />
 
         {/* Page Content View */}
@@ -160,6 +161,7 @@ export default function App() {
               onNavigateToAttendance={() => setCurrentTab('attendance')}
               onNavigateToSession={() => setCurrentTab('session')}
               onNavigateToCat={() => setCurrentTab('application-test')}
+              onNavigateToProgressReport={() => setCurrentTab('progress-report')}
               onOpenSanviAssistant={() => setSanviAssistantOpen(true)}
             />
           )}

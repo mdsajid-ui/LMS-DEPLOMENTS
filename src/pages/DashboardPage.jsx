@@ -33,6 +33,7 @@ export default function DashboardPage({
   onNavigateToAttendance, 
   onNavigateToSession, 
   onNavigateToCat,
+  onNavigateToProgressReport,
   onOpenSanviAssistant,
   onOpenDvAssistant
 }) {
@@ -163,6 +164,41 @@ export default function DashboardPage({
           />
         </div>
       </div>
+
+      {/* Progress Report & Grade Card Access Strip */}
+      {onNavigateToProgressReport && (
+        <div 
+          onClick={onNavigateToProgressReport}
+          className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-950 p-4 rounded-2xl border border-slate-800 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md hover:border-orange-500/50 transition-all cursor-pointer group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center justify-center font-bold">
+              <Award className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="font-bold text-sm tracking-tight text-white group-hover:text-orange-400 transition-colors">
+                  Official Student Performance &amp; Progress Report
+                </h4>
+                <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30">
+                  Grade A+ (8.85 CGPA)
+                </span>
+              </div>
+              <p className="text-xs text-slate-400">
+                View verified module grade sheets, 11 skill competencies, assignments review, and official transcript download.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={(e) => { e.stopPropagation(); onNavigateToProgressReport(); }}
+            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition-all shadow-sm self-start sm:self-auto cursor-pointer"
+          >
+            <span>View Progress Report</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Advanced Section: Live Attendance vs. Recorded Video Watch Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
