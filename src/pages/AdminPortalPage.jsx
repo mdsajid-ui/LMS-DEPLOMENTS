@@ -49,7 +49,9 @@ import {
   Folder,
   Type,
   Mail,
-  IndianRupee
+  IndianRupee,
+  PhoneCall,
+  Building2
 } from 'lucide-react';
 import { downloadFile, generateAndDownloadExcel } from '../utils/excelHelper';
 import Logo from '../components/Logo';
@@ -253,6 +255,117 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     else if (menuKey === 'dashboard') window.location.hash = '/admin/dashboard.aspx';
     else window.location.hash = `/admin/${menuKey}.aspx`;
   };
+
+  const [sidebarSearch, setSidebarSearch] = useState('');
+
+  // Structured macOS Admin Navigation Architecture
+  const adminMenuGroups = [
+    {
+      id: 'dashboard',
+      label: 'DASHBOARD & REVENUE',
+      icon: Gauge,
+      badge: 'Live',
+      items: [
+        { key: 'collection-recovery', name: 'Collections & Recovery', icon: IndianRupee, badge: 'Live' },
+        { key: 'monthly-collection', name: 'Monthly Collection', icon: Calendar },
+        { key: 'daily-collection', name: 'Daily Collection', icon: TrendingUp }
+      ]
+    },
+    {
+      id: 'master',
+      label: 'MASTER DIRECTORIES',
+      icon: Monitor,
+      badge: '11',
+      items: [
+        { key: 'user-master', name: 'User Master', icon: Users },
+        { key: 'branch-master', name: 'Branch Master', icon: Building },
+        { key: 'skill-master', name: 'Skill Master', icon: Award },
+        { key: 'app-master', name: 'Application Master', icon: Layers },
+        { key: 'course-master', name: 'Course Master', icon: BookOpen },
+        { key: 'batch-master', name: 'Batch Master', icon: GraduationCap },
+        { key: 'mentor-master', name: 'Mentor Master', icon: UserCheck },
+        { key: 'non-live-master', name: 'Non Live Training', icon: Video },
+        { key: 'telecaller-master', name: 'TeleCaller Master', icon: PhoneCall },
+        { key: 'department-master', name: 'Department', icon: Building2 },
+        { key: 'designation-master', name: 'Designation', icon: Briefcase }
+      ]
+    },
+    {
+      id: 'approval',
+      label: 'APPROVAL WORKFLOWS',
+      icon: CheckCircle2,
+      badge: '5',
+      items: [
+        { key: 'pay-approval', name: 'Payment Approval', icon: CreditCard, badge: 'Audit' },
+        { key: 'reg-approval', name: 'Registration Approval', icon: CheckCircle2 },
+        { key: 'emp-approval', name: 'Employee Approval', icon: UserCheck },
+        { key: 'exp-approval', name: 'Expense Approval', icon: DollarSign },
+        { key: 'app-approval', name: 'Appraisal Approval', icon: Award }
+      ]
+    },
+    {
+      id: 'transaction',
+      label: 'OPERATIONS & SESSIONS',
+      icon: Folder,
+      badge: '21',
+      items: [
+        { key: 'external-link', name: 'Registration Web Link', icon: ExternalLink },
+        { key: 'reg', name: 'Registration Form (Reg.aspx)', icon: FileText },
+        { key: 'fee', name: 'Fee Management', icon: DollarSign },
+        { key: 'session', name: 'Live Sessions (Session.aspx)', icon: Video },
+        { key: 'session-delete', name: 'Live Session Delete', icon: Trash2 },
+        { key: 'assignment', name: 'Assignment Approval', icon: ClipboardCheck },
+        { key: 'resume', name: 'Resume Repository', icon: FileCheck },
+        { key: 'interview-kit', name: 'My Interview Kit', icon: Briefcase },
+        { key: 'non-live-session', name: 'Non Live Session', icon: FolderOpen },
+        { key: 'assign-non-live', name: 'Assign Non-Live Access', icon: UserCheck },
+        { key: 'release-user', name: 'Release User', icon: Key },
+        { key: 'exe-users', name: 'EXE Users', icon: ShieldCheck },
+        { key: 'assign-batch', name: 'Assign Students for Batch', icon: GraduationCap },
+        { key: 'mock-interview', name: 'Mock Interview Defense', icon: ShieldCheck },
+        { key: 'class', name: 'Class Management', icon: Video },
+        { key: 'discussion-forum', name: 'Discussion Forum', icon: Mail },
+        { key: 'app-users', name: 'App Users', icon: Users },
+        { key: 'import-lead', name: 'Import Leads', icon: UploadCloud },
+        { key: 'batch-completion', name: 'Batch Completion', icon: CheckCircle2 },
+        { key: 'assign-batch-collection', name: 'Assign Batch Collection', icon: DollarSign },
+        { key: 'expense', name: 'Expense Ledger', icon: DollarSign }
+      ]
+    },
+    {
+      id: 'applicationTest',
+      label: 'APPLICATION TEST',
+      icon: Type,
+      badge: '5',
+      items: [
+        { key: 'app-test-type', name: 'Test Type Master', icon: Type },
+        { key: 'app-test-topic', name: 'Topic Master', icon: BookOpen },
+        { key: 'app-test-diff', name: 'Difficulty Level', icon: Gauge },
+        { key: 'app-test-quest', name: 'Question Master', icon: FileText },
+        { key: 'app-test-cat', name: 'CAT Benchmark', icon: Award }
+      ]
+    },
+    {
+      id: 'reports',
+      label: 'ENTERPRISE REPORTS',
+      icon: Mail,
+      badge: '12',
+      items: [
+        { key: 'collection-recovery', name: 'Collection & Recovery', icon: IndianRupee, badge: 'Live' },
+        { key: 'daily-collection', name: 'Daily Collection Report', icon: TrendingUp },
+        { key: 'monthly-collection', name: 'Collection Summary', icon: Calendar },
+        { key: 'report-invoice', name: 'Invoice Report', icon: FileSpreadsheet },
+        { key: 'report-student', name: 'Student Report', icon: Users },
+        { key: 'report-outstanding', name: 'Outstanding Report', icon: AlertCircle },
+        { key: 'report-feedback', name: 'Feedback Report', icon: CheckCircle2 },
+        { key: 'report-attendance', name: 'Attendance Report', icon: Clock },
+        { key: 'report-assignment', name: 'Assignment Report', icon: ClipboardCheck },
+        { key: 'report-mcq', name: 'MCQ Assessment', icon: FileText },
+        { key: 'report-practical', name: 'Practical Lab Defense', icon: Database },
+        { key: 'report-expense', name: 'Expense Audit', icon: DollarSign }
+      ]
+    }
+  ];
 
   // Toast Alerts
   const [toastMessage, setToastMessage] = useState("");
@@ -775,462 +888,234 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
         </div>
       )}
 
-      {/* Admin Sidebar - DV Deep Navy & macOS MacBook Design System */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} h-full bg-gradient-to-b from-[#081220] via-[#0d1d36] to-[#060c17] text-slate-200 flex flex-col transition-all duration-300 shrink-0 border-r border-slate-800/80 z-40 select-none shadow-xl overflow-hidden`}>
-        {/* macOS Traffic Lights & Top Brand Logo */}
-        <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800/80 bg-[#081220]/75 backdrop-blur-xl">
+      {/* Admin Sidebar - macOS Studio UI Design System */}
+      <aside className={`${sidebarOpen ? 'w-72' : 'w-20'} h-full bg-gradient-to-b from-[#081220]/95 via-[#0c182c]/95 to-[#060c17]/98 backdrop-blur-2xl text-slate-200 flex flex-col transition-all duration-300 shrink-0 border-r border-white/10 z-40 select-none shadow-[4px_0_30px_rgba(0,0,0,0.4)] overflow-hidden`}>
+        {/* macOS Window Controls & DV Analytics Branding */}
+        <div className="h-16 px-4 flex items-center justify-between border-b border-white/10 bg-[#081220]/80 backdrop-blur-xl shrink-0">
           <div className="flex items-center gap-3">
             {sidebarOpen ? (
-              <div className="mac-traffic-lights mr-1.5" title="macOS Window Controls">
-                <span className="mac-dot mac-dot-red" title="Close"></span>
-                <span className="mac-dot mac-dot-yellow" title="Minimize"></span>
-                <span className="mac-dot mac-dot-green" title="Expand"></span>
+              <div className="flex items-center gap-2 group/lights py-1" title="macOS Window Controls">
+                <button 
+                  type="button"
+                  onClick={() => setIsAuthenticated(false)}
+                  title="Close Session" 
+                  className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e] flex items-center justify-center text-[8px] font-bold text-black/0 group-hover/lights:text-black/70 transition-colors shadow-inner cursor-pointer"
+                >
+                  ×
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setSidebarOpen(false)}
+                  title="Minimize Sidebar" 
+                  className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123] flex items-center justify-center text-[8px] font-bold text-black/0 group-hover/lights:text-black/70 transition-colors shadow-inner cursor-pointer"
+                >
+                  −
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setSidebarOpen(true)}
+                  title="Maximize Sidebar" 
+                  className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29] flex items-center justify-center text-[7px] font-bold text-black/0 group-hover/lights:text-black/70 transition-colors shadow-inner cursor-pointer"
+                >
+                  +
+                </button>
               </div>
             ) : (
               <div className="flex flex-col gap-1 items-center mr-1" title="macOS Window Controls">
-                <span className="w-2 h-2 rounded-full bg-[#ff5f56]"></span>
-                <span className="w-2 h-2 rounded-full bg-[#ffbd2e]"></span>
-                <span className="w-2 h-2 rounded-full bg-[#27c93f]"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></span>
               </div>
             )}
-            <Logo collapsed={!sidebarOpen} />
+            <div className="flex items-center gap-2">
+              <Logo collapsed={!sidebarOpen} />
+              {sidebarOpen && (
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                  Studio
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Profile Card inside Sidebar - macOS Frosted Navy Card */}
-        <div className="p-3 border-b border-slate-800/80">
-          <div className="rounded-2xl bg-gradient-to-b from-[#0f2347]/70 to-[#0b1728]/80 border border-slate-700/60 p-3 flex items-center gap-3 shadow-inner">
-            <div className="w-10 h-10 rounded-full bg-slate-800 border-2 border-orange-500/50 overflow-hidden flex items-center justify-center shrink-0 shadow-xs">
-              <img src="./student-avatar.jpg" alt="Admin" className="w-full h-full object-cover" />
+        {/* Spotlight Filter & Profile Card */}
+        <div className="p-3 border-b border-white/10 space-y-2.5 shrink-0 bg-white/[0.02]">
+          {sidebarOpen && (
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <input 
+                type="text"
+                value={sidebarSearch}
+                onChange={(e) => setSidebarSearch(e.target.value)}
+                placeholder="Search tools... (⌘K)"
+                className="w-full bg-[#040914]/80 text-white placeholder-slate-400 text-xs pl-8 pr-7 py-2 rounded-xl border border-white/10 focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/50 transition-all shadow-inner"
+              />
+              {sidebarSearch && (
+                <button
+                  type="button"
+                  onClick={() => setSidebarSearch('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* macOS Frosted Profile Badge */}
+          <div className="rounded-xl bg-gradient-to-b from-[#132238]/70 to-[#0a1424]/80 border border-white/10 p-2.5 flex items-center gap-3 shadow-inner">
+            <div className="relative shrink-0">
+              <div className="w-9 h-9 rounded-full bg-slate-800 border-2 border-orange-500/60 overflow-hidden flex items-center justify-center shadow-xs">
+                <img src="./student-avatar.jpg" alt="Admin" className="w-full h-full object-cover" />
+              </div>
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-[#0a1424]" />
             </div>
             {sidebarOpen && (
-              <div className="overflow-hidden">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-orange-400 block">System Admin</span>
+              <div className="overflow-hidden min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="text-[9px] uppercase font-bold tracking-widest text-orange-400 truncate block">Admin Node</span>
+                  <span className="text-[9px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-1 rounded border border-emerald-500/20">LIVE</span>
+                </div>
                 <span className="font-bold text-xs text-white truncate block">
-                  {adminUser.displayName}
+                  {adminUser.displayName || 'SK ABDUL SAJID'}
                 </span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Accordion Sidebar Menu with macOS Highlighting */}
-        <nav className="flex-1 overflow-y-auto min-h-0 py-2 text-xs divide-y divide-slate-800/60 scrollbar-thin">
-          {/* 1. Dashboard Accordion */}
-          <div className={openAccordions.dashboard ? "border-r-[4px] border-orange-500 bg-[#0f2347]/50" : ""}>
-            <button
-              onClick={() => toggleAccordion('dashboard')}
-              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5">
-                <Gauge className="w-4 h-4 text-orange-400" />
-                {sidebarOpen && <span className="font-semibold">Dashboard</span>}
+        {/* Navigation list with macOS styling */}
+        <nav className="flex-1 overflow-y-auto min-h-0 py-2 px-2 text-xs space-y-1 scrollbar-thin scrollbar-thumb-slate-700/50">
+          {sidebarSearch.trim() ? (
+            /* Search Results View */
+            <div className="space-y-1">
+              <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Matching Tools ({
+                  adminMenuGroups.flatMap(g => g.items).filter(i => i.name.toLowerCase().includes(sidebarSearch.toLowerCase())).length
+                })
               </div>
-              {sidebarOpen && (
-                openAccordions.dashboard ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-              )}
-            </button>
-            {sidebarOpen && openAccordions.dashboard && (
-              <div className="relative pl-5 py-1 text-[11px] bg-[#091526]/80 before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-orange-500/30">
-                <button
-                  onClick={() => handleSelectMenu('collection-recovery')}
-                  className={`w-full flex items-center justify-between py-1.5 px-3 rounded-lg transition-all text-left group cursor-pointer ${activeMenu === 'collection-recovery' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'collection-recovery' ? 'bg-white' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                    <span>Collections & Recovery</span>
-                  </div>
-                  <span className="text-[9px] px-1.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded font-bold uppercase">Live</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('monthly-collection')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded-lg transition-all text-left group cursor-pointer ${activeMenu === 'monthly-collection' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'monthly-collection' ? 'bg-white' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Monthly Collection</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('daily-collection')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded-lg transition-all text-left group cursor-pointer ${activeMenu === 'daily-collection' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'daily-collection' ? 'bg-white' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Daily Collection</span>
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* 2. Master Accordion */}
-          <div className={openAccordions.master ? "border-r-[4px] border-orange-500 bg-[#0f2347]/50" : ""}>
-            <button
-              onClick={() => toggleAccordion('master')}
-              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5">
-                <Monitor className="w-4 h-4 text-slate-400" />
-                {sidebarOpen && <span className="font-semibold">Master</span>}
-              </div>
-              {sidebarOpen && (
-                openAccordions.master ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-              )}
-            </button>
-            {sidebarOpen && openAccordions.master && (
-              <div className="relative pl-5 py-1 text-[11px] bg-[#091526]/80 before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-orange-500/30">
-                {[
-                  { key: 'user-master', name: 'User Master' },
-                  { key: 'branch-master', name: 'Branch Master' },
-                  { key: 'skill-master', name: 'Skill Master' },
-                  { key: 'app-master', name: 'Application Master' },
-                  { key: 'course-master', name: 'Course Master' },
-                  { key: 'batch-master', name: 'Batch Master' },
-                  { key: 'mentor-master', name: 'Mentor Master' },
-                  { key: 'non-live-master', name: 'Non Live Training' },
-                  { key: 'telecaller-master', name: 'TeleCaller Master' },
-                  { key: 'department-master', name: 'Department' },
-                  { key: 'designation-master', name: 'Designation' }
-                ].map(m => (
-                  <button
-                    key={m.key}
-                    onClick={() => handleSelectMenu(m.key)}
-                    className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${
-                      activeMenu === m.key 
-                        ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' 
-                        : 'text-slate-300 hover:text-white hover:bg-white/10'
-                    }`}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 transition-colors ${
-                      activeMenu === m.key ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'
-                    }`} />
-                    <span>{m.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 3. Approval Accordion */}
-          <div className={openAccordions.approval ? "border-r-[4px] border-orange-500 bg-[#0f2347]/50" : ""}>
-            <button
-              onClick={() => toggleAccordion('approval')}
-              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-slate-400" />
-                {sidebarOpen && <span className="font-semibold">Approval</span>}
-              </div>
-              {sidebarOpen && (
-                openAccordions.approval ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-              )}
-            </button>
-            {sidebarOpen && openAccordions.approval && (
-              <div className="relative pl-5 py-1 text-[11px] bg-[#091526]/80 before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-orange-500/30">
-                {[
-                  { key: 'pay-approval', name: 'Payment Approval' },
-                  { key: 'reg-approval', name: 'Registration Approval' },
-                  { key: 'emp-approval', name: 'Employee Approval' },
-                  { key: 'exp-approval', name: 'Expense Approval' },
-                  { key: 'app-approval', name: 'Appraisal Approval' }
-                ].map(a => (
-                  <button
-                    key={a.key}
-                    onClick={() => handleSelectMenu(a.key)}
-                    className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${
-                      activeMenu === a.key 
-                        ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' 
-                        : 'text-slate-300 hover:text-white hover:bg-white/10'
-                    }`}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 transition-colors ${
-                      activeMenu === a.key ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'
-                    }`} />
-                    <span>{a.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 4. Transaction Accordion */}
-          <div className={openAccordions.transaction ? "border-r-[4px] border-orange-500 bg-[#0f2347]/50" : ""}>
-            <button
-              onClick={() => toggleAccordion('transaction')}
-              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5">
-                <Folder className="w-4 h-4 text-slate-400" />
-                {sidebarOpen && <span className="font-semibold">Transaction</span>}
-              </div>
-              {sidebarOpen && (
-                openAccordions.transaction ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-              )}
-            </button>
-            {sidebarOpen && openAccordions.transaction && (
-              <div className="relative pl-5 py-1 text-[11px] bg-[#091526]/80 before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-orange-500/30">
-                <button
-                  onClick={() => handleSelectMenu('external-link')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'external-link' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'external-link' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Registration Web Link</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('reg')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'reg' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'reg' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Registration (Reg.aspx)</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('fee')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'fee' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'fee' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Fee (Fee.aspx)</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('session')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'session' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'session' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Live Session (Session.aspx)</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('session-delete')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'session-delete' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'session-delete' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Live Session - Delete</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('assignment')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'assignment' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'assignment' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Assignment</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('resume')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'resume' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'resume' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Resume</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('interview-kit')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'interview-kit' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'interview-kit' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>My Interview Kit</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('non-live-session')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'non-live-session' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'non-live-session' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Non Live Session</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('assign-non-live')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'assign-non-live' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'assign-non-live' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Assign Student for Non live sessions</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('release-user')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'release-user' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'release-user' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Release User</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('exe-users')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'exe-users' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'exe-users' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>EXE Users</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('assign-batch')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'assign-batch' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'assign-batch' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Assign Students for Batch</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('mock-interview')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'mock-interview' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'mock-interview' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Mock Interview</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('class')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'class' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'class' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Class</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('discussion-forum')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'discussion-forum' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'discussion-forum' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Discussion Forum</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('app-users')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'app-users' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'app-users' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>App Users</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('import-lead')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'import-lead' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'import-lead' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Import Lead</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('batch-completion')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'batch-completion' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'batch-completion' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Batch Completion</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('assign-batch-collection')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'assign-batch-collection' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'assign-batch-collection' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Assign Batch For Collection</span>
-                </button>
-                <button
-                  onClick={() => handleSelectMenu('expense')}
-                  className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${activeMenu === 'expense' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'expense' ? 'bg-[#1abb9c]' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
-                  <span>Expense</span>
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* 5. Application Test Accordion (Matches Screenshot media_1790833990861.png) */}
-          <div className={openAccordions.applicationTest ? "border-r-[4px] border-orange-500 bg-[#0f2347]/50" : ""}>
-            <button
-              onClick={() => toggleAccordion('applicationTest')}
-              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5">
-                <Type className="w-4 h-4 text-slate-400 font-serif" />
-                {sidebarOpen && <span className="font-semibold">Application Test</span>}
-              </div>
-              {sidebarOpen && (
-                openAccordions.applicationTest ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-              )}
-            </button>
-            {sidebarOpen && openAccordions.applicationTest && (
-              <div className="relative pl-5 py-1 text-[11px] bg-[#091526]/80 before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-orange-500/30">
-                {[
-                  { name: "Practical Test Questions", url: "PracticalTestQuestions.aspx" },
-                  { name: "MCQ", url: "MCQMaster.aspx" },
-                  { name: "Assign MCQ To Batch", url: "AssignMCQ.aspx" },
-                  { name: "Assign Practical Questions", url: "AssignPractical.aspx" },
-                  { name: "Practical Test Evaluation", url: "PracticalTestEvaluation.aspx" },
-                  { name: "Assign PI To Batch", url: "AssignPI.aspx" },
-                  { name: "PI Questions", url: "PIQuestions.aspx" },
-                  { name: "PI", url: "PIMaster.aspx" },
-                  { name: "PI Evaluation", url: "PIEvaluation.aspx" }
-                ].map(at => (
-                  <button
-                    key={at.name}
-                    onClick={() => {
-                      showToast(`Navigated to ${at.name} (${at.url})`);
-                    }}
-                    title={`https://edu.dvanalyticsmds.com/admin/${at.url}`}
-                    className="w-full flex items-center gap-2.5 py-1.5 px-3 rounded text-slate-300 hover:text-white hover:bg-white/10 transition-colors text-left group cursor-pointer"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-500 group-hover:bg-orange-400 shrink-0 -ml-1 transition-colors" />
-                    <span>{at.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 6. Reports Accordion (Matches Screenshot media_1790834000571.png) */}
-          <div className={openAccordions.reports ? "border-r-[4px] border-orange-500 bg-[#0f2347]/50" : ""}>
-            <button
-              onClick={() => toggleAccordion('reports')}
-              className="w-full flex items-center justify-between px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5">
-                <Mail className="w-4 h-4 text-slate-400" />
-                {sidebarOpen && <span className="font-semibold">Reports</span>}
-              </div>
-              {sidebarOpen && (
-                openAccordions.reports ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-              )}
-            </button>
-            {sidebarOpen && openAccordions.reports && (
-              <div className="relative pl-5 py-1 text-[11px] bg-[#091526]/80 before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-orange-500/30">
-                {[
-                  { name: "Invoice", url: "rpt_Invoice.aspx", key: "report-invoice" },
-                  { name: "Student", url: "rpt_Student.aspx", key: "report-student" },
-                  { name: "Collection & Recovery", url: "rpt_CollectionRecovery.aspx", key: "collection-recovery" },
-                  { name: "Collection", url: "rpt_Collection.aspx", key: "daily-collection" },
-                  { name: "Collection Summary", url: "rpt_CollectionSummary.aspx", key: "monthly-collection" },
-                  { name: "Outstanding", url: "rpt_Outstanding.aspx", key: "report-outstanding" },
-                  { name: "Feedback", url: "rpt_Feedback.aspx", key: "report-feedback" },
-                  { name: "Attendance", url: "rpt_Attendance.aspx", key: "report-attendance" },
-                  { name: "Assignment", url: "rpt_Assignment.aspx", key: "report-assignment" },
-                  { name: "MCQ", url: "rpt_MCQ.aspx", key: "report-mcq" },
-                  { name: "Practical", url: "rpt_Practical.aspx", key: "report-practical" },
-                  { name: "Expense", url: "rpt_Expense.aspx", key: "report-expense" }
-                ].map(r => {
-                  const isActive = activeMenu === r.key;
+              {adminMenuGroups.flatMap(g => g.items)
+                .filter(i => i.name.toLowerCase().includes(sidebarSearch.toLowerCase()))
+                .map(item => {
+                  const Icon = item.icon || Folder;
+                  const isActive = activeMenu === item.key;
                   return (
                     <button
-                      key={r.name}
-                      onClick={() => {
-                        handleSelectMenu(r.key);
-                        showToast(`Opened ${r.name} Report (${r.url})`);
-                      }}
-                      title={`https://edu.dvanalyticsmds.com/admin/${r.url}`}
-                      className={`w-full flex items-center justify-between py-1.5 px-3 rounded transition-colors text-left group cursor-pointer ${
+                      key={item.key}
+                      onClick={() => handleSelectMenu(item.key)}
+                      className={`relative w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all duration-150 cursor-pointer ${
                         isActive 
-                          ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' 
+                          ? 'bg-gradient-to-r from-white via-white to-slate-100 text-slate-950 font-bold shadow-[0_2px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,1)] pl-4' 
                           : 'text-slate-300 hover:text-white hover:bg-white/10'
                       }`}
                     >
-                      <div className="flex items-center gap-2">
-                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 transition-colors ${
-                          isActive ? 'bg-white' : 'bg-slate-500 group-hover:bg-orange-400'
-                        }`} />
-                        <span>{r.name}</span>
-                      </div>
-                      <span className={`text-[9px] font-mono ${isActive ? 'text-teal-100' : 'text-slate-500'}`}>
-                        {r.url.replace('.aspx', '')}
-                      </span>
+                      {isActive && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-5 bg-gradient-to-b from-orange-400 via-orange-500 to-amber-500 rounded-r-full shadow-[0_0_8px_rgba(249,115,22,0.8)]" />
+                      )}
+                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-orange-600' : 'text-slate-400'}`} />
+                      <span className="truncate flex-1">{item.name}</span>
                     </button>
                   );
                 })}
-              </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            /* Grouped macOS Accordion View */
+            adminMenuGroups.map(group => {
+              const GroupIcon = group.icon || Folder;
+              const isOpen = openAccordions[group.id];
+              return (
+                <div key={group.id} className="rounded-xl overflow-hidden mb-1">
+                  <button
+                    onClick={() => toggleAccordion(group.id)}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all cursor-pointer ${
+                      isOpen ? 'bg-white/[0.08] text-white' : 'text-slate-300 hover:text-white hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
+                        isOpen ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-white/5 text-slate-400'
+                      }`}>
+                        <GroupIcon className="w-3.5 h-3.5" />
+                      </div>
+                      {sidebarOpen && (
+                        <span className="font-bold text-[11px] uppercase tracking-wider text-slate-200 truncate">
+                          {group.label}
+                        </span>
+                      )}
+                    </div>
+                    {sidebarOpen && (
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {group.badge && (
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                            group.badge === 'Live'
+                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                              : 'bg-white/10 text-slate-400'
+                          }`}>
+                            {group.badge}
+                          </span>
+                        )}
+                        {isOpen ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />}
+                      </div>
+                    )}
+                  </button>
+
+                  {sidebarOpen && isOpen && (
+                    <div className="mt-1 ml-3 pl-2.5 border-l border-white/10 space-y-0.5 py-1">
+                      {group.items.map(item => {
+                        const Icon = item.icon || Folder;
+                        const isActive = activeMenu === item.key;
+                        return (
+                          <button
+                            key={item.key}
+                            onClick={() => handleSelectMenu(item.key)}
+                            className={`relative w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all duration-150 cursor-pointer group ${
+                              isActive 
+                                ? 'bg-gradient-to-r from-white via-white to-slate-100 text-slate-950 font-bold shadow-[0_2px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,1)] pl-3' 
+                                : 'text-slate-300 hover:text-white hover:bg-white/10'
+                            }`}
+                          >
+                            {isActive && (
+                              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-5 bg-gradient-to-b from-orange-400 via-orange-500 to-amber-500 rounded-r-full shadow-[0_0_8px_rgba(249,115,22,0.8)]" />
+                            )}
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Icon className={`w-3.5 h-3.5 shrink-0 transition-colors ${
+                                isActive ? 'text-orange-600' : 'text-slate-400 group-hover:text-orange-400'
+                              }`} />
+                              <span className="text-[11px] truncate">{item.name}</span>
+                            </div>
+                            {item.badge && (
+                              <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ml-1 shrink-0 ${
+                                isActive ? 'bg-orange-500 text-white' : 'bg-white/10 text-orange-400'
+                              }`}>
+                                {item.badge}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </nav>
 
-        {/* Sidebar Logout Action */}
-        <div className="p-3 border-t border-[#374f67]">
+        {/* macOS Sidebar Footer - Logout & Version Status */}
+        <div className="p-3 border-t border-white/10 bg-white/[0.02] shrink-0">
           <button
             onClick={() => setIsAuthenticated(false)}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white text-xs font-semibold transition-all cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-red-200 border border-red-500/20 text-xs font-semibold transition-all cursor-pointer shadow-inner active:scale-98"
+            title="Sign Out of Admin Portal"
           >
             <LogOut className="w-3.5 h-3.5 shrink-0" />
             {sidebarOpen && <span>Sign Out</span>}
           </button>
+          {sidebarOpen && (
+            <div className="mt-2 text-center text-[9px] text-slate-400 font-mono tracking-wider">
+              macOS Studio UI • DV Analytics
+            </div>
+          )}
         </div>
       </aside>
 
