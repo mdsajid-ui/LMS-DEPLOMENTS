@@ -103,7 +103,7 @@ export default function SanviAssistant({
     );
   };
 
-  const refreshWakeSession = (durationMs = 25000) => {
+  const refreshWakeSession = (durationMs = 120000) => {
     isWakeActiveRef.current = true;
     setIsWakeActive(true);
     if (wakeSessionTimerRef.current) clearTimeout(wakeSessionTimerRef.current);
@@ -116,12 +116,22 @@ export default function SanviAssistant({
   alwaysListeningRef.current = alwaysListening;
   isSpeakingRef.current = isSpeaking;
 
-  // Synchronize with external triggers
+  // Synchronize with external triggers & activate 120s session
   useEffect(() => {
     if (isOpenExternal !== undefined && isOpenExternal !== null) {
       setIsOpen(isOpenExternal);
+      if (isOpenExternal) {
+        refreshWakeSession(120000);
+      }
     }
   }, [isOpenExternal]);
+
+  useEffect(() => {
+    if (isOpen) {
+      refreshWakeSession(120000);
+      restartRecognitionSafely();
+    }
+  }, [isOpen]);
 
   // Web Audio Synthesizer: Futuristic AI Chime (Jarvis Wake Chime)
   const playWakeChime = () => {
@@ -161,8 +171,8 @@ export default function SanviAssistant({
     }
   }, []);
 
-  // Submit voice speech safely - STRICTLY GATED:
-  // "untill unless i say Hey sanvi you no need to speak anything"
+  // Submit voice speech safely:
+  // When modal is open OR wake session is active OR "Hey Sanvi" is detected
   const submitVoiceSpeech = (transcript) => {
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     const text = (transcript || activeTranscriptRef.current || '').trim();
@@ -170,17 +180,16 @@ export default function SanviAssistant({
 
     const wakeDetected = checkWakeWord(text);
 
-    // CRITICAL USER CONDITION:
-    // If user has NOT said "Hey Sanvi" AND Sanvi is not currently in an active wake conversation session:
-    // DROP IT! Do not process, do not execute, do not speak!
-    if (!wakeDetected && !isWakeActiveRef.current) {
+    // If modal is closed AND user has NOT said "Hey Sanvi" AND Sanvi is not currently in an active wake conversation session:
+    // Ignore to prevent accidental trigger
+    if (!isOpen && !wakeDetected && !isWakeActiveRef.current) {
       activeTranscriptRef.current = '';
       setInterimSpeech('');
       return;
     }
 
-    // Refresh active wake session for follow-up turns
-    refreshWakeSession(25000);
+    // Refresh active wake session for follow-up turns (120s Mark-LIII standard)
+    refreshWakeSession(120000);
 
     activeTranscriptRef.current = '';
     setInterimSpeech('');
@@ -260,11 +269,9 @@ export default function SanviAssistant({
           // Check for wake words
           const wakeDetected = checkWakeWord(rawText);
 
-          // STRICT USER CONDITION:
-          // "untill unless i say Hey sanvi you no need to speak anything"
-          // If wake word is NOT present AND we are NOT in an active conversation session:
-          // Ignore completely! Do not show interim speech, do not buffer, do not submit, DO NOT SPEAK!
-          if (!wakeDetected && !isWakeActiveRef.current) {
+          // If modal is closed AND wake word is NOT present AND we are NOT in an active conversation session:
+          // Ignore completely to avoid false triggers in the room!
+          if (!isOpen && !wakeDetected && !isWakeActiveRef.current) {
             activeTranscriptRef.current = '';
             setInterimSpeech('');
             return;
@@ -274,9 +281,9 @@ export default function SanviAssistant({
             playWakeChime();
             setIsOpen(true);
             setIsMinimized(false);
-            refreshWakeSession(25000);
-          } else if (wakeDetected) {
-            refreshWakeSession(25000);
+            refreshWakeSession(120000);
+          } else {
+            refreshWakeSession(120000);
           }
 
           setInterimSpeech(rawText);
@@ -479,20 +486,20 @@ export default function SanviAssistant({
       window.__activeSanviUtterance = null;
       lastSpokenTimeRef.current = Date.now();
 
-      // Hold a 1200ms acoustic cool-down buffer so room echo/reverb doesn't trigger the microphone
+      // Hold an acoustic cool-down buffer so room echo/reverb doesn't trigger the microphone
       if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
       cooldownTimerRef.current = setTimeout(() => {
         isAudioOutputActiveRef.current = false;
         activeTranscriptRef.current = '';
         setInterimSpeech('');
-        // Maintain active conversation window so Sajid can reply naturally without repeating wake word
-        if (isWakeActiveRef.current) {
-          refreshWakeSession(25000);
+        // Maintain active conversation window (120s) so Sajid can reply naturally
+        if (isWakeActiveRef.current || isOpen) {
+          refreshWakeSession(120000);
         }
         if (alwaysListeningRef.current) {
           restartRecognitionSafely();
         }
-      }, 1200);
+      }, 1000);
     };
 
     utterance.onstart = () => {
@@ -591,7 +598,7 @@ export default function SanviAssistant({
       setIsListening(false);
     } else {
       setAlwaysListening(true);
-      refreshWakeSession(25000); // Clicking mic manually opens a 25s speaking session
+      refreshWakeSession(120000); // Clicking mic manually opens a 120s speaking session
       if (synthRef.current) synthRef.current.cancel();
       setIsSpeaking(false);
       if (recognitionRef.current) {
@@ -617,8 +624,8 @@ export default function SanviAssistant({
     if (!query) return;
 
     // Strict voice gating:
-    // "untill unless i say Hey sanvi you no need to speak anything"
-    if (fromVoice && !checkWakeWord(query) && !isWakeActiveRef.current) {
+    // Only block if assistant window is CLOSED and user has NOT said wake word and wake session is NOT active
+    if (fromVoice && !isOpen && !checkWakeWord(query) && !isWakeActiveRef.current) {
       return;
     }
 
@@ -730,17 +737,42 @@ I have launched the interactive "Retail_Sales_Raw_Data.xlsx" workbench on your s
       spokenVoiceText = "Opening your assignments module.";
     }
 
-    // Action: Navigate to CAT Test / Practical Interview booth
+    // Action: Navigate to Student Progress Report & i-SMS Dashboard
     else if (
-      (lower.includes('open') && (lower.includes('test') || lower.includes('cat') || lower.includes('practical'))) ||
+      lower.includes('progress report') || 
+      lower.includes('student report') || 
+      lower.includes('scorecard') || 
+      lower.includes('grade card') ||
+      lower.includes('isms') ||
+      lower.includes('i-sms') ||
+      (lower.includes('show') && lower.includes('report')) ||
+      (lower.includes('open') && lower.includes('report')) ||
+      (lower.includes('show') && lower.includes('progress')) ||
+      (lower.includes('open') && lower.includes('progress'))
+    ) {
+      if (onNavigate) onNavigate('progress-report');
+      replyText = "Opening your Student Progress Report and i-SMS Performance Dashboard! You can inspect attendance, test scores, modular subject breakdowns, and download official transcripts.";
+      actionType = "navigated_progress_report";
+      spokenVoiceText = "Opening your student progress report and i-SMS dashboard.";
+    }
+
+    // Action: Navigate to CAT Test / Practical Interview booth / i-Test
+    else if (
+      (lower.includes('open') && (lower.includes('test') || lower.includes('cat') || lower.includes('practical') || lower.includes('lab'))) ||
       lower.includes('take test') ||
       lower.includes('open application test') ||
-      lower.includes('open interview booth')
+      lower.includes('open interview booth') ||
+      lower.includes('practical test') ||
+      lower.includes('i-test') ||
+      lower.includes('itest') ||
+      lower.includes('coding lab') ||
+      lower.includes('sql lab') ||
+      lower.includes('python lab')
     ) {
       if (onNavigate) onNavigate('application-test');
-      replyText = "Opening the CAT Practical Test and AI Interview Booth! You can take the 30-minute MCQ test, run live SQL/Python code in the workbench, and complete the simulated viva.";
+      replyText = "Opening the i-Test Practical Coding Lab and CAT Test Booth! You can run PostgreSQL queries, Python scripts, dynamic array formulas, and SAS analytics.";
       actionType = "navigated_test";
-      spokenVoiceText = "Opening the CAT practical test and interview booth.";
+      spokenVoiceText = "Opening the i-Test practical coding lab and test booth.";
     }
 
     // Action: Navigate to Interview Prep Kit
@@ -1052,8 +1084,8 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                     ? "Sanvi is speaking..." 
                     : isProcessing 
                       ? "Sanvi is thinking..." 
-                      : isWakeActive 
-                        ? "🟢 Active • Listening to Sajid..." 
+                      : (isWakeActive || isOpen)
+                        ? "🟢 Active • Listening to you (120s Mark-LIII session)..." 
                         : isListening 
                           ? "🎙️ Standby • Say 'Hey Sanvi' to speak" 
                           : "Mic Paused • Click mic to enable"}
@@ -1126,14 +1158,16 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
               }`}>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-0.5 h-3.5">
-                    <span className="w-1 bg-current rounded-full animate-bounce" style={{ height: '60%' }}></span>
-                    <span className="w-1 bg-current rounded-full animate-bounce" style={{ height: '100%', animationDelay: '0.15s' }}></span>
-                    <span className="w-1 bg-current rounded-full animate-bounce" style={{ height: '40%', animationDelay: '0.3s' }}></span>
-                    <span className="w-1 bg-current rounded-full animate-bounce" style={{ height: '80%', animationDelay: '0.45s' }}></span>
+                    <span className="w-1 bg-current rounded-full animate-bounce" style={{ height: '40%' }}></span>
+                    <span className="w-1 bg-current rounded-full animate-bounce" style={{ height: '90%', animationDelay: '0.1s' }}></span>
+                    <span className="w-1 bg-current rounded-full animate-bounce" style={{ height: '60%', animationDelay: '0.2s' }}></span>
+                    <span className="w-1 bg-current rounded-full animate-bounce" style={{ height: '100%', animationDelay: '0.3s' }}></span>
+                    <span className="w-1 bg-current rounded-full animate-bounce" style={{ height: '50%', animationDelay: '0.4s' }}></span>
+                    <span className="w-1 bg-current rounded-full animate-bounce" style={{ height: '80%', animationDelay: '0.5s' }}></span>
                   </div>
                   <span className="truncate max-w-[280px] sm:max-w-md">
                     {isListening 
-                      ? (interimSpeech ? `"${interimSpeech}"` : 'Say "Hey Sanvi"') 
+                      ? (interimSpeech ? `"${interimSpeech}"` : (isOpen ? 'Listening... Speak anything or give a command' : 'Say "Hey Sanvi" to activate')) 
                       : isSpeaking 
                         ? "Sanvi is speaking..." 
                         : "Mic Idle • Tap mic icon to start"}
@@ -1408,7 +1442,7 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
 
                     <input
                       type="text"
-                      placeholder={isListening ? "Listening... (Say 'Hey Sanvi', 'Open Excel sheet')" : "Speak or type to Sanvi (Say 'Hey Sanvi')..."}
+                      placeholder={isListening ? "Listening... Speak anything or ask Sanvi a question..." : "Speak or type to Sanvi (Say 'Hey Sanvi' or ask directly)..."}
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
                       className="flex-1 bg-slate-950 text-xs text-slate-200 placeholder:text-slate-500 px-3.5 py-2.5 rounded-xl border border-slate-800 focus:border-rose-400 focus:ring-1 focus:ring-rose-400 focus:outline-none transition-all"
