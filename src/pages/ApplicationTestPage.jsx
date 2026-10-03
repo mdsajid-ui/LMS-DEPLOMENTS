@@ -28,11 +28,40 @@ import {
   studentProfile 
 } from '../data/mockData';
 import PracticalLabEnvironment from '../components/compilers/PracticalLabEnvironment';
+import AssessmentExcelUploadModal from '../components/compilers/AssessmentExcelUploadModal';
+import { CORPORATE_MCQ_BANK } from '../data/corporateMcqBank';
+import { subscribeToDataUpdates } from '../utils/lmsStorage';
 
 export default function ApplicationTestPage({ student = studentProfile }) {
   const [activeSection, setActiveSection] = useState(null); // null, 'mcq', 'practical', 'interview'
 
   // ================= MCQ STATE =================
+  const [allMcqBank, setAllMcqBank] = useState(() => {
+    try {
+      const customRaw = localStorage.getItem('dva_lms_custom_mcq_v1');
+      const customList = customRaw ? JSON.parse(customRaw) : [];
+      return [...customList, ...CORPORATE_MCQ_BANK, ...catMcqQuestionsBank];
+    } catch (e) {
+      return [...CORPORATE_MCQ_BANK, ...catMcqQuestionsBank];
+    }
+  });
+
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadModalType, setUploadModalType] = useState('mcq');
+
+  useEffect(() => {
+    const unsub = subscribeToDataUpdates((e) => {
+      if (e?.type === 'question_bank') {
+        try {
+          const customRaw = localStorage.getItem('dva_lms_custom_mcq_v1');
+          const customList = customRaw ? JSON.parse(customRaw) : [];
+          setAllMcqBank([...customList, ...CORPORATE_MCQ_BANK, ...catMcqQuestionsBank]);
+        } catch (err) {}
+      }
+    });
+    return () => unsub();
+  }, []);
+
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState({});
@@ -44,11 +73,17 @@ export default function ApplicationTestPage({ student = studentProfile }) {
 
   // Filtered questions
   const filteredMcqs = selectedCategory === 'All' 
-    ? catMcqQuestionsBank 
-    : catMcqQuestionsBank.filter(q => q.subject.toLowerCase().includes(selectedCategory.toLowerCase()));
+    ? allMcqBank 
+    : allMcqBank.filter(q => q.subject.toLowerCase().includes(selectedCategory.toLowerCase()));
 
   // Active question
-  const currentQ = filteredMcqs[currentQuestionIndex] || filteredMcqs[0];
+  const currentQ = filteredMcqs[currentQuestionIndex] || filteredMcqs[0] || {
+    id: 'placeholder-1',
+    subject: 'General',
+    question: 'Loading question bank...',
+    options: ['A', 'B', 'C', 'D'],
+    correct: 0
+  };
 
   // Timer countdown
   useEffect(() => {
@@ -285,9 +320,36 @@ DataFrame Output:
         </div>
       </div>
 
-      {/* ================= SECTION 0: THE 3 CORE SELECTION CARDS (AS IN SCREENSHOT) ================= */}
+      {/* ================= SECTION 0: THE 3 CORE SELECTION CARDS ================= */}
       {!activeSection ? (
         <div className="space-y-4">
+          {/* Quick Action: Bulk Upload Excel Card */}
+          <div className="flex items-center justify-between bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-teal-50 border border-teal-200 text-teal-700 flex items-center justify-center">
+                <UploadCloud className="w-4 h-4 text-teal-600" />
+              </div>
+              <div>
+                <span className="font-bold text-slate-800 text-xs block">Corporate Assessment Uploader</span>
+                <span className="text-[11px] text-slate-500">Ingest your own Excel questions (.xlsx) for instant student test evaluation</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { setUploadModalType('mcq'); setUploadModalOpen(true); }}
+                className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold border border-blue-200 text-xs transition cursor-pointer"
+              >
+                + Upload MCQ (.xlsx)
+              </button>
+              <button
+                onClick={() => { setUploadModalType('practical'); setUploadModalOpen(true); }}
+                className="px-3 py-1.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs shadow-xs transition cursor-pointer"
+              >
+                + Upload Practical Lab (.xlsx)
+              </button>
+            </div>
+          </div>
+
           {/* Card 1: Multiple Choice Question (MCQ) - Royal Blue #3498db */}
           <button
             onClick={() => setActiveSection('mcq')}
@@ -298,11 +360,16 @@ DataFrame Output:
                 <FileEdit className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-bold tracking-wide">
-                  Multiple Choice Question (MCQ)
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-bold tracking-wide">
+                    Multiple Choice Question (MCQ)
+                  </h3>
+                  <span className="text-[11px] font-mono bg-white/20 px-2 py-0.5 rounded-full font-bold">
+                    {allMcqBank.length} Questions
+                  </span>
+                </div>
                 <p className="text-xs text-blue-100 font-normal mt-0.5">
-                  SQL, Python, Excel & Statistics • 30 Mins • Auto-Evaluated Scorecard
+                  SQL, Python, Excel & SAS • 30 Mins • Auto-Evaluated Scorecard with Real-time Explanations
                 </p>
               </div>
             </div>
@@ -322,11 +389,16 @@ DataFrame Output:
                 <FileEdit className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-bold tracking-wide">
-                  Practical Question
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-bold tracking-wide">
+                    Practical Question & Labs
+                  </h3>
+                  <span className="text-[11px] font-mono bg-white/20 px-2 py-0.5 rounded-full font-bold">
+                    Banking, Healthcare & Sales
+                  </span>
+                </div>
                 <p className="text-xs text-amber-100 font-normal mt-0.5">
-                  Hands-on Dataset Cleaning, Interactive SQL/Python Sandbox & Workbook Upload
+                  Hands-on Multi-Table SQL, Python, Excel & SAS Sandboxes with Live Schema Inspector & Excel Ingestion
                 </p>
               </div>
             </div>
@@ -406,24 +478,45 @@ DataFrame Output:
                 </div>
               </div>
 
-              {/* Subject Category Filter Tabs */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-semibold">
-                {['All', 'SQL Server', 'Excel Advanced', 'Python', 'Machine Learning', 'Power BI'].map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => {
-                      setSelectedCategory(cat);
-                      setCurrentQuestionIndex(0);
-                    }}
-                    className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap ${
-                      selectedCategory === cat
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+              {/* Subject Category Filter Tabs & Excel Upload */}
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                  {['All', 'SQL', 'Python', 'Excel', 'SAS', 'Power BI'].map((cat) => {
+                    const count = cat === 'All' 
+                      ? allMcqBank.length 
+                      : allMcqBank.filter(q => (q.subject || '').toLowerCase().includes(cat.toLowerCase())).length;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => {
+                          setSelectedCategory(cat);
+                          setCurrentQuestionIndex(0);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                          selectedCategory === cat
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        <span>{cat}</span>
+                        <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
+                          selectedCategory === cat ? 'bg-blue-800 text-blue-200' : 'bg-slate-200 text-slate-600'
+                        }`}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() => { setUploadModalType('mcq'); setUploadModalOpen(true); }}
+                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold flex items-center gap-1.5 cursor-pointer shadow-sm transition-all active:scale-95"
+                  title="Upload MCQs from Excel (.xlsx)"
+                >
+                  <UploadCloud className="w-3.5 h-3.5" />
+                  <span>Upload MCQs (.xlsx)</span>
+                </button>
               </div>
 
               {/* Active Question Box */}
@@ -441,7 +534,7 @@ DataFrame Output:
 
                 <h4 className="text-base font-bold text-slate-900 leading-snug">
                   <span className="text-blue-600 mr-2">Q{currentQuestionIndex + 1}.</span>
-                  {currentQ.q}
+                  {currentQ.question || currentQ.q}
                 </h4>
 
                 {/* Radio Options */}
@@ -929,6 +1022,13 @@ DataFrame Output:
           )}
         </div>
       )}
+
+      {/* Assessment Excel Upload Modal */}
+      <AssessmentExcelUploadModal
+        isOpen={uploadModalOpen}
+        onClose={() => setUploadModalOpen(false)}
+        defaultType={uploadModalType}
+      />
     </div>
   );
 }
