@@ -50,7 +50,8 @@ export default function SanviAssistant({
   onCloseExternal, 
   onOpenExternal,
   currentTab, 
-  onNavigate 
+  onNavigate,
+  onOpenAdmin 
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const isOpenRef = useRef(false);
@@ -836,21 +837,25 @@ I have launched the interactive "Retail_Sales_Raw_Data.xlsx" workbench on your s
       spokenVoiceText = "Opening your assignments module.";
     }
 
-    // Action: Navigate to Collections & Recovery Dashboard
+    // Action: Navigate to Collections & Recovery Dashboard in Admin Portal
     else if (
       lower.includes('collection') ||
       lower.includes('recovery') ||
       lower.includes('revenue dashboard') ||
       lower.includes('collections')
     ) {
-      if (onNavigate) onNavigate('collection-recovery');
-      replyText = `Opening the **Collection & Recovery Executive Dashboard** for DV Analytics!
+      if (onOpenAdmin) {
+        onOpenAdmin('/admin/CollectionRecovery.aspx');
+      } else {
+        window.location.hash = '/admin/CollectionRecovery.aspx';
+      }
+      replyText = `Switching to the **Admin Portal** and opening the **Collection & Recovery Executive Dashboard** for DV Analytics!
 • **Month-to-Date (MTD):** ₹48,45,000 (64.6% of ₹75L Target)
 • **Today's Collection:** ₹1,85,000 | **Yesterday:** ₹2,10,000
 • **Traffic Light Status:** 🟡 Amber (Behind target pace, ₹2,04,231/day required)
 • **Top Center:** Bangalore HQ (₹21.2L • 43.8%)`;
       actionType = "navigated_collection";
-      spokenVoiceText = "Opening the Collection and Recovery Executive Dashboard. Month to date collections stand at 48.45 lakh rupees, at 64.6% of target.";
+      spokenVoiceText = "Switching to the Admin Portal and opening the Executive Collection and Recovery Dashboard for you, Sajid.";
     }
 
     // Action: Navigate to Student Progress Report & i-SMS Dashboard

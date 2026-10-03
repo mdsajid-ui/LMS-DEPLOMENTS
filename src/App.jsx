@@ -25,7 +25,6 @@ import AccountProfilePage from './pages/AccountProfilePage';
 import NotificationPage from './pages/NotificationPage';
 import ProgressReportPage from './pages/ProgressReportPage';
 import ChangeProgramPage from './pages/ChangeProgramPage';
-import CollectionRecoveryPage from './pages/CollectionRecoveryPage';
 import AdminPortalPage from './pages/AdminPortalPage';
 import LoginPage from './pages/LoginPage';
 
@@ -91,8 +90,8 @@ export default function App() {
     }
   }, []);
 
-  const handleOpenAdmin = () => {
-    window.location.hash = '/admin/Reg.aspx';
+  const handleOpenAdmin = (targetHash = '/admin/Reg.aspx') => {
+    window.location.hash = typeof targetHash === 'string' ? targetHash : '/admin/Reg.aspx';
     setIsAdminPortal(true);
   };
 
@@ -330,12 +329,6 @@ export default function App() {
                 student={studentData}
               />
             )}
-
-            {currentTab === 'collection-recovery' && (
-              <CollectionRecoveryPage
-                student={studentData}
-              />
-            )}
             </ErrorBoundary>
           </main>
 
@@ -382,6 +375,7 @@ export default function App() {
           onCloseExternal={() => setSanviAssistantOpen(false)}
           currentTab={currentTab}
           onNavigate={(tab) => setCurrentTab(tab)}
+          onOpenAdmin={handleOpenAdmin}
         />
 
         {/* Floating Quick Switcher Pill (Student Mode) - Centered Dynamic Island */}

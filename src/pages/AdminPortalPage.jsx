@@ -48,7 +48,8 @@ import {
   Monitor,
   Folder,
   Type,
-  Mail
+  Mail,
+  IndianRupee
 } from 'lucide-react';
 import { downloadFile, generateAndDownloadExcel } from '../utils/excelHelper';
 import Logo from '../components/Logo';
@@ -79,6 +80,7 @@ import {
   MockInterviewFeedbackView
 } from '../components/AdminMasterViews';
 import ClassManagementView from '../components/ClassManagementView';
+import CollectionRecoveryPage from './CollectionRecoveryPage';
 import {
   ReportInvoiceView,
   ReportStudentView,
@@ -160,6 +162,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     if (url.includes('designation')) return 'designation-master';
     if (url.includes('payapproval') || url.includes('paymentapproval')) return 'pay-approval';
     if (url.includes('external_link') || url.includes('registrationlink')) return 'external-link';
+    if (url.includes('collection-recovery') || url.includes('recovery')) return 'collection-recovery';
     if (url.includes('dailycollection') || url.includes('daily-collection')) return 'daily-collection';
     if (url.includes('monthlycollection') || url.includes('monthly-collection')) return 'monthly-collection';
     if (url.includes('rpt_invoice') || url.includes('report-invoice')) return 'report-invoice';
@@ -214,6 +217,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     else if (menuKey === 'department-master') window.location.hash = '/admin/Department.aspx';
     else if (menuKey === 'designation-master') window.location.hash = '/admin/Designation.aspx';
     else if (menuKey === 'pay-approval') window.location.hash = '/admin/PayApproval.aspx';
+    else if (menuKey === 'collection-recovery') window.location.hash = '/admin/CollectionRecovery.aspx';
     else if (menuKey === 'external-link') window.location.hash = '/admin/external_link.aspx';
     else if (menuKey === 'fee') window.location.hash = '/admin/Fee.aspx';
     else if (menuKey === 'class') window.location.hash = '/admin/Class.aspx';
@@ -829,6 +833,16 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
             {sidebarOpen && openAccordions.dashboard && (
               <div className="relative pl-5 py-1 text-[11px] bg-[#091526]/80 before:absolute before:left-[19px] before:top-2 before:bottom-3 before:w-[1px] before:bg-orange-500/30">
                 <button
+                  onClick={() => handleSelectMenu('collection-recovery')}
+                  className={`w-full flex items-center justify-between py-1.5 px-3 rounded-lg transition-all text-left group cursor-pointer ${activeMenu === 'collection-recovery' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 -ml-1 ${activeMenu === 'collection-recovery' ? 'bg-white' : 'bg-slate-500 group-hover:bg-orange-400'}`} />
+                    <span>Collections & Recovery</span>
+                  </div>
+                  <span className="text-[9px] px-1.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded font-bold uppercase">Live</span>
+                </button>
+                <button
                   onClick={() => handleSelectMenu('monthly-collection')}
                   className={`w-full flex items-center gap-2.5 py-1.5 px-3 rounded-lg transition-all text-left group cursor-pointer ${activeMenu === 'monthly-collection' ? 'text-white font-bold bg-gradient-to-r from-orange-500 to-amber-500 shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
@@ -1165,6 +1179,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                 {[
                   { name: "Invoice", url: "rpt_Invoice.aspx", key: "report-invoice" },
                   { name: "Student", url: "rpt_Student.aspx", key: "report-student" },
+                  { name: "Collection & Recovery", url: "rpt_CollectionRecovery.aspx", key: "collection-recovery" },
                   { name: "Collection", url: "rpt_Collection.aspx", key: "daily-collection" },
                   { name: "Collection Summary", url: "rpt_CollectionSummary.aspx", key: "monthly-collection" },
                   { name: "Outstanding", url: "rpt_Outstanding.aspx", key: "report-outstanding" },
@@ -1623,6 +1638,15 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
           {/* VIEW 4P: EXPENSE */}
           {activeMenu === 'expense' && (
             <ReportExpenseView showToast={showToast} />
+          )}
+
+          {/* ========================================================= */}
+          {/* VIEW 5-EXECUTIVE: COLLECTION & RECOVERY DASHBOARD         */}
+          {/* ========================================================= */}
+          {activeMenu === 'collection-recovery' && (
+            <div className="space-y-4">
+              <CollectionRecoveryPage />
+            </div>
           )}
 
           {/* ========================================================= */}
