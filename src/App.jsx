@@ -25,6 +25,7 @@ import AccountProfilePage from './pages/AccountProfilePage';
 import NotificationPage from './pages/NotificationPage';
 import ProgressReportPage from './pages/ProgressReportPage';
 import ChangeProgramPage from './pages/ChangeProgramPage';
+import CollectionRecoveryPage from './pages/CollectionRecoveryPage';
 import AdminPortalPage from './pages/AdminPortalPage';
 import LoginPage from './pages/LoginPage';
 
@@ -329,6 +330,12 @@ export default function App() {
                 student={studentData}
               />
             )}
+
+            {currentTab === 'collection-recovery' && (
+              <CollectionRecoveryPage
+                student={studentData}
+              />
+            )}
             </ErrorBoundary>
           </main>
 
@@ -371,6 +378,7 @@ export default function App() {
         {/* Sanvi Voice AI Assistant (Floats across all screens with two-way voice & Jarvis actions) */}
         <SanviAssistant
           isOpenExternal={sanviAssistantOpen}
+          onOpenExternal={() => setSanviAssistantOpen(true)}
           onCloseExternal={() => setSanviAssistantOpen(false)}
           currentTab={currentTab}
           onNavigate={(tab) => setCurrentTab(tab)}

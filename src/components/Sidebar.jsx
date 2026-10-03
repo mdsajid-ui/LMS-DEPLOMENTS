@@ -21,7 +21,8 @@ import {
   User,
   Bell,
   BarChart3,
-  Settings
+  Settings,
+  IndianRupee
 } from 'lucide-react';
 import Logo from './Logo';
 
@@ -36,6 +37,7 @@ export default function Sidebar({
   const menuItems = [
     { id: 'welcome', label: 'WELCOME & OVERVIEW', icon: Compass, badge: 'Info' },
     { id: 'dashboard', label: 'DASHBOARD', icon: LayoutDashboard },
+    { id: 'collection-recovery', label: 'COLLECTIONS & RECOVERY', icon: IndianRupee, badge: 'Live' },
     { id: 'courses', label: 'COURSES', icon: BookOpen, badge: '4' },
     { id: 'assignments', label: 'ASSIGNMENTS', icon: ClipboardList, badge: '3' },
     { id: 'application-test', label: 'APPLICATION TEST', icon: FileCheck2 },

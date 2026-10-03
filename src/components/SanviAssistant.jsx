@@ -29,7 +29,8 @@ import {
   Download,
   Brain,
   Trash2,
-  Plus
+  Plus,
+  IndianRupee
 } from 'lucide-react';
 import { 
   dvHelplineNumbers, 
@@ -47,10 +48,17 @@ import { saanviMemory } from '../services/saanviMemory';
 export default function SanviAssistant({ 
   isOpenExternal, 
   onCloseExternal, 
+  onOpenExternal,
   currentTab, 
   onNavigate 
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const isOpenRef = useRef(false);
+
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
+
   const [activeTab, setActiveTab] = useState('chat'); // 'chat', 'memory', 'company', 'assignments', 'helplines', 'tools'
   const [selectedAsnKey, setSelectedAsnKey] = useState('ASN-01');
   const [copiedText, setCopiedText] = useState(null);
@@ -182,6 +190,8 @@ export default function SanviAssistant({
   // One-click instant voice activator & greeting
   const handleFloatingButtonClick = async () => {
     setIsOpen(true);
+    isOpenRef.current = true;
+    if (onOpenExternal) onOpenExternal();
     setIsMinimized(false);
     refreshWakeSession(120000);
     await activateMicrophoneAndVoice();
@@ -209,6 +219,7 @@ export default function SanviAssistant({
   useEffect(() => {
     if (isOpenExternal !== undefined && isOpenExternal !== null) {
       setIsOpen(isOpenExternal);
+      isOpenRef.current = isOpenExternal;
       if (isOpenExternal) {
         refreshWakeSession(120000);
       }
@@ -271,7 +282,7 @@ export default function SanviAssistant({
 
     // If modal is closed AND user has NOT said "Hey Sanvi" AND Sanvi is not currently in an active wake conversation session:
     // Ignore to prevent accidental trigger
-    if (!isOpen && !wakeDetected && !isWakeActiveRef.current) {
+    if (!isOpenRef.current && !wakeDetected && !isWakeActiveRef.current) {
       activeTranscriptRef.current = '';
       setInterimSpeech('');
       return;
@@ -339,20 +350,6 @@ export default function SanviAssistant({
             setIsSpeaking(false);
           }
 
-          // Acoustic Echo Guard: If microphone heard what Sanvi just spoke within 3 seconds, drop it
-          const lower = rawText.toLowerCase();
-          const timeSinceLastSpoken = Date.now() - lastSpokenTimeRef.current;
-          if (timeSinceLastSpoken < 3000 && lastSpokenUtteranceRef.current) {
-            const lastWords = lastSpokenUtteranceRef.current.split(/\s+/).filter(w => w.length > 3);
-            const recognizedWords = lower.split(/\s+/).filter(w => w.length > 3);
-            const matchingCount = recognizedWords.filter(w => lastWords.includes(w)).length;
-            if (matchingCount >= 2 || (recognizedWords.length <= 3 && matchingCount >= 1)) {
-              activeTranscriptRef.current = '';
-              setInterimSpeech('');
-              return;
-            }
-          }
-
           // Ignore single-character noise or microphone static
           if (rawText.length < 2) return;
 
@@ -361,15 +358,17 @@ export default function SanviAssistant({
 
           // If modal is closed AND wake word is NOT present AND we are NOT in an active conversation session:
           // Ignore completely to avoid false triggers in the room!
-          if (!isOpen && !wakeDetected && !isWakeActiveRef.current) {
+          if (!isOpenRef.current && !wakeDetected && !isWakeActiveRef.current) {
             activeTranscriptRef.current = '';
             setInterimSpeech('');
             return;
           }
 
-          if (wakeDetected && !isOpen) {
+          if (wakeDetected && !isOpenRef.current) {
             playWakeChime();
             setIsOpen(true);
+            isOpenRef.current = true;
+            if (onOpenExternal) onOpenExternal();
             setIsMinimized(false);
             refreshWakeSession(120000);
           } else {
@@ -725,7 +724,7 @@ export default function SanviAssistant({
 
     // Strict voice gating:
     // Only block if assistant window is CLOSED and user has NOT said wake word and wake session is NOT active
-    if (fromVoice && !isOpen && !checkWakeWord(query) && !isWakeActiveRef.current) {
+    if (fromVoice && !isOpenRef.current && !checkWakeWord(query) && !isWakeActiveRef.current) {
       return;
     }
 
@@ -835,6 +834,23 @@ I have launched the interactive "Retail_Sales_Raw_Data.xlsx" workbench on your s
       replyText = "Opening your Assignments module right away. You have 3 hands-on assignments: Retail Sales Analysis in Excel, VBA Invoice Macro, and SQL Server E-Commerce Analytics.";
       actionType = "navigated_assignments";
       spokenVoiceText = "Opening your assignments module.";
+    }
+
+    // Action: Navigate to Collections & Recovery Dashboard
+    else if (
+      lower.includes('collection') ||
+      lower.includes('recovery') ||
+      lower.includes('revenue dashboard') ||
+      lower.includes('collections')
+    ) {
+      if (onNavigate) onNavigate('collection-recovery');
+      replyText = `Opening the **Collection & Recovery Executive Dashboard** for DV Analytics!
+• **Month-to-Date (MTD):** ₹48,45,000 (64.6% of ₹75L Target)
+• **Today's Collection:** ₹1,85,000 | **Yesterday:** ₹2,10,000
+• **Traffic Light Status:** 🟡 Amber (Behind target pace, ₹2,04,231/day required)
+• **Top Center:** Bangalore HQ (₹21.2L • 43.8%)`;
+      actionType = "navigated_collection";
+      spokenVoiceText = "Opening the Collection and Recovery Executive Dashboard. Month to date collections stand at 48.45 lakh rupees, at 64.6% of target.";
     }
 
     // Action: Navigate to Student Progress Report & i-SMS Dashboard
@@ -1561,6 +1577,13 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                     >
                       <FileSpreadsheet className="w-3 h-3" />
                       "Open Excel Sheet" 📊
+                    </button>
+                    <button
+                      onClick={() => handleSendMessage("Open collection dashboard")}
+                      className="px-2.5 py-1 rounded-full bg-amber-950/60 text-amber-300 hover:bg-amber-900/70 transition-colors border border-amber-500/40 cursor-pointer font-bold flex items-center gap-1"
+                    >
+                      <IndianRupee className="w-3 h-3" />
+                      "Collection Dashboard" 💰
                     </button>
                     <button
                       onClick={() => handleSendMessage("Who is the Director of DV Analytics?")}
