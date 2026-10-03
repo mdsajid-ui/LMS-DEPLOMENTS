@@ -51,7 +51,10 @@ import {
   Mail,
   IndianRupee,
   PhoneCall,
-  Building2
+  Building2,
+  Target,
+  Activity,
+  Sparkles
 } from 'lucide-react';
 import { downloadFile, generateAndDownloadExcel } from '../utils/excelHelper';
 import Logo from '../components/Logo';
@@ -83,6 +86,12 @@ import {
 } from '../components/AdminMasterViews';
 import ClassManagementView from '../components/ClassManagementView';
 import CollectionRecoveryPage from './CollectionRecoveryPage';
+import AcademicAnalyticsView from '../components/analytics/AcademicAnalyticsView';
+import StudentAnalyticsView from '../components/analytics/StudentAnalyticsView';
+import PlacementAnalyticsView from '../components/analytics/PlacementAnalyticsView';
+import ExecutiveDashboardView from '../components/analytics/ExecutiveDashboardView';
+import EnhancedDailyCollectionInsights from '../components/analytics/EnhancedDailyCollectionInsights';
+import EnhancedMonthlyCollectionInsights from '../components/analytics/EnhancedMonthlyCollectionInsights';
 import {
   ReportInvoiceView,
   ReportStudentView,
@@ -197,6 +206,17 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     if (url.includes('users.aspx') || url.includes('releaseuser')) return 'release-user';
     if (url.includes('assignbatch')) return 'assign-batch';
     if (url.includes('mockinterview')) return 'mock-interview';
+    if (url.includes('mentordashboard') || url.includes('mentor-dashboard')) return 'mentor-dashboard';
+    if (url.includes('classmonitoring') || url.includes('class-monitoring')) return 'class-monitoring';
+    if (url.includes('batchperformance') || url.includes('batch-performance')) return 'batch-performance';
+    if (url.includes('learningprogress') || url.includes('learning-progress')) return 'learning-progress';
+    if (url.includes('lmsengagement') || url.includes('lms-engagement')) return 'lms-engagement';
+    if (url.includes('assignmenttracking') || url.includes('assignment-tracking')) return 'assignment-tracking';
+    if (url.includes('placementdashboard') || url.includes('placement-dashboard')) return 'placement-dashboard';
+    if (url.includes('interviewtracking') || url.includes('interview-tracking')) return 'interview-tracking';
+    if (url.includes('directoroverview') || url.includes('director-overview')) return 'director-overview';
+    if (url.includes('revenueanalytics') || url.includes('revenue-analytics')) return 'revenue-analytics';
+    if (url.includes('institutehealthscore') || url.includes('healthscore') || url.includes('health-score')) return 'institute-health-score';
     if (url.includes('dashboard')) return 'monthly-collection';
     if (url.includes('master')) return 'user-master';
     return 'user-master'; // Default to User Master (Screenshot 1)
@@ -243,6 +263,17 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     else if (menuKey === 'mock-interview') window.location.hash = '/admin/MockinterviewFeedback.aspx';
     else if (menuKey === 'daily-collection') window.location.hash = '/admin/DailyCollection.aspx';
     else if (menuKey === 'monthly-collection') window.location.hash = '/admin/MonthlyCollection.aspx';
+    else if (menuKey === 'mentor-dashboard') window.location.hash = '/admin/MentorDashboard.aspx';
+    else if (menuKey === 'class-monitoring') window.location.hash = '/admin/ClassMonitoring.aspx';
+    else if (menuKey === 'batch-performance') window.location.hash = '/admin/BatchPerformance.aspx';
+    else if (menuKey === 'learning-progress') window.location.hash = '/admin/LearningProgress.aspx';
+    else if (menuKey === 'lms-engagement') window.location.hash = '/admin/LMSEngagement.aspx';
+    else if (menuKey === 'assignment-tracking') window.location.hash = '/admin/AssignmentTracking.aspx';
+    else if (menuKey === 'placement-dashboard') window.location.hash = '/admin/PlacementDashboard.aspx';
+    else if (menuKey === 'interview-tracking') window.location.hash = '/admin/InterviewTracking.aspx';
+    else if (menuKey === 'director-overview') window.location.hash = '/admin/DirectorOverview.aspx';
+    else if (menuKey === 'revenue-analytics') window.location.hash = '/admin/RevenueAnalytics.aspx';
+    else if (menuKey === 'institute-health-score') window.location.hash = '/admin/InstituteHealthScore.aspx';
     else if (menuKey === 'report-invoice') window.location.hash = '/admin/rpt_Invoice.aspx';
     else if (menuKey === 'report-student') window.location.hash = '/admin/rpt_Student.aspx';
     else if (menuKey === 'report-outstanding') window.location.hash = '/admin/rpt_Outstanding.aspx';
@@ -257,18 +288,81 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
   };
 
   const [sidebarSearch, setSidebarSearch] = useState('');
+  const [openSubgroups, setOpenSubgroups] = useState({
+    'collections-recovery': true,
+    'academic-analytics': true,
+    'student-analytics': true,
+    'placement-analytics': true,
+    'executive-dashboard': true
+  });
+  const toggleSubgroup = (subId) => {
+    setOpenSubgroups(prev => ({
+      ...prev,
+      [subId]: !prev[subId]
+    }));
+  };
 
-  // Structured macOS Admin Navigation Architecture
+  // Structured macOS Admin Navigation Architecture with Nested Hierarchy
   const adminMenuGroups = [
     {
       id: 'dashboard',
-      label: 'DASHBOARD & REVENUE',
+      label: 'DASHBOARDS & ANALYTICS',
       icon: Gauge,
-      badge: 'Live',
-      items: [
-        { key: 'collection-recovery', name: 'Collections & Recovery', icon: IndianRupee, badge: 'Live' },
-        { key: 'monthly-collection', name: 'Monthly Collection', icon: Calendar },
-        { key: 'daily-collection', name: 'Daily Collection', icon: TrendingUp }
+      badge: 'Suite',
+      subgroups: [
+        {
+          id: 'collections-recovery',
+          label: 'Collections & Recovery',
+          icon: IndianRupee,
+          badge: 'Live',
+          items: [
+            { key: 'collection-recovery', name: 'Collection & Recovery Cockpit', icon: IndianRupee, badge: 'Live' },
+            { key: 'daily-collection', name: 'Daily Collection & Insights', icon: TrendingUp },
+            { key: 'monthly-collection', name: 'Monthly Collection & Projections', icon: Calendar }
+          ]
+        },
+        {
+          id: 'academic-analytics',
+          label: 'Academic Analytics',
+          icon: BookOpen,
+          badge: 'Faculty',
+          items: [
+            { key: 'mentor-dashboard', name: 'Mentor Dashboard', icon: UserCheck, badge: '4.8★' },
+            { key: 'class-monitoring', name: 'Class Monitoring', icon: Video, badge: 'Live' },
+            { key: 'batch-performance', name: 'Batch Performance', icon: Layers }
+          ]
+        },
+        {
+          id: 'student-analytics',
+          label: 'Student Analytics',
+          icon: Users,
+          items: [
+            { key: 'learning-progress', name: 'Learning Progress', icon: TrendingUp },
+            { key: 'lms-engagement', name: 'LMS Engagement', icon: Activity, badge: 'DAU' },
+            { key: 'assignment-tracking', name: 'Assignment Tracking', icon: FileCheck }
+          ]
+        },
+        {
+          id: 'placement-analytics',
+          label: 'Placement Analytics',
+          icon: Briefcase,
+          badge: '87%',
+          items: [
+            { key: 'placement-dashboard', name: 'Placement Dashboard', icon: Award, badge: '₹24.5L' },
+            { key: 'interview-tracking', name: 'Interview Tracking', icon: Target }
+          ]
+        },
+        {
+          id: 'executive-dashboard',
+          label: 'Executive Dashboard',
+          icon: Building,
+          badge: 'A+',
+          items: [
+            { key: 'director-overview', name: 'Director Overview', icon: Building, badge: '360°' },
+            { key: 'revenue-analytics', name: 'Revenue Analytics', icon: DollarSign },
+            { key: 'institute-health-score', name: 'Institute Health Score', icon: ShieldCheck, badge: '92.8' }
+          ]
+        }
       ]
     },
     {
@@ -366,6 +460,35 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
       ]
     }
   ];
+
+  const allNavItems = React.useMemo(() => {
+    const list = [];
+    for (const g of adminMenuGroups) {
+      if (g.items) list.push(...g.items);
+      if (g.subgroups) {
+        for (const sg of g.subgroups) {
+          if (sg.items) list.push(...sg.items);
+        }
+      }
+    }
+    return list;
+  }, [adminMenuGroups]);
+
+  const breadcrumbInfo = React.useMemo(() => {
+    for (const g of adminMenuGroups) {
+      if (g.items) {
+        const found = g.items.find(i => i.key === activeMenu);
+        if (found) return { group: g.label, sub: null, title: found.name };
+      }
+      if (g.subgroups) {
+        for (const sg of g.subgroups) {
+          const found = sg.items.find(i => i.key === activeMenu);
+          if (found) return { group: 'Dashboard', sub: sg.label, title: found.name };
+        }
+      }
+    }
+    return { group: 'Administration', sub: null, title: activeMenu };
+  }, [activeMenu, adminMenuGroups]);
 
   // Toast Alerts
   const [toastMessage, setToastMessage] = useState("");
@@ -991,10 +1114,10 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
             <div className="space-y-1">
               <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Matching Tools ({
-                  adminMenuGroups.flatMap(g => g.items).filter(i => i.name.toLowerCase().includes(sidebarSearch.toLowerCase())).length
+                  allNavItems.filter(i => i.name.toLowerCase().includes(sidebarSearch.toLowerCase())).length
                 })
               </div>
-              {adminMenuGroups.flatMap(g => g.items)
+              {allNavItems
                 .filter(i => i.name.toLowerCase().includes(sidebarSearch.toLowerCase()))
                 .map(item => {
                   const Icon = item.icon || Folder;
@@ -1047,7 +1170,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                       <div className="flex items-center gap-1.5 shrink-0">
                         {group.badge && (
                           <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                            group.badge === 'Live'
+                            group.badge === 'Live' || group.badge === 'Suite'
                               ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                               : 'bg-white/10 text-slate-400'
                           }`}>
@@ -1060,39 +1183,105 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                   </button>
 
                   {sidebarOpen && isOpen && (
-                    <div className="mt-1 ml-3 pl-2.5 border-l border-white/10 space-y-0.5 py-1">
-                      {group.items.map(item => {
-                        const Icon = item.icon || Folder;
-                        const isActive = activeMenu === item.key;
-                        return (
-                          <button
-                            key={item.key}
-                            onClick={() => handleSelectMenu(item.key)}
-                            className={`relative w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all duration-150 cursor-pointer group ${
-                              isActive 
-                                ? 'bg-gradient-to-r from-white via-white to-slate-100 text-slate-950 font-bold shadow-[0_2px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,1)] pl-3' 
-                                : 'text-slate-300 hover:text-white hover:bg-white/10'
-                            }`}
-                          >
-                            {isActive && (
-                              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-5 bg-gradient-to-b from-orange-400 via-orange-500 to-amber-500 rounded-r-full shadow-[0_0_8px_rgba(249,115,22,0.8)]" />
-                            )}
-                            <div className="flex items-center gap-2 min-w-0">
-                              <Icon className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                                isActive ? 'text-orange-600' : 'text-slate-400 group-hover:text-orange-400'
-                              }`} />
-                              <span className="text-[11px] truncate">{item.name}</span>
+                    <div className="mt-1 ml-2.5 pl-2 border-l border-white/10 space-y-1 py-1">
+                      {group.subgroups ? (
+                        group.subgroups.map(sub => {
+                          const SubIcon = sub.icon || Folder;
+                          const isSubOpen = openSubgroups[sub.id];
+                          return (
+                            <div key={sub.id} className="space-y-0.5 mb-1.5">
+                              <button
+                                type="button"
+                                onClick={() => toggleSubgroup(sub.id)}
+                                className="w-full flex items-center justify-between px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] transition-colors cursor-pointer"
+                              >
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <SubIcon className="w-3 h-3 text-orange-400/80" />
+                                  <span className="truncate">{sub.label}</span>
+                                </div>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {sub.badge && (
+                                    <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-white/10 text-slate-300">
+                                      {sub.badge}
+                                    </span>
+                                  )}
+                                  {isSubOpen ? <ChevronDown className="w-3 h-3 text-slate-500" /> : <ChevronRight className="w-3 h-3 text-slate-500" />}
+                                </div>
+                              </button>
+
+                              {isSubOpen && (
+                                <div className="ml-2 pl-2 border-l border-white/10 space-y-0.5">
+                                  {sub.items.map(item => {
+                                    const Icon = item.icon || Folder;
+                                    const isActive = activeMenu === item.key;
+                                    return (
+                                      <button
+                                        key={item.key}
+                                        onClick={() => handleSelectMenu(item.key)}
+                                        className={`relative w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-left transition-all duration-150 cursor-pointer group ${
+                                          isActive 
+                                            ? 'bg-gradient-to-r from-white via-white to-slate-100 text-slate-950 font-bold shadow-[0_2px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,1)] pl-3' 
+                                            : 'text-slate-300 hover:text-white hover:bg-white/10'
+                                        }`}
+                                      >
+                                        {isActive && (
+                                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-4.5 bg-gradient-to-b from-orange-400 via-orange-500 to-amber-500 rounded-r-full shadow-[0_0_8px_rgba(249,115,22,0.8)]" />
+                                        )}
+                                        <div className="flex items-center gap-2 min-w-0">
+                                          <Icon className={`w-3.5 h-3.5 shrink-0 transition-colors ${
+                                            isActive ? 'text-orange-600' : 'text-slate-400 group-hover:text-orange-400'
+                                          }`} />
+                                          <span className="text-[11px] truncate">{item.name}</span>
+                                        </div>
+                                        {item.badge && (
+                                          <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ml-1 shrink-0 ${
+                                            isActive ? 'bg-orange-500 text-white' : 'bg-white/10 text-orange-400'
+                                          }`}>
+                                            {item.badge}
+                                          </span>
+                                        )}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </div>
-                            {item.badge && (
-                              <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ml-1 shrink-0 ${
-                                isActive ? 'bg-orange-500 text-white' : 'bg-white/10 text-orange-400'
-                              }`}>
-                                {item.badge}
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
+                          );
+                        })
+                      ) : (
+                        group.items.map(item => {
+                          const Icon = item.icon || Folder;
+                          const isActive = activeMenu === item.key;
+                          return (
+                            <button
+                              key={item.key}
+                              onClick={() => handleSelectMenu(item.key)}
+                              className={`relative w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all duration-150 cursor-pointer group ${
+                                isActive 
+                                  ? 'bg-gradient-to-r from-white via-white to-slate-100 text-slate-950 font-bold shadow-[0_2px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,1)] pl-3' 
+                                  : 'text-slate-300 hover:text-white hover:bg-white/10'
+                              }`}
+                            >
+                              {isActive && (
+                                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-5 bg-gradient-to-b from-orange-400 via-orange-500 to-amber-500 rounded-r-full shadow-[0_0_8px_rgba(249,115,22,0.8)]" />
+                              )}
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Icon className={`w-3.5 h-3.5 shrink-0 transition-colors ${
+                                  isActive ? 'text-orange-600' : 'text-slate-400 group-hover:text-orange-400'
+                                }`} />
+                                <span className="text-[11px] truncate">{item.name}</span>
+                              </div>
+                              {item.badge && (
+                                <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ml-1 shrink-0 ${
+                                  isActive ? 'bg-orange-500 text-white' : 'bg-white/10 text-orange-400'
+                                }`}>
+                                  {item.badge}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })
+                      )}
                     </div>
                   )}
                 </div>
@@ -1119,17 +1308,44 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
         </div>
       </aside>
 
+      {/* Mobile Backdrop Overlay for Admin Sidebar Drawer */}
+      {sidebarOpen && (
+        <div 
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-30 md:hidden"
+        />
+      )}
+
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-[#f8fafc]">
         {/* Top Navbar Header - macOS Frosted Glass */}
         <header className="h-16 shrink-0 bg-white/80 backdrop-blur-2xl border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between shadow-[0_1px_3px_rgba(0,0,0,0.02)] z-30">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="mac-btn mac-btn-glass p-2 rounded-xl text-slate-700 hover:text-slate-900 cursor-pointer"
-            title="Toggle Admin Sidebar"
-          >
-            <Menu className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="mac-btn mac-btn-glass p-2 rounded-xl text-slate-700 hover:text-slate-900 cursor-pointer"
+              title="Toggle Admin Sidebar"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+
+            {/* macOS Breadcrumb Trail */}
+            <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+              <span className="text-slate-400">Portal</span>
+              <ChevronRight className="w-3 h-3 text-slate-400" />
+              <span className="text-slate-600 font-semibold">{breadcrumbInfo.group}</span>
+              {breadcrumbInfo.sub && (
+                <>
+                  <ChevronRight className="w-3 h-3 text-slate-400" />
+                  <span className="text-slate-600 font-semibold">{breadcrumbInfo.sub}</span>
+                </>
+              )}
+              <ChevronRight className="w-3 h-3 text-slate-400" />
+              <span className="text-slate-900 font-bold bg-slate-100 px-2.5 py-0.5 rounded-lg border border-slate-200 shadow-2xs">
+                {breadcrumbInfo.title}
+              </span>
+            </div>
+          </div>
 
           {/* Right Action Bar: Live Sync Status, Switch to Student LMS, and User Profile */}
           <div className="flex items-center gap-3">
@@ -1526,6 +1742,55 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
           )}
 
           {/* ========================================================= */}
+          {/* ACADEMIC ANALYTICS DASHBOARDS                             */}
+          {/* ========================================================= */}
+          {activeMenu === 'mentor-dashboard' && (
+            <AcademicAnalyticsView initialSubTab="mentor" showToast={showToast} />
+          )}
+          {activeMenu === 'class-monitoring' && (
+            <AcademicAnalyticsView initialSubTab="class" showToast={showToast} />
+          )}
+          {activeMenu === 'batch-performance' && (
+            <AcademicAnalyticsView initialSubTab="batch" showToast={showToast} />
+          )}
+
+          {/* ========================================================= */}
+          {/* STUDENT ANALYTICS DASHBOARDS                              */}
+          {/* ========================================================= */}
+          {activeMenu === 'learning-progress' && (
+            <StudentAnalyticsView initialSubTab="progress" showToast={showToast} />
+          )}
+          {activeMenu === 'lms-engagement' && (
+            <StudentAnalyticsView initialSubTab="engagement" showToast={showToast} />
+          )}
+          {activeMenu === 'assignment-tracking' && (
+            <StudentAnalyticsView initialSubTab="assignment" showToast={showToast} />
+          )}
+
+          {/* ========================================================= */}
+          {/* PLACEMENT ANALYTICS DASHBOARDS                            */}
+          {/* ========================================================= */}
+          {activeMenu === 'placement-dashboard' && (
+            <PlacementAnalyticsView initialSubTab="placement" showToast={showToast} />
+          )}
+          {activeMenu === 'interview-tracking' && (
+            <PlacementAnalyticsView initialSubTab="interview" showToast={showToast} />
+          )}
+
+          {/* ========================================================= */}
+          {/* EXECUTIVE DASHBOARDS                                      */}
+          {/* ========================================================= */}
+          {activeMenu === 'director-overview' && (
+            <ExecutiveDashboardView initialSubTab="director" showToast={showToast} />
+          )}
+          {activeMenu === 'revenue-analytics' && (
+            <ExecutiveDashboardView initialSubTab="revenue" showToast={showToast} />
+          )}
+          {activeMenu === 'institute-health-score' && (
+            <ExecutiveDashboardView initialSubTab="health" showToast={showToast} />
+          )}
+
+          {/* ========================================================= */}
           {/* VIEW 5-EXECUTIVE: COLLECTION & RECOVERY DASHBOARD         */}
           {/* ========================================================= */}
           {activeMenu === 'collection-recovery' && (
@@ -1539,6 +1804,9 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
           {/* ========================================================= */}
           {(activeMenu === 'monthly-collection' || activeMenu === 'dashboard') && (
             <div className="space-y-6">
+              {/* Enhanced Actionable Monthly Collection Telemetry & Projections */}
+              <EnhancedMonthlyCollectionInsights showToast={showToast} />
+
               {/* Executive Summary Metrics matching user screenshot media_1790836123881.png */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
@@ -1747,6 +2015,9 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
           {/* ========================================================= */}
           {activeMenu === 'daily-collection' && (
             <div className="space-y-6">
+              {/* Enhanced Actionable Daily Collection Insights & PTP Telemetry */}
+              <EnhancedDailyCollectionInsights showToast={showToast} />
+
               {/* Daily Filter & Search Card */}
               <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-xs space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
