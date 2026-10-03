@@ -80,6 +80,16 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
+  // Enforce zero window scroll so header and sidebar never scroll off-screen
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      window.scrollTo(0, 0);
+    }
+  }, []);
+
   const handleOpenAdmin = () => {
     window.location.hash = '/admin/Reg.aspx';
     setIsAdminPortal(true);
@@ -191,7 +201,7 @@ export default function App() {
         />
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col h-screen min-w-0 transition-all duration-300 overflow-hidden">
+        <div className="flex-1 flex flex-col h-full min-w-0 transition-all duration-300 overflow-hidden">
           {/* Top Navbar Header */}
           <Header
             collapsed={sidebarCollapsed}
@@ -366,8 +376,8 @@ export default function App() {
           onNavigate={(tab) => setCurrentTab(tab)}
         />
 
-        {/* Floating Quick Switcher Pill (Student Mode) */}
-        <div className="fixed bottom-5 right-5 z-40 flex items-center gap-2 bg-slate-950/90 text-white p-1.5 pl-3.5 rounded-full shadow-2xl border border-slate-700/80 backdrop-blur-md text-xs select-none animate-in fade-in duration-300">
+        {/* Floating Quick Switcher Pill (Student Mode) - Centered Dynamic Island */}
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-slate-950/90 text-white p-1.5 pl-3.5 rounded-full shadow-2xl border border-slate-700/80 backdrop-blur-md text-xs select-none animate-in fade-in duration-300">
           <div className="flex items-center gap-1.5 pr-1">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span className="text-[11px] font-semibold text-slate-300 truncate max-w-[130px]">

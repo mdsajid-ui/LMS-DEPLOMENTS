@@ -4,28 +4,32 @@
   * {
     box-sizing: border-box;
   }
-  html {
+  html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   body {
-    margin: 0;
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.012em;
     background-color: #f8fafc;
     color: #0f172a;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
   code, pre, kbd, samp {
     font-family: "JetBrains Mono", "SF Mono", Monaco, Menlo, Consolas, "Liberation Mono", monospace;
     font-feature-settings: "zero", "ss02";
   }
   #root {
-    min-height: 100vh;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
   }
@@ -361,10 +365,34 @@ html, body {
   background-color: #0d0e12 !important;
 }
 
-[data-theme="award"] .bg-white {
+/* Nested surface cards (e.g. bg-slate-50/80, bg-slate-100, etc.) */
+[data-theme="award"] [class*="bg-slate-50"],
+[data-theme="award"] [class*="bg-slate-100"],
+[data-theme="award"] [class*="bg-slate-200"],
+[data-theme="award"] [class*="bg-gray-50"],
+[data-theme="award"] [class*="bg-gray-100"],
+[data-theme="award"] [class*="bg-zinc-50"],
+[data-theme="award"] [class*="bg-zinc-100"] {
+  background-color: #171821 !important;
+  border-color: rgba(245, 181, 68, 0.16) !important;
+  color: #f3f4f6 !important;
+}
+
+[data-theme="award"] .bg-white,
+[data-theme="award"] [class*="bg-white"] {
   background-color: #14151c !important;
   border-color: rgba(245, 181, 68, 0.18) !important;
   color: #f3f4f6 !important;
+}
+
+/* Badges / pills inside nested cards */
+[data-theme="award"] [class*="bg-slate-50"] [class*="bg-white"],
+[data-theme="award"] [class*="bg-slate-100"] [class*="bg-white"],
+[data-theme="award"] [class*="bg-slate-50"] .bg-white,
+[data-theme="award"] [class*="bg-slate-100"] .bg-white {
+  background-color: #242735 !important;
+  color: #f5b544 !important;
+  border-color: rgba(245, 181, 68, 0.3) !important;
 }
 
 [data-theme="award"] .text-slate-900,
@@ -701,10 +729,34 @@ html, body {
   background-color: #000000 !important;
 }
 
-[data-theme="black"] .bg-white {
+/* Nested surface cards */
+[data-theme="black"] [class*="bg-slate-50"],
+[data-theme="black"] [class*="bg-slate-100"],
+[data-theme="black"] [class*="bg-slate-200"],
+[data-theme="black"] [class*="bg-gray-50"],
+[data-theme="black"] [class*="bg-gray-100"],
+[data-theme="black"] [class*="bg-zinc-50"],
+[data-theme="black"] [class*="bg-zinc-100"] {
+  background-color: #111111 !important;
+  border-color: #222222 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="black"] .bg-white,
+[data-theme="black"] [class*="bg-white"] {
   background-color: #090909 !important;
   border-color: #1f1f1f !important;
   color: #ffffff !important;
+}
+
+/* Badges / pills inside nested cards */
+[data-theme="black"] [class*="bg-slate-50"] [class*="bg-white"],
+[data-theme="black"] [class*="bg-slate-100"] [class*="bg-white"],
+[data-theme="black"] [class*="bg-slate-50"] .bg-white,
+[data-theme="black"] [class*="bg-slate-100"] .bg-white {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  border-color: #333333 !important;
 }
 
 [data-theme="black"] .text-slate-900,
