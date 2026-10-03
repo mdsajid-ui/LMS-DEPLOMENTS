@@ -52,6 +52,7 @@ import {
 } from 'lucide-react';
 import { downloadFile, generateAndDownloadExcel } from '../utils/excelHelper';
 import Logo from '../components/Logo';
+import ThemeSelector from '../components/ThemeSelector';
 import { 
   UserMasterView, 
   BranchMasterView, 
@@ -1248,6 +1249,9 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                 <span>🎓 Switch to Student LMS</span>
               </button>
             )}
+
+            {/* 4-Theme Switcher (macOS, Award 2026, White, Black) */}
+            <ThemeSelector compact={true} />
 
             {/* User Profile in Top Right Header with MacBook Glass styling */}
             <div className="relative">

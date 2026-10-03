@@ -18,6 +18,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import Logo from './Logo';
+import ThemeSelector from './ThemeSelector';
 
 export default function Header({ 
   collapsed, 
@@ -129,6 +130,9 @@ export default function Header({
             <span>Admin Access</span>
           </button>
         )}
+
+        {/* 4-Theme Switcher (macOS, Award 2026, White, Black) */}
+        <ThemeSelector compact={true} />
 
         {/* Student Profile dropdown with MacBook Glass styling */}
         <div className="relative">

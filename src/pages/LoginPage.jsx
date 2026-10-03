@@ -16,6 +16,7 @@ import {
   Key
 } from 'lucide-react';
 import Logo from '../components/Logo';
+import ThemeSelector from '../components/ThemeSelector';
 import { getStoredStudents, saveStudentProfile } from '../utils/lmsStorage';
 import { studentProfile as defaultStudentProfile } from '../data/mockData';
 import { sanitizeString } from '../utils/securityShield';
@@ -148,6 +149,11 @@ export default function LoginPage({ onStudentLoginSuccess, onAdminLoginSuccess }
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-[#111e2e] to-slate-950 flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans select-none">
       
+      {/* Top Right Floating Theme Switcher */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30">
+        <ThemeSelector compact={false} />
+      </div>
+
       {/* Background Decorative Glow */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl pointer-events-none"></div>
