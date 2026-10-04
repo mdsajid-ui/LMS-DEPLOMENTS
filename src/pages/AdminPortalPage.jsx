@@ -59,6 +59,7 @@ import {
 import { downloadFile, generateAndDownloadExcel } from '../utils/excelHelper';
 import Logo from '../components/Logo';
 import ThemeSelector from '../components/ThemeSelector';
+import { useTheme } from '../utils/themeContext';
 import { 
   UserMasterView, 
   BranchMasterView, 
@@ -132,20 +133,24 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
   const [rememberMe, setRememberMe] = useState(true);
   const [loginError, setLoginError] = useState("");
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const { theme } = useTheme();
+  const isWhite = theme === 'white';
 
   // Sidebar Accordion State (Exact structure from screenshots media_1790833890610.png to media_1790833925679.png)
   const [openAccordions, setOpenAccordions] = useState(() => {
     const url = (window.location.hash + window.location.pathname).toLowerCase();
     const isMaster = url.includes('master') || url.includes('department') || url.includes('designation') || url.includes('selfpace');
     const isApproval = url.includes('approval');
-    const isTransaction = url.includes('external_link') || url.includes('reg') || url.includes('fee') || url.includes('session') || url.includes('assignment');
+    const isTransaction = url.includes('external_link') || url.includes('reg') || url.includes('fee') || url.includes('session') || url.includes('assignment') || url.includes('resume') || url.includes('interviewkit') || url.includes('class') || url.includes('discussionforum') || url.includes('appusers') || url.includes('importlead') || url.includes('batchcompletion') || url.includes('expense');
+    const isReports = url.includes('rpt_') || url.includes('report-');
+    const isDashboard = (url.includes('collection-recovery') || url.includes('dailycollection') || url.includes('monthlycollection') || url.includes('mentor-dashboard') || url.includes('class-monitoring') || url.includes('batch-performance') || url.includes('learning-progress') || url.includes('lms-engagement') || url.includes('assignment-tracking') || url.includes('director-overview') || url.includes('revenue-analytics') || url.includes('healthscore') || url.includes('dashboard')) && !isTransaction && !isMaster && !isApproval && !isReports;
     return {
-      dashboard: !isMaster && !isApproval && !isTransaction,
+      dashboard: isDashboard,
       master: isMaster,
       approval: isApproval,
-      transaction: isTransaction || (!isMaster && !isApproval),
+      transaction: isTransaction || (!isMaster && !isApproval && !isDashboard && !isReports),
       applicationTest: false,
-      reports: false
+      reports: isReports
     };
   });
 
@@ -171,7 +176,12 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     if (url.includes('department')) return 'department-master';
     if (url.includes('designation')) return 'designation-master';
     if (url.includes('payapproval') || url.includes('paymentapproval')) return 'pay-approval';
+    if (url.includes('regapproval') || url.includes('registrationapproval')) return 'reg-approval';
+    if (url.includes('empapproval') || url.includes('employeeapproval')) return 'emp-approval';
+    if (url.includes('expapproval') || url.includes('expenseapproval')) return 'exp-approval';
+    if (url.includes('appapproval') || url.includes('appraisalapproval')) return 'app-approval';
     if (url.includes('external_link') || url.includes('registrationlink')) return 'external-link';
+    if (url.includes('reg.aspx') || url.includes('/reg')) return 'reg';
     if (url.includes('collection-recovery') || url.includes('recovery')) return 'collection-recovery';
     if (url.includes('dailycollection') || url.includes('daily-collection')) return 'daily-collection';
     if (url.includes('monthlycollection') || url.includes('monthly-collection')) return 'monthly-collection';
@@ -214,6 +224,11 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     if (url.includes('directoroverview') || url.includes('director-overview')) return 'director-overview';
     if (url.includes('revenueanalytics') || url.includes('revenue-analytics')) return 'revenue-analytics';
     if (url.includes('institutehealthscore') || url.includes('healthscore') || url.includes('health-score')) return 'institute-health-score';
+    if (url.includes('app-test-type') || url.includes('testtypemaster')) return 'app-test-type';
+    if (url.includes('app-test-topic') || url.includes('topicmaster')) return 'app-test-topic';
+    if (url.includes('app-test-diff') || url.includes('difficultylevel')) return 'app-test-diff';
+    if (url.includes('app-test-quest') || url.includes('questionmaster')) return 'app-test-quest';
+    if (url.includes('app-test-cat') || url.includes('catbenchmark')) return 'app-test-cat';
     if (url.includes('dashboard')) return 'monthly-collection';
     if (url.includes('master')) return 'user-master';
     return 'user-master'; // Default to User Master (Screenshot 1)
@@ -221,6 +236,16 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
 
   const [activeMenu, setActiveMenu] = useState(() => getInitialMenu());
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Synchronize route with URL hash on browser back/forward/navigation
+  useEffect(() => {
+    const handleHashChange = () => {
+      const targetMenu = getInitialMenu();
+      setActiveMenu(targetMenu);
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   const handleSelectMenu = (menuKey) => {
     setActiveMenu(menuKey);
@@ -300,30 +325,27 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
   const adminMenuGroups = [
     {
       id: 'dashboard',
-      label: 'DASHBOARDS & ANALYTICS',
+      label: 'Dashboards & Analytics',
       icon: Gauge,
-      badge: 'Suite',
       subgroups: [
         {
           id: 'collections-recovery',
           label: 'Collections & Recovery',
           icon: IndianRupee,
-          badge: 'Live',
           items: [
-            { key: 'collection-recovery', name: 'Collection & Recovery Cockpit', icon: IndianRupee, badge: 'Live' },
-            { key: 'daily-collection', name: 'Daily Collection & Insights', icon: TrendingUp },
-            { key: 'monthly-collection', name: 'Monthly Collection & Projections', icon: Calendar }
+            { key: 'collection-recovery', name: 'Collection & Recovery Cockpit', icon: IndianRupee, badge: 'Live', tooltip: 'Live collections tracking & recovery cockpit' },
+            { key: 'daily-collection', name: 'Daily Collection & Insights', icon: TrendingUp, tooltip: 'Daily payment breakdown & variance' },
+            { key: 'monthly-collection', name: 'Monthly Collection & Projections', icon: Calendar, tooltip: 'Monthly target vs achievement run-rate' }
           ]
         },
         {
           id: 'academic-analytics',
           label: 'Academic Analytics',
           icon: BookOpen,
-          badge: 'Faculty',
           items: [
-            { key: 'mentor-dashboard', name: 'Mentor Dashboard', icon: UserCheck, badge: '4.8★' },
-            { key: 'class-monitoring', name: 'Class Monitoring', icon: Video, badge: 'Live' },
-            { key: 'batch-performance', name: 'Batch Performance', icon: Layers }
+            { key: 'mentor-dashboard', name: 'Mentor Dashboard', icon: UserCheck, tooltip: '4.8★ Faculty rating' },
+            { key: 'class-monitoring', name: 'Class Monitoring', icon: Video, tooltip: 'Live class monitoring & attendance' },
+            { key: 'batch-performance', name: 'Batch Performance', icon: Layers, tooltip: 'Batch syllabus & completion pace' }
           ]
         },
         {
@@ -331,27 +353,26 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
           label: 'Student Analytics',
           icon: Users,
           items: [
-            { key: 'learning-progress', name: 'Learning Progress', icon: TrendingUp },
-            { key: 'lms-engagement', name: 'LMS Engagement', icon: Activity, badge: 'DAU' },
-            { key: 'assignment-tracking', name: 'Assignment Tracking', icon: FileCheck }
+            { key: 'learning-progress', name: 'Learning Progress', icon: TrendingUp, tooltip: 'Student chapter mastery & completion' },
+            { key: 'lms-engagement', name: 'LMS Engagement', icon: Activity, tooltip: 'Daily active student sessions (DAU)' },
+            { key: 'assignment-tracking', name: 'Assignment Tracking', icon: FileCheck, tooltip: 'Submissions & pending evaluation' }
           ]
         },
         {
           id: 'executive-dashboard',
           label: 'Executive Dashboard',
           icon: Building,
-          badge: 'A+',
           items: [
-            { key: 'director-overview', name: 'Director Overview', icon: Building, badge: '360°' },
-            { key: 'revenue-analytics', name: 'Revenue Analytics', icon: DollarSign },
-            { key: 'institute-health-score', name: 'Institute Health Score', icon: ShieldCheck, badge: '92.8' }
+            { key: 'director-overview', name: 'Director Overview', icon: Building, tooltip: '360° Executive governance overview' },
+            { key: 'revenue-analytics', name: 'Revenue Analytics', icon: DollarSign, tooltip: 'Branch gross revenue & fee collection' },
+            { key: 'institute-health-score', name: 'Institute Health Score', icon: ShieldCheck, tooltip: 'Comprehensive institution health index (92.8/100)' }
           ]
         }
       ]
     },
     {
       id: 'master',
-      label: 'MASTER DIRECTORIES',
+      label: 'Master Directories',
       icon: Monitor,
       badge: '11',
       items: [
@@ -370,11 +391,11 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     },
     {
       id: 'approval',
-      label: 'APPROVAL WORKFLOWS',
+      label: 'Approval Workflows',
       icon: CheckCircle2,
       badge: '5',
       items: [
-        { key: 'pay-approval', name: 'Payment Approval', icon: CreditCard, badge: 'Audit' },
+        { key: 'pay-approval', name: 'Payment Approval', icon: CreditCard, tooltip: 'Payment Approval & Audit' },
         { key: 'reg-approval', name: 'Registration Approval', icon: CheckCircle2 },
         { key: 'emp-approval', name: 'Employee Approval', icon: UserCheck },
         { key: 'exp-approval', name: 'Expense Approval', icon: DollarSign },
@@ -383,7 +404,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     },
     {
       id: 'transaction',
-      label: 'OPERATIONS & SESSIONS',
+      label: 'Operations & Sessions',
       icon: Folder,
       badge: '21',
       items: [
@@ -412,7 +433,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     },
     {
       id: 'applicationTest',
-      label: 'APPLICATION TEST',
+      label: 'Application Test',
       icon: Type,
       badge: '5',
       items: [
@@ -425,7 +446,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     },
     {
       id: 'reports',
-      label: 'ENTERPRISE REPORTS',
+      label: 'Enterprise Reports',
       icon: Mail,
       badge: '12',
       items: [
@@ -444,6 +465,23 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
       ]
     }
   ];
+
+  // Automatically expand the group and subgroup containing the current active page
+  useEffect(() => {
+    for (const group of adminMenuGroups) {
+      if (group.items && group.items.some(i => i.key === activeMenu)) {
+        setOpenAccordions(prev => ({ ...prev, [group.id]: true }));
+      }
+      if (group.subgroups) {
+        for (const sub of group.subgroups) {
+          if (sub.items && sub.items.some(i => i.key === activeMenu)) {
+            setOpenAccordions(prev => ({ ...prev, [group.id]: true }));
+            setOpenSubgroups(prev => ({ ...prev, [sub.id]: true }));
+          }
+        }
+      }
+    }
+  }, [activeMenu]);
 
   const allNavItems = React.useMemo(() => {
     const list = [];
@@ -996,9 +1034,19 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
       )}
 
       {/* Admin Sidebar - macOS Studio UI Design System */}
-      <aside className={`${sidebarOpen ? 'w-72' : 'w-20'} h-full bg-gradient-to-b from-[#081220]/95 via-[#0c182c]/95 to-[#060c17]/98 backdrop-blur-2xl text-slate-200 flex flex-col transition-all duration-300 shrink-0 border-r border-white/10 z-40 select-none shadow-[4px_0_30px_rgba(0,0,0,0.4)] overflow-hidden`}>
+      <aside 
+        className={`${
+          sidebarOpen ? 'w-[290px]' : 'w-20'
+        } h-full flex flex-col transition-all duration-200 shrink-0 select-none overflow-hidden z-40 ${
+          isWhite 
+            ? 'bg-white text-slate-800 border-r border-slate-200 shadow-sm' 
+            : 'bg-gradient-to-b from-[#081220]/95 via-[#0c182c]/95 to-[#060c17]/98 text-slate-200 border-r border-white/10 shadow-[4px_0_30px_rgba(0,0,0,0.4)] backdrop-blur-2xl'
+        }`}
+      >
         {/* macOS Window Controls & DV Analytics Branding */}
-        <div className="h-16 px-4 flex items-center justify-between border-b border-white/10 bg-[#081220]/80 backdrop-blur-xl shrink-0">
+        <div className={`h-16 px-4 flex items-center justify-between shrink-0 ${
+          isWhite ? 'border-b border-slate-200 bg-white/95' : 'border-b border-white/10 bg-[#081220]/80 backdrop-blur-xl'
+        }`}>
           <div className="flex items-center gap-3">
             {sidebarOpen ? (
               <div className="flex items-center gap-2 group/lights py-1" title="macOS Window Controls">
@@ -1037,7 +1085,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
             <div className="flex items-center gap-2">
               <Logo collapsed={!sidebarOpen} />
               {sidebarOpen && (
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-orange-500/20 text-orange-500 border border-orange-500/30">
                   Studio
                 </span>
               )}
@@ -1046,22 +1094,32 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
         </div>
 
         {/* Spotlight Filter & Profile Card */}
-        <div className="p-3 border-b border-white/10 space-y-2.5 shrink-0 bg-white/[0.02]">
+        <div className={`p-3 border-b space-y-2.5 shrink-0 ${
+          isWhite ? 'border-slate-200 bg-slate-50/60' : 'border-white/10 bg-white/[0.02]'
+        }`}>
           {sidebarOpen && (
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <Search className={`w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${
+                isWhite ? 'text-slate-400' : 'text-slate-400'
+              }`} />
               <input 
                 type="text"
                 value={sidebarSearch}
                 onChange={(e) => setSidebarSearch(e.target.value)}
                 placeholder="Search tools... (⌘K)"
-                className="w-full bg-[#040914]/80 text-white placeholder-slate-400 text-xs pl-8 pr-7 py-2 rounded-xl border border-white/10 focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/50 transition-all shadow-inner"
+                className={`w-full text-xs pl-8 pr-7 py-2 rounded-xl transition-all shadow-inner focus:outline-none focus:ring-1 focus:ring-orange-500/50 ${
+                  isWhite 
+                    ? 'bg-white text-slate-900 placeholder-slate-400 border border-slate-200 focus:border-orange-500' 
+                    : 'bg-[#040914]/80 text-white placeholder-slate-400 border border-white/10 focus:border-orange-500/60'
+                }`}
               />
               {sidebarSearch && (
                 <button
                   type="button"
                   onClick={() => setSidebarSearch('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs cursor-pointer"
+                  className={`absolute right-2.5 top-1/2 -translate-y-1/2 text-xs cursor-pointer ${
+                    isWhite ? 'text-slate-400 hover:text-slate-800' : 'text-slate-400 hover:text-white'
+                  }`}
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -1070,20 +1128,26 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
           )}
 
           {/* macOS Frosted Profile Badge */}
-          <div className="rounded-xl bg-gradient-to-b from-[#132238]/70 to-[#0a1424]/80 border border-white/10 p-2.5 flex items-center gap-3 shadow-inner">
+          <div className={`rounded-xl border p-2.5 flex items-center gap-3 shadow-inner ${
+            isWhite 
+              ? 'bg-white border-slate-200 text-slate-900 shadow-2xs' 
+              : 'bg-gradient-to-b from-[#132238]/70 to-[#0a1424]/80 border-white/10 text-white'
+          }`}>
             <div className="relative shrink-0">
               <div className="w-9 h-9 rounded-full bg-slate-800 border-2 border-orange-500/60 overflow-hidden flex items-center justify-center shadow-xs">
                 <img src="./student-avatar.jpg" alt="Admin" className="w-full h-full object-cover" />
               </div>
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-[#0a1424]" />
+              <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ${
+                isWhite ? 'ring-white' : 'ring-[#0a1424]'
+              }`} />
             </div>
             {sidebarOpen && (
               <div className="overflow-hidden min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-1">
-                  <span className="text-[9px] uppercase font-bold tracking-widest text-orange-400 truncate block">Admin Node</span>
-                  <span className="text-[9px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-1 rounded border border-emerald-500/20">LIVE</span>
+                  <span className="text-[9px] uppercase font-bold tracking-widest text-orange-500 truncate block">Admin Node</span>
+                  <span className="text-[9px] font-mono text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-1 rounded border border-emerald-500/20">LIVE</span>
                 </div>
-                <span className="font-bold text-xs text-white truncate block">
+                <span className={`font-bold text-xs truncate block ${isWhite ? 'text-slate-900' : 'text-white'}`}>
                   {adminUser.displayName || 'SK ABDUL SAJID'}
                 </span>
               </div>
@@ -1092,11 +1156,13 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
         </div>
 
         {/* Navigation list with macOS styling */}
-        <nav className="flex-1 overflow-y-auto min-h-0 py-2 px-2 text-xs space-y-1 scrollbar-thin scrollbar-thumb-slate-700/50">
+        <nav className="flex-1 overflow-y-auto min-h-0 py-2 px-2.5 text-xs space-y-1 scrollbar-thin">
           {sidebarSearch.trim() ? (
             /* Search Results View */
             <div className="space-y-1">
-              <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <div className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider ${
+                isWhite ? 'text-slate-500' : 'text-slate-400'
+              }`}>
                 Matching Tools ({
                   allNavItems.filter(i => i.name.toLowerCase().includes(sidebarSearch.toLowerCase())).length
                 })
@@ -1110,17 +1176,28 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                     <button
                       key={item.key}
                       onClick={() => handleSelectMenu(item.key)}
-                      className={`relative w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all duration-150 cursor-pointer ${
+                      title={item.tooltip || item.name}
+                      className={`relative w-full min-h-[42px] flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all duration-150 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 ${
                         isActive 
-                          ? 'bg-gradient-to-r from-white via-white to-slate-100 text-slate-950 font-bold shadow-[0_2px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,1)] pl-4' 
-                          : 'text-slate-300 hover:text-white hover:bg-white/10'
+                          ? isWhite 
+                            ? 'nav-active-row bg-orange-500/10 text-orange-950 font-semibold border border-orange-500/25 pl-4' 
+                            : 'nav-active-row bg-orange-500/15 text-white font-semibold border border-orange-500/30 pl-4 shadow-xs'
+                          : isWhite 
+                            ? 'text-slate-700 hover:text-slate-950 hover:bg-slate-100/90 font-medium' 
+                            : 'text-slate-300 hover:text-white hover:bg-white/[0.06] font-medium'
                       }`}
                     >
                       {isActive && (
-                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-5 bg-gradient-to-b from-orange-400 via-orange-500 to-amber-500 rounded-r-full shadow-[0_0_8px_rgba(249,115,22,0.8)]" />
+                        <span className="nav-active-indicator absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-gradient-to-b from-orange-500 to-amber-500 rounded-r-full shadow-[0_0_8px_rgba(249,115,22,0.7)]" />
                       )}
-                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-orange-600' : 'text-slate-400'}`} />
-                      <span className="truncate flex-1">{item.name}</span>
+                      <Icon className={`w-[18px] h-[18px] shrink-0 transition-colors ${
+                        isActive 
+                          ? 'text-orange-600 dark:text-orange-400' 
+                          : isWhite 
+                            ? 'text-slate-500 group-hover:text-orange-600' 
+                            : 'text-slate-400 group-hover:text-orange-400'
+                      }`} />
+                      <span className={`text-[14px] leading-[20px] truncate flex-1 ${isActive ? 'font-semibold' : 'font-medium'}`}>{item.name}</span>
                     </button>
                   );
                 })}
@@ -1133,68 +1210,99 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
               return (
                 <div key={group.id} className="rounded-xl overflow-hidden mb-1">
                   <button
+                    type="button"
                     onClick={() => toggleAccordion(group.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all cursor-pointer ${
-                      isOpen ? 'bg-white/[0.08] text-white' : 'text-slate-300 hover:text-white hover:bg-white/[0.04]'
+                    className={`w-full min-h-[44px] flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 ${
+                      isOpen 
+                        ? isWhite 
+                          ? 'bg-slate-100/90 text-slate-900 font-bold' 
+                          : 'bg-white/[0.08] text-white font-bold'
+                        : isWhite 
+                          ? 'text-slate-700 hover:text-slate-950 hover:bg-slate-100/60 font-semibold' 
+                          : 'text-slate-300 hover:text-white hover:bg-white/[0.04] font-semibold'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
-                        isOpen ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-white/5 text-slate-400'
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                        isOpen 
+                          ? isWhite 
+                            ? 'bg-orange-500/15 text-orange-600 border border-orange-500/25' 
+                            : 'bg-orange-500/20 text-orange-400 border border-orange-500/30' 
+                          : isWhite 
+                            ? 'bg-slate-200/70 text-slate-600' 
+                            : 'bg-white/5 text-slate-400'
                       }`}>
-                        <GroupIcon className="w-3.5 h-3.5" />
+                        <GroupIcon className="w-[18px] h-[18px]" />
                       </div>
                       {sidebarOpen && (
-                        <span className="font-bold text-[11px] uppercase tracking-wider text-slate-200 truncate">
+                        <span className={`font-[650] text-[12px] tracking-wide truncate ${
+                          isWhite ? 'text-slate-800' : 'text-slate-200'
+                        }`}>
                           {group.label}
                         </span>
                       )}
                     </div>
                     {sidebarOpen && (
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-2 shrink-0 ml-auto">
                         {group.badge && (
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                            group.badge === 'Live' || group.badge === 'Suite'
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                              : 'bg-white/10 text-slate-400'
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            isWhite ? 'bg-slate-200/80 text-slate-700' : 'bg-white/10 text-slate-300'
                           }`}>
                             {group.badge}
                           </span>
                         )}
-                        {isOpen ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />}
+                        {isOpen ? (
+                          <ChevronDown className={`w-4 h-4 ${isWhite ? 'text-slate-500' : 'text-slate-400'}`} />
+                        ) : (
+                          <ChevronRight className={`w-4 h-4 ${isWhite ? 'text-slate-500' : 'text-slate-400'}`} />
+                        )}
                       </div>
                     )}
                   </button>
 
                   {sidebarOpen && isOpen && (
-                    <div className="mt-1 ml-2.5 pl-2 border-l border-white/10 space-y-1 py-1">
+                    <div className={`mt-1 ml-3 pl-2.5 border-l space-y-1 py-1 ${
+                      isWhite ? 'border-slate-200' : 'border-white/10'
+                    }`}>
                       {group.subgroups ? (
-                        group.subgroups.map(sub => {
+                        group.subgroups.map((sub, sIdx) => {
                           const SubIcon = sub.icon || Folder;
                           const isSubOpen = openSubgroups[sub.id];
                           return (
-                            <div key={sub.id} className="space-y-0.5 mb-1.5">
+                            <div key={sub.id} className={sIdx > 0 ? `pt-2 mt-2 border-t ${isWhite ? 'border-slate-200/80' : 'border-white/5'}` : ''}>
                               <button
                                 type="button"
                                 onClick={() => toggleSubgroup(sub.id)}
-                                className="w-full flex items-center justify-between px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] transition-colors cursor-pointer"
+                                className={`w-full min-h-[38px] flex items-center justify-between px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-orange-500/50 ${
+                                  isWhite 
+                                    ? 'text-slate-700 hover:text-slate-950 hover:bg-slate-100/70' 
+                                    : 'text-slate-300 hover:text-white hover:bg-white/[0.04]'
+                                }`}
                               >
-                                <div className="flex items-center gap-1.5 min-w-0">
-                                  <SubIcon className="w-3 h-3 text-orange-400/80" />
-                                  <span className="truncate">{sub.label}</span>
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <SubIcon className="w-4 h-4 text-orange-500/90 shrink-0" />
+                                  <span className="text-[13px] font-semibold tracking-normal truncate">{sub.label}</span>
                                 </div>
-                                <div className="flex items-center gap-1 shrink-0">
+                                <div className="flex items-center gap-1.5 shrink-0 ml-auto">
                                   {sub.badge && (
-                                    <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-white/10 text-slate-300">
+                                    <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${
+                                      isWhite ? 'bg-slate-200 text-slate-700' : 'bg-white/10 text-slate-300'
+                                    }`}>
                                       {sub.badge}
                                     </span>
                                   )}
-                                  {isSubOpen ? <ChevronDown className="w-3 h-3 text-slate-500" /> : <ChevronRight className="w-3 h-3 text-slate-500" />}
+                                  {isSubOpen ? (
+                                    <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+                                  ) : (
+                                    <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+                                  )}
                                 </div>
                               </button>
 
                               {isSubOpen && (
-                                <div className="ml-2 pl-2 border-l border-white/10 space-y-0.5">
+                                <div className={`mt-1 ml-2 pl-2 border-l space-y-1 ${
+                                  isWhite ? 'border-slate-200/80' : 'border-white/10'
+                                }`}>
                                   {sub.items.map(item => {
                                     const Icon = item.icon || Folder;
                                     const isActive = activeMenu === item.key;
@@ -1202,24 +1310,39 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                                       <button
                                         key={item.key}
                                         onClick={() => handleSelectMenu(item.key)}
-                                        className={`relative w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-left transition-all duration-150 cursor-pointer group ${
+                                        title={item.tooltip || item.name}
+                                        className={`relative w-full min-h-[42px] flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all duration-150 cursor-pointer group select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 ${
                                           isActive 
-                                            ? 'bg-gradient-to-r from-white via-white to-slate-100 text-slate-950 font-bold shadow-[0_2px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,1)] pl-3' 
-                                            : 'text-slate-300 hover:text-white hover:bg-white/10'
+                                            ? isWhite 
+                                              ? 'nav-active-row bg-orange-500/10 text-orange-950 font-semibold border border-orange-500/25 pl-4' 
+                                              : 'nav-active-row bg-orange-500/15 text-white font-semibold border border-orange-500/30 pl-4 shadow-xs'
+                                            : isWhite 
+                                              ? 'text-slate-700 hover:text-slate-950 hover:bg-slate-100/90 font-medium' 
+                                              : 'text-slate-300 hover:text-white hover:bg-white/[0.06] font-medium'
                                         }`}
                                       >
                                         {isActive && (
-                                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-4.5 bg-gradient-to-b from-orange-400 via-orange-500 to-amber-500 rounded-r-full shadow-[0_0_8px_rgba(249,115,22,0.8)]" />
+                                          <span className="nav-active-indicator absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-gradient-to-b from-orange-500 to-amber-500 rounded-r-full shadow-[0_0_8px_rgba(249,115,22,0.7)]" />
                                         )}
-                                        <div className="flex items-center gap-2 min-w-0">
-                                          <Icon className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                                            isActive ? 'text-orange-600' : 'text-slate-400 group-hover:text-orange-400'
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                          <Icon className={`w-[18px] h-[18px] shrink-0 transition-colors ${
+                                            isActive 
+                                              ? 'text-orange-600 dark:text-orange-400' 
+                                              : isWhite 
+                                                ? 'text-slate-500 group-hover:text-orange-600' 
+                                                : 'text-slate-400 group-hover:text-orange-400'
                                           }`} />
-                                          <span className="text-[11px] truncate">{item.name}</span>
+                                          <span className={`text-[14px] leading-[20px] truncate ${isActive ? 'font-semibold' : 'font-medium'}`}>
+                                            {item.name}
+                                          </span>
                                         </div>
                                         {item.badge && (
-                                          <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ml-1 shrink-0 ${
-                                            isActive ? 'bg-orange-500 text-white' : 'bg-white/10 text-orange-400'
+                                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ml-2 shrink-0 ${
+                                            isActive 
+                                              ? 'bg-orange-500 text-white' 
+                                              : isWhite 
+                                                ? 'bg-slate-200 text-slate-700' 
+                                                : 'bg-white/10 text-orange-400'
                                           }`}>
                                             {item.badge}
                                           </span>
@@ -1240,24 +1363,39 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                             <button
                               key={item.key}
                               onClick={() => handleSelectMenu(item.key)}
-                              className={`relative w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all duration-150 cursor-pointer group ${
+                              title={item.tooltip || item.name}
+                              className={`relative w-full min-h-[42px] flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all duration-150 cursor-pointer group select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 ${
                                 isActive 
-                                  ? 'bg-gradient-to-r from-white via-white to-slate-100 text-slate-950 font-bold shadow-[0_2px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,1)] pl-3' 
-                                  : 'text-slate-300 hover:text-white hover:bg-white/10'
+                                  ? isWhite 
+                                    ? 'nav-active-row bg-orange-500/10 text-orange-950 font-semibold border border-orange-500/25 pl-4' 
+                                    : 'nav-active-row bg-orange-500/15 text-white font-semibold border border-orange-500/30 pl-4 shadow-xs'
+                                  : isWhite 
+                                    ? 'text-slate-700 hover:text-slate-950 hover:bg-slate-100/90 font-medium' 
+                                    : 'text-slate-300 hover:text-white hover:bg-white/[0.06] font-medium'
                               }`}
                             >
                               {isActive && (
-                                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-5 bg-gradient-to-b from-orange-400 via-orange-500 to-amber-500 rounded-r-full shadow-[0_0_8px_rgba(249,115,22,0.8)]" />
+                                <span className="nav-active-indicator absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-gradient-to-b from-orange-500 to-amber-500 rounded-r-full shadow-[0_0_8px_rgba(249,115,22,0.7)]" />
                               )}
-                              <div className="flex items-center gap-2 min-w-0">
-                                <Icon className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                                  isActive ? 'text-orange-600' : 'text-slate-400 group-hover:text-orange-400'
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <Icon className={`w-[18px] h-[18px] shrink-0 transition-colors ${
+                                  isActive 
+                                    ? 'text-orange-600 dark:text-orange-400' 
+                                    : isWhite 
+                                      ? 'text-slate-500 group-hover:text-orange-600' 
+                                      : 'text-slate-400 group-hover:text-orange-400'
                                 }`} />
-                                <span className="text-[11px] truncate">{item.name}</span>
+                                <span className={`text-[14px] leading-[20px] truncate ${isActive ? 'font-semibold' : 'font-medium'}`}>
+                                  {item.name}
+                                </span>
                               </div>
                               {item.badge && (
-                                <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ml-1 shrink-0 ${
-                                  isActive ? 'bg-orange-500 text-white' : 'bg-white/10 text-orange-400'
+                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ml-2 shrink-0 ${
+                                  isActive 
+                                    ? 'bg-orange-500 text-white' 
+                                    : isWhite 
+                                      ? 'bg-slate-200 text-slate-700' 
+                                      : 'bg-white/10 text-orange-400'
                                 }`}>
                                   {item.badge}
                                 </span>
@@ -1275,17 +1413,26 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
         </nav>
 
         {/* macOS Sidebar Footer - Logout & Version Status */}
-        <div className="p-3 border-t border-white/10 bg-white/[0.02] shrink-0">
+        <div className={`p-3 border-t shrink-0 ${
+          isWhite ? 'border-slate-200 bg-slate-50/60' : 'border-white/10 bg-white/[0.02]'
+        }`}>
           <button
+            type="button"
             onClick={() => setIsAuthenticated(false)}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-red-200 border border-red-500/20 text-xs font-semibold transition-all cursor-pointer shadow-inner active:scale-98"
+            className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-inner active:scale-98 ${
+              isWhite 
+                ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80' 
+                : 'bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-red-200 border border-red-500/20'
+            }`}
             title="Sign Out of Admin Portal"
           >
             <LogOut className="w-3.5 h-3.5 shrink-0" />
             {sidebarOpen && <span>Sign Out</span>}
           </button>
           {sidebarOpen && (
-            <div className="mt-2 text-center text-[9px] text-slate-400 font-mono tracking-wider">
+            <div className={`mt-2 text-center text-[9px] font-mono tracking-wider ${
+              isWhite ? 'text-slate-500' : 'text-slate-400'
+            }`}>
               macOS Studio UI • DV Analytics
             </div>
           )}
