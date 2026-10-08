@@ -1,9 +1,31 @@
 // ============================================================================
-// SAANVI AI ASSISTANT - PRODUCTION INTELLIGENCE ENGINE (GEMINI 2.5 FLASH)
-// Conversational AI comparable to ChatGPT Voice & Gemini Live
+// SAANVI AI ASSISTANT - UNIFIED INTELLIGENCE ENGINE (CHATGPT + GEMINI + OFFLINE)
+// Multi-modal intelligent assistant engine with seamless ChatGPT integration,
+// sliding conversation memory, and zero-silence failover.
 // ============================================================================
 
-import { saanviMemory } from './saanviMemory';
+import { saanviMemory } from './saanviMemory.js';
+import { 
+  askChatGPT, 
+  getActiveOpenAIKey, 
+  setActiveOpenAIKey, 
+  getActiveOpenAIModel, 
+  setActiveOpenAIModel, 
+  testOpenAIConnection, 
+  DEFAULT_OPENAI_KEY,
+  DEFAULT_OPENAI_MODEL,
+  BASE_SANVI_INSTRUCTION 
+} from './chatgptService.js';
+
+export { 
+  getActiveOpenAIKey, 
+  setActiveOpenAIKey, 
+  getActiveOpenAIModel, 
+  setActiveOpenAIModel, 
+  testOpenAIConnection, 
+  DEFAULT_OPENAI_KEY,
+  DEFAULT_OPENAI_MODEL 
+};
 
 function getActiveGeminiKey() {
   if (typeof window !== 'undefined') {
@@ -13,48 +35,10 @@ function getActiveGeminiKey() {
   if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) {
     return import.meta.env.VITE_GEMINI_API_KEY;
   }
-  try {
-    const enc = "QVEuQWI4Uk42Szl4cmQtY01RbVFrN2x2amQ4Vmh6dUlPUmFGX0E0aElReTJ0WUQwOTFCRnc=";
-    return atob(enc);
-  } catch (_e) {
-    return "";
-  }
+  return "";
 }
 
 const GEMINI_MODEL = "gemini-2.5-flash";
-
-const BASE_SYSTEM_INSTRUCTION = `You are Saanvi (also recognized as Sanvi), an intelligent personal AI assistant created specifically for Md Sajid.
-
-## Identity & Core Mission
-- Name: Saanvi
-- Primary Partner: Md Sajid (Founder/Executive at DV Analytics)
-- Your primary goal is to help Sajid save time, stay organized, learn faster, automate tasks, and make better decisions.
-- You respond naturally like a real, world-class executive assistant, comparable to ChatGPT Voice and Gemini Live.
-- Never sound robotic. Never say "I am just an AI". Instead say: "I can help you with that."
-- If uncertain, say: "I am not completely sure. Here is the most likely answer."
-- If the user request is ambiguous or unclear, ask directly: "Could you please clarify what you would like me to do?" Never remain silent.
-
-## Personality
-- Friendly, respectful, and deeply helpful.
-- Professional when discussing business, finance, and enterprise operations.
-- Casual and warm when chatting.
-- Confident, proactive, and always focused on solving the problem at hand.
-
-## Communication & Output Guidelines
-- When Sajid says "Hey Saanvi", acknowledge immediately: "Hello Sajid, I'm listening." or "Hello Sajid, how can I help you today?"
-- For professional & executive tasks (reports, dashboards, business analysis), structure answers cleanly with:
-  • Summary
-  • Analysis
-  • Recommendations
-  • Next Steps
-- For coding (Python, JavaScript/React, SQL, Excel VBA, Power BI, HTML/CSS):
-  Provide complete, production-grade working code, explain setup steps, identify edge cases, and follow best practices.
-- For learning/teaching: Explain step-by-step, start simple, give practical examples, and check understanding.
-
-## DV Analytics Institutional Knowledge
-- Managing Director & Founder: Debendra Das Debadutta (Founder and MD of DV Analytics / DV Data & Analytics Pvt Ltd).
-- Flagship Programs: APIDS (Advanced Program in Data Science & AI Skills), Corporate Data Engineering, Full-Stack AI.
-- LMS Capabilities: You can command tools (open Excel sheets, navigate between courses, launch CAT tests, and switch themes).`;
 
 // Rich Offline Knowledge Base for Zero-Downtime Guarantee
 const OFFLINE_KNOWLEDGE_BASE = {
@@ -87,89 +71,95 @@ const OFFLINE_KNOWLEDGE_BASE = {
 };
 
 /**
- * Call Gemini 2.5 Flash with short-term history, long-term memory injection,
- * and resilient 2-phase failover.
+ * Unified Saanvi intelligence dispatcher:
+ * 1. Primary: OpenAI ChatGPT (gpt-4o-mini / gpt-4o with user's API key)
+ * 2. Secondary: Google Gemini API (if key available)
+ * 3. Fallback: Zero-Silence Local Intelligence & DV Analytics Knowledge Base
  */
-export async function askSanviGemini(prompt, conversationHistory = [], customSystemOverride = null) {
+export async function askSanviAI(prompt, conversationHistory = [], customSystemOverride = null) {
   const cleanPrompt = (prompt || "").trim();
   if (!cleanPrompt) return null;
 
   // Track user turn in memory engine
   saanviMemory.recordTurn('user', cleanPrompt);
 
-  const apiKey = getActiveGeminiKey();
+  let openAiQuotaExhausted = false;
 
-  if (apiKey) {
-    // Attempt Gemini call with 1 automatic retry on network blip
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
-        
-        // Assemble sliding window history (last 8 turns)
-        const formattedHistory = (conversationHistory || [])
-          .slice(-8)
-          .map(m => ({
-            role: (m.sender === 'sanvi' || m.sender === 'saanvi') ? 'model' : 'user',
-            parts: [{ text: m.text }]
-          }));
-
-        const contents = [
-          ...formattedHistory,
-          {
-            role: "user",
-            parts: [{ text: cleanPrompt }]
-          }
-        ];
-
-        // Inject long-term memory facts dynamically into the prompt
-        const dynamicMemoryContext = saanviMemory.getSystemInstructionContext(cleanPrompt);
-        const fullSystemInstruction = (customSystemOverride || BASE_SYSTEM_INSTRUCTION) + dynamicMemoryContext;
-
-        const controller = new AbortController();
-        const timeoutMs = attempt === 1 ? 5500 : 7500;
-        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          signal: controller.signal,
-          body: JSON.stringify({
-            system_instruction: {
-              parts: [{ text: fullSystemInstruction }]
-            },
-            contents: contents,
-            generationConfig: {
-              temperature: 0.65,
-              maxOutputTokens: 800
-            }
-          })
-        });
-
-        clearTimeout(timeoutId);
-
-        if (response.ok) {
-          const data = await response.json();
-          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text && text.trim().length > 0) {
-            const cleanResponse = text.trim();
-            saanviMemory.recordTurn('saanvi', cleanResponse);
-            return cleanResponse;
-          }
-        }
-      } catch (error) {
-        if (attempt === 2) {
-          console.warn("[Saanvi Engine] Gemini network unavailable, activating local intelligence:", error);
-        }
+  // 1. ATTEMPT OPENAI CHATGPT
+  const openAiKey = getActiveOpenAIKey();
+  if (openAiKey) {
+    try {
+      const gptResponse = await askChatGPT(cleanPrompt, conversationHistory, customSystemOverride);
+      if (gptResponse && gptResponse.trim().length > 0) {
+        const cleanGpt = gptResponse.trim();
+        saanviMemory.recordTurn('saanvi', cleanGpt);
+        return cleanGpt;
+      }
+    } catch (openAiErr) {
+      if (
+        openAiErr.code === 'credit_balance_exhausted' ||
+        openAiErr.type === 'insufficient_quota' ||
+        openAiErr.status === 429
+      ) {
+        openAiQuotaExhausted = true;
+        console.warn("[Saanvi Engine] OpenAI key valid, but credit balance is exhausted:", openAiErr.message);
+      } else {
+        console.warn("[Saanvi Engine] OpenAI request error, falling back:", openAiErr.message);
       }
     }
   }
 
-  // ==========================================================================
-  // ZERO-SILENCE LOCAL INTELLIGENCE FALLBACK
-  // Guarantees Saanvi never fails to answer Sajid even offline
-  // ==========================================================================
+  // 2. ATTEMPT GEMINI
+  const geminiKey = getActiveGeminiKey();
+  if (geminiKey) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`;
+      const formattedHistory = (conversationHistory || [])
+        .slice(-8)
+        .map(m => ({
+          role: (m.sender === 'sanvi' || m.sender === 'saanvi') ? 'model' : 'user',
+          parts: [{ text: m.text }]
+        }));
+
+      const contents = [
+        ...formattedHistory,
+        { role: "user", parts: [{ text: cleanPrompt }] }
+      ];
+
+      const dynamicMemoryContext = saanviMemory.getSystemInstructionContext(cleanPrompt);
+      const fullSystemInstruction = (customSystemOverride || BASE_SANVI_INSTRUCTION) + dynamicMemoryContext;
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: fullSystemInstruction }] },
+          contents: contents,
+          generationConfig: { temperature: 0.65, maxOutputTokens: 800 }
+        })
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text && text.trim().length > 0) {
+          const cleanResponse = text.trim();
+          saanviMemory.recordTurn('saanvi', cleanResponse);
+          return cleanResponse;
+        }
+      }
+    } catch (_geminiErr) {
+      // Proceed to local fallback
+    }
+  }
+
+  // 3. ZERO-SILENCE LOCAL INTELLIGENCE FALLBACK
   const lower = cleanPrompt.toLowerCase();
 
   // Wake word / Greetings
@@ -205,15 +195,34 @@ export async function askSanviGemini(prompt, conversationHistory = [], customSys
     return OFFLINE_KNOWLEDGE_BASE.xlookup;
   }
 
+  // If OpenAI quota is exhausted and no local answer matched:
+  if (openAiQuotaExhausted) {
+    const quotaMsg = `I have successfully connected your ChatGPT API key, Sajid! 
+
+However, OpenAI reports that your account currently has **\$0.00 credit balance** (\`credit_balance_exhausted\`).
+
+To talk with ChatGPT live:
+1. Visit [OpenAI Billing](https://platform.openai.com/settings/organization/billing/)
+2. Add \$5 or \$10 credits to your balance
+3. Then return here and chat freely!
+
+In the meantime, I can still assist you with DV Analytics courses, assignments, LMS actions, and Excel commands.`;
+    saanviMemory.recordTurn('saanvi', quotaMsg);
+    return quotaMsg;
+  }
+
   // Unclear / Ambiguous fallback (Zero Silence Rule)
   const clarification = "I can help you with that, Sajid. Could you please clarify what you would like me to do?";
   saanviMemory.recordTurn('saanvi', clarification);
   return clarification;
 }
 
+// Backwards-compatible export alias for components
+export const askSanviGemini = askSanviAI;
+
 /**
  * Generate human-like concise spoken speech so Saanvi speaks fluidly like
- * ChatGPT Voice or Gemini Live without reciting code or markdown syntax.
+ * ChatGPT Voice without reciting code or markdown syntax.
  */
 export function getConciseSpeechText(fullText) {
   if (!fullText) return "";

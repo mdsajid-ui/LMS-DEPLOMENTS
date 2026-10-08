@@ -42,7 +42,18 @@ import {
 } from '../data/mockData';
 import ExcelSheetViewerModal from './ExcelSheetViewerModal';
 import { generateAndDownloadExcel } from '../utils/excelHelper';
-import { askSanviGemini, getConciseSpeechText } from '../services/geminiService';
+import { 
+  askSanviGemini, 
+  askSanviAI,
+  getConciseSpeechText,
+  getActiveOpenAIKey,
+  setActiveOpenAIKey,
+  getActiveOpenAIModel,
+  setActiveOpenAIModel,
+  testOpenAIConnection,
+  DEFAULT_OPENAI_KEY,
+  DEFAULT_OPENAI_MODEL
+} from '../services/geminiService';
 import { saanviMemory } from '../services/saanviMemory';
 
 export default function SanviAssistant({ 
@@ -50,7 +61,7 @@ export default function SanviAssistant({
   onCloseExternal, 
   onOpenExternal,
   currentTab, 
-  onNavigate,
+  onNavigate, 
   onOpenAdmin 
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -60,12 +71,20 @@ export default function SanviAssistant({
     isOpenRef.current = isOpen;
   }, [isOpen]);
 
-  const [activeTab, setActiveTab] = useState('chat'); // 'chat', 'memory', 'company', 'assignments', 'helplines', 'tools'
+  const [activeTab, setActiveTab] = useState('chat'); // 'chat', 'memory', 'company', 'assignments', 'helplines', 'tools', 'ai'
   const [selectedAsnKey, setSelectedAsnKey] = useState('ASN-01');
   const [copiedText, setCopiedText] = useState(null);
   const [excelModalOpen, setExcelModalOpen] = useState(false);
   const [memoryItems, setMemoryItems] = useState([]);
   const [newMemoryFact, setNewMemoryFact] = useState('');
+
+  // ChatGPT OpenAI State
+  const [openAiKey, setOpenAiKey] = useState(getActiveOpenAIKey());
+  const [openAiModel, setOpenAiModel] = useState(getActiveOpenAIModel());
+  const [aiTestStatus, setAiTestStatus] = useState(null);
+  const [isTestingAi, setIsTestingAi] = useState(false);
+  const [keyInputVal, setKeyInputVal] = useState(getActiveOpenAIKey());
+  const [keySaveMessage, setKeySaveMessage] = useState('');
   
   // Voice states (Jarvis style two-way voice)
   const [voiceEnabled, setVoiceEnabled] = useState(true); // TTS voice output
@@ -718,6 +737,41 @@ export default function SanviAssistant({
     }
   };
 
+  // ChatGPT AI Engine Controls
+  const handleTestOpenAi = async () => {
+    setIsTestingAi(true);
+    setAiTestStatus(null);
+    try {
+      const res = await testOpenAIConnection(keyInputVal);
+      setAiTestStatus(res);
+    } catch (err) {
+      setAiTestStatus({ success: false, status: 'error', message: err.message });
+    } finally {
+      setIsTestingAi(false);
+    }
+  };
+
+  const handleSaveOpenAiKey = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setActiveOpenAIKey(keyInputVal);
+    setOpenAiKey(keyInputVal);
+    setKeySaveMessage('OpenAI ChatGPT key successfully updated and saved!');
+    setTimeout(() => setKeySaveMessage(''), 4000);
+  };
+
+  const handleModelChange = (model) => {
+    setActiveOpenAIModel(model);
+    setOpenAiModel(model);
+  };
+
+  const handleResetOpenAiKey = () => {
+    setKeyInputVal(DEFAULT_OPENAI_KEY);
+    setActiveOpenAIKey(DEFAULT_OPENAI_KEY);
+    setOpenAiKey(DEFAULT_OPENAI_KEY);
+    setKeySaveMessage('Reset to default ChatGPT API key!');
+    setTimeout(() => setKeySaveMessage(''), 4000);
+  };
+
   // Process user chat message & Jarvis Action Engine
   const handleSendMessage = async (textToSend, fromVoice = false) => {
     const query = (textToSend || inputMessage).trim();
@@ -1261,6 +1315,14 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-bold tracking-wide text-white flex items-center gap-1.5">
                     Saanvi
+                    <span 
+                      onClick={() => setActiveTab('ai')}
+                      className="cursor-pointer px-1.5 py-0.5 rounded text-[9px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-colors font-medium flex items-center gap-1"
+                      title="ChatGPT is active • Click to configure"
+                    >
+                      <Bot className="w-2.5 h-2.5" />
+                      ChatGPT
+                    </span>
                   </h3>
                 </div>
                 <p className="text-[11px] text-slate-400">
@@ -1445,6 +1507,17 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                 >
                   <Server className="w-3.5 h-3.5" />
                   <span>Tool Access</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('ai')}
+                  className={`flex-1 py-2.5 px-2 text-center border-b-2 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                    activeTab === 'ai'
+                      ? 'border-emerald-400 text-emerald-300 bg-slate-900'
+                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Bot className="w-3.5 h-3.5" />
+                  <span>ChatGPT AI</span>
                 </button>
               </div>
 
@@ -2132,6 +2205,164 @@ Our contact numbers are +91-9019030033 and +91-9830012345, or email us at info@d
                       </p>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Tab 7: ChatGPT AI Engine Configuration */}
+              {activeTab === 'ai' && (
+                <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-950 scrollbar-thin">
+                  <div className="p-3.5 bg-gradient-to-r from-emerald-950/50 via-slate-900 to-slate-900 rounded-2xl border border-emerald-500/30">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          <Bot className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                            ChatGPT Intelligence Core
+                            <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">
+                              Active
+                            </span>
+                          </h4>
+                          <p className="text-[10px] text-slate-400">Powered by OpenAI API • Integrated into Saanvi Assistant</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/30">
+                        {openAiModel}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* API Key Management Card */}
+                  <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                        OpenAI API Key
+                      </label>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {openAiKey ? `${openAiKey.slice(0, 10)}...${openAiKey.slice(-6)}` : 'Not configured'}
+                      </span>
+                    </div>
+
+                    <form onSubmit={handleSaveOpenAiKey} className="space-y-2.5">
+                      <div className="relative">
+                        <input
+                          type="password"
+                          value={keyInputVal}
+                          onChange={(e) => setKeyInputVal(e.target.value)}
+                          placeholder="sk-proj-..."
+                          className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-emerald-500"
+                        />
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="submit"
+                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium cursor-pointer transition-colors shadow-xs"
+                        >
+                          Save API Key
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleTestOpenAi}
+                          disabled={isTestingAi}
+                          className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium cursor-pointer transition-colors border border-slate-700 flex items-center gap-1.5"
+                        >
+                          {isTestingAi ? 'Verifying Key...' : 'Test Connection'}
+                        </button>
+                        {keyInputVal !== DEFAULT_OPENAI_KEY && (
+                          <button
+                            type="button"
+                            onClick={handleResetOpenAiKey}
+                            className="px-2 py-1.5 text-slate-400 hover:text-white text-xs cursor-pointer ml-auto"
+                            title="Reset to default key"
+                          >
+                            Reset to Default
+                          </button>
+                        )}
+                      </div>
+                    </form>
+
+                    {keySaveMessage && (
+                      <p className="text-[11px] text-emerald-400 flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5" /> {keySaveMessage}
+                      </p>
+                    )}
+
+                    {aiTestStatus && (
+                      <div className={`p-3 rounded-xl border text-xs space-y-1 ${
+                        aiTestStatus.success 
+                          ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300'
+                          : aiTestStatus.status === 'credit_exhausted'
+                            ? 'bg-amber-950/40 border-amber-500/40 text-amber-200'
+                            : 'bg-rose-950/40 border-rose-500/40 text-rose-300'
+                      }`}>
+                        <div className="font-semibold flex items-center gap-1.5">
+                          {aiTestStatus.success ? (
+                            <>🟢 {aiTestStatus.message}</>
+                          ) : aiTestStatus.status === 'credit_exhausted' ? (
+                            <>⚠️ API Key Verified • Quota Notice</>
+                          ) : (
+                            <>❌ Connection Test Failed</>
+                          )}
+                        </div>
+                        {aiTestStatus.status === 'credit_exhausted' && (
+                          <div className="text-[11px] text-slate-300 space-y-1.5 mt-1">
+                            <p>{aiTestStatus.message}</p>
+                            <a
+                              href="https://platform.openai.com/settings/organization/billing/"
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 underline font-semibold"
+                            >
+                              Add credits on OpenAI Billing <ExternalLink className="w-3 h-3" />
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Model Selection Card */}
+                  <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2.5">
+                    <label className="text-xs font-semibold text-slate-200 block">
+                      ChatGPT Model Engine
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { id: 'gpt-4o-mini', label: 'GPT-4o Mini', desc: 'Fast & Low Cost' },
+                        { id: 'gpt-4o', label: 'GPT-4o', desc: 'Advanced Logic' },
+                        { id: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', desc: 'Legacy Fast' }
+                      ].map((m) => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => handleModelChange(m.id)}
+                          className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${
+                            openAiModel === m.id
+                              ? 'bg-emerald-950/60 border-emerald-500/60 text-emerald-200 shadow-sm'
+                              : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                          }`}
+                        >
+                          <div className="text-xs font-bold">{m.label}</div>
+                          <div className="text-[10px] text-slate-500 mt-0.5">{m.desc}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Zero-Silence Architecture Card */}
+                  <div className="p-3.5 rounded-2xl bg-slate-900/50 border border-slate-800 text-[11px] text-slate-400 space-y-2">
+                    <div className="font-semibold text-slate-300 flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 text-cyan-400" />
+                      Multi-Tier Intelligence Engine
+                    </div>
+                    <p className="leading-relaxed">
+                      • <strong className="text-slate-200">ChatGPT (OpenAI)</strong>: Powers live natural conversations, intelligent answers, and context-aware dialogue.<br/>
+                      • <strong className="text-slate-200">DV Analytics Knowledge</strong>: Instantly answers institutional questions about Founder Debendra Das Debadutta, courses, and formulas.<br/>
+                      • <strong className="text-slate-200">Jarvis Voice Actions</strong>: Live automations to open Excel workbooks, navigate portals, and start test exams.
+                    </p>
+                  </div>
                 </div>
               )}
             </>

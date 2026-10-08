@@ -196,3 +196,52 @@ test('Security: Anti-prompt injection filters and guards system prompt', () => {
   const cleanBenign = sanitizePromptInput(benign);
   assert.equal(cleanBenign, benign);
 });
+
+// -------------------------------------------------------------
+// 5. OPENAI CHATGPT ENGINE SUITE
+// -------------------------------------------------------------
+test('ChatGPT Engine: OpenAI API key configuration, model selection, and zero-silence fallback', async () => {
+  const { 
+    getActiveOpenAIKey, 
+    setActiveOpenAIKey, 
+    getActiveOpenAIModel, 
+    setActiveOpenAIModel,
+    DEFAULT_OPENAI_KEY,
+    DEFAULT_OPENAI_MODEL,
+    askSanviAI,
+    getConciseSpeechText
+  } = await import('../src/services/geminiService.js');
+
+  // Verify configured OpenAI key is present and formatted properly
+  assert.ok(DEFAULT_OPENAI_KEY.startsWith('sk-proj-'), 'Default key must start with sk-proj-');
+  assert.equal(getActiveOpenAIKey(), DEFAULT_OPENAI_KEY, 'Active key should default to user configured key');
+  assert.equal(getActiveOpenAIModel(), DEFAULT_OPENAI_MODEL, 'Active model should default to gpt-4o-mini');
+
+  // Test custom key override via localStorage
+  setActiveOpenAIKey('sk-proj-custom-test-key-for-sajid-1234567890');
+  assert.equal(getActiveOpenAIKey(), 'sk-proj-custom-test-key-for-sajid-1234567890');
+
+  // Test model switching
+  setActiveOpenAIModel('gpt-4o');
+  assert.equal(getActiveOpenAIModel(), 'gpt-4o');
+
+  // Reset to default
+  setActiveOpenAIKey(DEFAULT_OPENAI_KEY);
+  setActiveOpenAIModel(DEFAULT_OPENAI_MODEL);
+  assert.equal(getActiveOpenAIKey(), DEFAULT_OPENAI_KEY);
+  assert.equal(getActiveOpenAIModel(), 'gpt-4o-mini');
+
+  // Test speech synthesizer text optimizer
+  const spoken = getConciseSpeechText('```python\nprint("hello")\n``` This is our answer.');
+  assert.ok(spoken.includes('I have displayed the code on your screen.'));
+  assert.ok(!spoken.includes('```'));
+
+  // Test zero-silence response on founder question
+  const founderAnswer = await askSanviAI('Who is the founder of DV Analytics?');
+  assert.ok(founderAnswer.includes('Debendra Das Debadutta'));
+
+  // Test zero-silence response on greeting
+  const greetingAnswer = await askSanviAI('Hey Saanvi');
+  assert.ok(greetingAnswer.includes('Sajid'));
+});
+
