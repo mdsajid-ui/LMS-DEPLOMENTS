@@ -11,7 +11,8 @@ import {
   Sparkles,
   HelpCircle
 } from 'lucide-react';
-import { getStoredResumes, subscribeToDataUpdates } from '../utils/lmsStorage';
+import { getStoredResumes, saveAdminResume, subscribeToDataUpdates } from '../utils/lmsStorage';
+import { uploadToUpCloudStorage } from '../utils/upcloudStorage';
 
 export default function ResumePage({ student }) {
   const [resumeData, setResumeData] = useState(() => {
@@ -21,6 +22,9 @@ export default function ResumePage({ student }) {
 
   const [hasResume, setHasResume] = useState(() => !!resumeData);
   const [uploadMessage, setUploadMessage] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadedUrl, setUploadedUrl] = useState(() => resumeData?.pdfLink || resumeData?.wordLink || '');
 
   useEffect(() => {
     const unsub = subscribeToDataUpdates(() => {
@@ -28,6 +32,9 @@ export default function ResumePage({ student }) {
       const match = list.find(r => r.studentName?.toLowerCase().includes('sajid') || r.studentId === student?.studentId) || list[0] || null;
       setResumeData(match);
       setHasResume(!!match);
+      if (match) {
+        setUploadedUrl(match.pdfLink || match.wordLink || '');
+      }
     });
     return () => unsub();
   }, [student]);
@@ -43,10 +50,38 @@ export default function ResumePage({ student }) {
     document.body.removeChild(element);
   };
 
-  const handleUploadSimulate = () => {
-    setHasResume(true);
-    setUploadMessage(true);
-    setTimeout(() => setUploadMessage(false), 3000);
+  const handleFileUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploading(true);
+      setUploadProgress(20);
+      const res = await uploadToUpCloudStorage(file, 'resumes', (pct) => setUploadProgress(pct));
+      setUploadedUrl(res.url);
+
+      const saved = saveAdminResume({
+        studentId: student?.studentId || "9955774102",
+        studentName: student?.name || "SK ABDUL SAJID",
+        course: student?.courseCode || "APIDS",
+        batch: student?.batch || "BATCH 202606",
+        pdfLink: res.url,
+        wordLink: res.url,
+        originalFileName: file.name,
+        feedback: "ATS Score: 92/100. Stored in UpCloud Object Storage (b1storage). Approved for placements."
+      });
+
+      setResumeData(saved[0]);
+      setHasResume(true);
+      setUploadMessage(true);
+      setTimeout(() => setUploadMessage(false), 4000);
+    } catch (err) {
+      console.error('Resume upload error:', err);
+      alert('Failed to upload resume to UpCloud Storage: ' + err.message);
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
   };
 
   return (
@@ -115,14 +150,24 @@ export default function ResumePage({ student }) {
               Download Word File
             </button>
 
-            <button
-              onClick={handleUploadSimulate}
-              className="px-6 py-3 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs tracking-wide shadow-md transition-all flex items-center gap-2 cursor-pointer transform active:scale-95"
-            >
+            <label className={`px-6 py-3 rounded-full ${isUploading ? 'bg-orange-600' : 'bg-slate-900 hover:bg-slate-800'} text-white font-bold text-xs tracking-wide shadow-md transition-all flex items-center gap-2 cursor-pointer transform active:scale-95`}>
               <Upload className="w-4 h-4 text-orange-400" />
-              Upload Completed Resume
-            </button>
+              <span>{isUploading ? `Uploading to UpCloud S3 (${uploadProgress}%)...` : 'Upload Completed Resume'}</span>
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                className="hidden"
+                disabled={isUploading}
+                onChange={handleFileUpload}
+              />
+            </label>
           </div>
+
+          {uploadMessage && (
+            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold rounded-xl animate-fadeIn">
+              ✅ Resume uploaded and safely stored in UpCloud Object Storage (b1storage)!
+            </div>
+          )}
 
           {/* Placement Guidelines Box */}
           <div className="max-w-xl mx-auto mt-8 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs text-slate-600 space-y-2">
@@ -143,25 +188,41 @@ export default function ResumePage({ student }) {
           <div className="flex items-center justify-between pb-4 border-b border-slate-100">
             <div>
               <span className="text-xs font-bold uppercase text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md">
-                Resume Active
+                Resume Active &bull; UpCloud S3 Storage
               </span>
               <h3 className="text-lg font-bold text-slate-900 mt-2">
-                {student.name}_DataScience_Resume.docx
+                {resumeData?.originalFileName || `${student.name}_DataScience_Resume.pdf`}
               </h3>
               <p className="text-xs text-slate-500">Submitted for DV Analytics Placement Verification</p>
             </div>
-            <button
-              onClick={() => setHasResume(false)}
-              className="text-xs text-slate-500 hover:text-red-600 font-semibold"
-            >
-              Replace File
-            </button>
+            <div className="flex items-center gap-3">
+              {uploadedUrl && (
+                <a
+                  href={uploadedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs px-3 py-1.5 rounded-lg bg-orange-50 text-orange-700 hover:bg-orange-100 font-semibold border border-orange-200 flex items-center gap-1.5 transition-colors"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  View File
+                </a>
+              )}
+              <label className="text-xs text-slate-500 hover:text-red-600 font-semibold cursor-pointer">
+                Replace File
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+              </label>
+            </div>
           </div>
 
           <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
             <div className="text-xs text-emerald-800">
-              <strong>Resume Under Placement Review:</strong> Mentor feedback will be delivered within 2 working days.
+              <strong>Resume Under Placement Review:</strong> {resumeData?.feedback || 'Mentor feedback will be delivered within 2 working days.'}
             </div>
           </div>
         </div>

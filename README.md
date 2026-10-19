@@ -6,49 +6,87 @@ Built with **React 19**, **Vite 8**, **Tailwind CSS v4**, and **Lucide Icons**.
 
 ---
 
-## 🚀 Live Demo & Local Development
+## 🚀 Local Development & Architecture
 
-### 1. Run Locally
+### Full-Stack Architecture
+- **Frontend**: React 19, Vite 8, Tailwind CSS v4, Lucide Icons
+- **Storage**: UpCloud Object Storage (S3-compatible) &bull; Bucket: `b1storage` &bull; Endpoint: `https://t8fcc.upcloudobjects.com`
+- **Database**: MySQL 8.0+ / MariaDB &bull; Schema in `database/schema.sql` &bull; Seed data in `database/seed.sql`
+- **Backend API**: Node.js 20+ & Express with AWS SigV4 S3 Client & Connection Pool
+
+---
+
+### 1. Run the Backend Server (Storage & Database API)
 ```bash
-# Clone or navigate to the directory
-cd dv-analytics-lms
-
-# Install dependencies (if not already installed)
+cd server
 npm install
+npm start
+```
+The backend server runs on `http://localhost:5000` with live S3 storage uploads and SQL connectivity.
 
-# Start local dev server
+### 2. Run the Frontend LMS
+```bash
+# In the root directory:
+npm install
 npm run dev
 ```
 Open **[http://localhost:5173/](http://localhost:5173/)** in your browser.
 
 ---
 
-## 🌐 How to Host on GitHub (GitHub Pages)
+## 🗄️ Database Setup (SQL Part)
 
-### Option A: Automatic Deployment via GitHub Actions (Recommended)
+Detailed guide available at [`database/README.md`](database/README.md).
 
-1. **Create a new repository** on GitHub (e.g., `dv-analytics-lms` or your desired name).
-2. **Push your local code to GitHub**:
-   ```bash
-   git add .
-   git commit -m "Initial commit: DV Analytics modern LMS frontend"
-   git branch -M main
-   git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/<REPO_NAME>.git
-   git push -u origin main
-   ```
-3. **Enable GitHub Pages in your repo settings**:
-   - Go to your repository on GitHub.
-   - Click on **Settings** &rarr; **Pages** (under Code and automation).
-   - Under **Build and deployment** &rarr; **Source**, select **GitHub Actions**.
-   - Your site will automatically build and publish at `https://<YOUR_GITHUB_USERNAME>.github.io/<REPO_NAME>/`!
+### 1. Create and Seed Database
+Run this in your terminal or database client (phpMyAdmin / HeidiSQL / DBeaver / MySQL Workbench):
 
-### Option B: Deploy via `npm run deploy` CLI
+```bash
+# Import Database Schema (creates dv_analytics_lms and all 10+ tables)
+mysql -h <YOUR_DB_HOST> -u <DB_USER> -p < database/schema.sql
 
-1. Run:
-   ```bash
-   npm run deploy
-   ```
-2. In your GitHub repository settings &rarr; **Pages**, select **Deploy from a branch**, choose `gh-pages` branch, and click **Save**.
+# Import Initial Seed Data (Students, Batches, Sessions, Modules, Ledgers)
+mysql -h <YOUR_DB_HOST> -u <DB_USER> -p dv_analytics_lms < database/seed.sql
+```
+
+### 2. Configure Backend Credentials
+In `server/.env`:
+```env
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=dv_analytics_lms
+```
+
+Verify your connection anytime:
+```bash
+npm run test-db  # inside /server directory
+```
+
+---
+
+## ☁️ UpCloud Object Storage (S3) Configuration
+
+The application is configured to connect to UpCloud Object Storage:
+- **Endpoint**: `https://t8fcc.upcloudobjects.com`
+- **Bucket**: `b1storage`
+- **Public URL**: `https://b1storage.t8fcc.upcloudobjects.com`
+
+All uploaded class videos, session materials, student resumes, and assignment submissions are stored directly in `b1storage`. Both direct upload and presigned URL capabilities are supported.
+
+---
+
+## 🌐 Hosting & Deployment Guide
+
+### Frontend Hosting (Vercel, Netlify, or GitHub Pages)
+- **GitHub Pages**: Included GitHub Actions workflow automatically deploys to GitHub Pages on push to `main`.
+- **Vercel / Netlify**: Build command `npm run build`, output directory `dist`. Set environment variable `VITE_API_URL` to your production backend URL.
+
+### Backend & Database Hosting (UpCloud / Render / Railway / VPS)
+- Deploy `server/` to any Node.js host or an UpCloud Cloud Server (Ubuntu 22.04 / 24.04).
+- Use **PM2** or **Docker** to run `node server.js` persistently.
+- Attach an UpCloud Managed MySQL Database or host MySQL on the same cloud server.
 
 ---
 

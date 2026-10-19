@@ -51,6 +51,7 @@ import {
   getStoredAssignmentsList,
   updateAdminAssignment
 } from '../utils/lmsStorage';
+import { uploadToUpCloudStorage } from '../utils/upcloudStorage';
 import InvoiceFormatModal from './InvoiceFormatModal';
 
 export const masterApplicationDropdownList = [
@@ -4342,13 +4343,40 @@ export function LiveSessionView({ showToast }) {
                 <label className="block text-slate-700 font-bold mb-1 text-xs">
                   Uploaded link<span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  placeholder="Uploaded File link"
-                  value={materialForm.uploadedLink}
-                  onChange={(e) => setMaterialForm({ ...materialForm, uploadedLink: e.target.value })}
-                  className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:border-teal-500 bg-white text-xs font-mono"
-                />
+                <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                  <input
+                    type="text"
+                    placeholder="Uploaded File link"
+                    value={materialForm.uploadedLink}
+                    onChange={(e) => setMaterialForm({ ...materialForm, uploadedLink: e.target.value })}
+                    className="flex-1 border border-slate-300 rounded px-3 py-2 focus:outline-none focus:border-teal-500 bg-white text-xs font-mono"
+                  />
+                  <label className="px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer flex-shrink-0 transition-colors shadow-xs">
+                    <UploadCloud className="w-4 h-4" />
+                    <span>Upload to UpCloud S3</span>
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        try {
+                          showToast(`Uploading ${file.name} to UpCloud Storage...`);
+                          const folder = materialForm.listType === "Class Videos" ? "videos" : (materialForm.listType === "Materials" ? "materials" : "assignments");
+                          const res = await uploadToUpCloudStorage(file, folder);
+                          setMaterialForm({
+                            ...materialForm,
+                            uploadedLink: res.url,
+                            fileDescription: materialForm.fileDescription || file.name
+                          });
+                          showToast(`Uploaded successfully to UpCloud Object Storage (b1storage)!`);
+                        } catch (err) {
+                          showToast(`Upload failed: ${err.message}`);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
 
                 {/* 1-Click Preset Links */}
                 <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
