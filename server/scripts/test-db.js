@@ -8,13 +8,16 @@ async function checkDatabase() {
   console.log('User:    ', process.env.DB_USER || 'root');
   console.log('Database:', process.env.DB_NAME || 'dv_analytics_lms');
 
+  const isSsl = process.env.DB_SSL === 'true' || (process.env.DB_HOST && process.env.DB_HOST.includes('tidbcloud'));
+
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT || '3306', 10),
       user: process.env.DB_USER || 'root',
       password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'dv_analytics_lms'
+      database: process.env.DB_NAME || 'dv_analytics_lms',
+      ...(isSsl ? { ssl: { minVersion: 'TLSv1.2', rejectUnauthorized: true } } : {})
     });
 
     console.log('✅ Connection Successful!');

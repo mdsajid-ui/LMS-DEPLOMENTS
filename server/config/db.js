@@ -1,6 +1,8 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
+const isSsl = process.env.DB_SSL === 'true' || (process.env.DB_HOST && process.env.DB_HOST.includes('tidbcloud'));
+
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '3306', 10),
@@ -9,7 +11,8 @@ const dbConfig = {
   database: process.env.DB_NAME || 'dv_analytics_lms',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  ...(isSsl ? { ssl: { minVersion: 'TLSv1.2', rejectUnauthorized: true } } : {})
 };
 
 let pool = null;
