@@ -1,4 +1,5 @@
 import { excelSessions, sqlSessions, pythonSessions, assignmentsList, studentProfile } from '../data/mockData.js';
+import studentsMasterData from '../data/studentsMasterData.json';
 import { sealPayload, unsealPayload, sanitizeString } from './securityShield.js';
 
 const STORAGE_KEYS = {
@@ -677,6 +678,7 @@ export function deleteAdminResume(id) {
 // FEE MANAGEMENT PERSISTENCE (Fee.aspx)
 // ==========================================
 const initialFeesList = [
+  ...(studentsMasterData?.fees || []),
   {
     id: 1,
     date: "2026-10-01",
@@ -849,6 +851,7 @@ export function saveAdminFee(feeData) {
 // STUDENT REGISTRATION PERSISTENCE (Reg.aspx)
 // ==========================================
 const initialRegisteredStudents = [
+  ...(studentsMasterData?.students || []),
   {
     id: 1,
     rollNo: "BLR202609005",
