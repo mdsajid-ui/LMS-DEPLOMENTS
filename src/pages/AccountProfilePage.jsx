@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, 
   Mail, 
@@ -8,60 +8,130 @@ import {
   Save, 
   CheckCircle2, 
   Lock,
-  FileText,
-  Download,
-  Printer,
-  ExternalLink,
-  Receipt,
-  CreditCard,
-  Building2,
-  Check
+  FileText, 
+  Download, 
+  Printer, 
+  ExternalLink, 
+  Receipt, 
+  CreditCard, 
+  Building2, 
+  Check 
 } from 'lucide-react';
 import InvoiceFormatModal from '../components/InvoiceFormatModal';
+import { getStoredFees, saveStudentProfile, subscribeToDataUpdates } from '../utils/lmsStorage';
 
 export default function AccountProfilePage({ student }) {
   const [saved, setSaved] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
 
-  const studentInvoices = [
-    {
-      id: "DVA/2026-27/INV-0142",
-      date: "15.06.2026",
-      student: student.name,
-      rollNo: student.studentId,
-      branch: "Bhubaneswar Center",
-      course: `${student.courseCode} - Core Analytics & Machine Learning (Term 1)`,
-      batch: student.batch,
-      totalAmount: 35000,
-      baseFee: 29661,
-      gst: 5339,
-      status: "Paid in Full",
-      paymentMode: "Razorpay / UPI",
-      refNumber: "PAY_20260615_88129",
-      counselor: "Debendra Das Debadutta"
-    },
-    {
-      id: "DVA/2026-27/INV-0289",
-      date: "18.08.2026",
-      student: student.name,
-      rollNo: student.studentId,
-      branch: "Bhubaneswar Center",
-      course: `${student.courseCode} - Gen AI, Cloud Sandbox & Placement Support (Term 2)`,
-      batch: student.batch,
-      totalAmount: 30000,
-      baseFee: 25424,
-      gst: 4576,
-      status: "Paid in Full",
-      paymentMode: "Net Banking (HDFC)",
-      refNumber: "UTR-20260818-44910",
-      counselor: "Debendra Das Debadutta"
+  // Form State
+  const [name, setName] = useState(student?.name || '');
+  const [email, setEmail] = useState(student?.email || '');
+  const [phone, setPhone] = useState(student?.phone || student?.studentId || '');
+
+  // Keep form in sync when prop updates
+  useEffect(() => {
+    if (student) {
+      setName(student.name || '');
+      setEmail(student.email || '');
+      setPhone(student.phone || student.studentId || '');
     }
-  ];
+  }, [student]);
+
+  // Load fees related to this student from LMS Storage
+  const [feesList, setFeesList] = useState(() => getStoredFees());
+
+  useEffect(() => {
+    const unsub = subscribeToDataUpdates((event) => {
+      if (event.type === 'fees' || event.type === 'students') {
+        setFeesList(getStoredFees());
+      }
+    });
+    return unsub;
+  }, []);
+
+  // Filter invoices for current student
+  const studentInvoices = React.useMemo(() => {
+    if (!student) return [];
+    const sRoll = (student.studentId || student.rollNo || '').trim().toLowerCase();
+    const sName = (student.name || '').trim().toLowerCase();
+    const sPhone = (student.phone || student.studentId || '').trim();
+
+    const matched = feesList.filter(f => {
+      const fRoll = (f.rollNo || '').trim().toLowerCase();
+      const fStudentId = (f.studentId || '').trim().toLowerCase();
+      const fName = (f.studentName || '').trim().toLowerCase();
+
+      return (
+        (sRoll && (fRoll === sRoll || fStudentId === sRoll)) ||
+        (sPhone && (fStudentId === sPhone || fRoll === sPhone)) ||
+        (sName && (fName === sName || fName.includes(sName)))
+      );
+    });
+
+    if (matched.length > 0) {
+      return matched.map((f, idx) => {
+        const total = parseFloat(String(f.amount || 0).replace(/[^0-9.]/g, '')) || 0;
+        const base = Math.round(total / 1.18);
+        const gst = total - base;
+
+        return {
+          id: `DVA/2026-27/INV-${String(f.id || (100 + idx)).padStart(4, '0')}`,
+          date: f.date || '15.06.2026',
+          student: f.studentName || student.name,
+          rollNo: f.rollNo || student.studentId || student.rollNo,
+          branch: "Bhubaneswar Center",
+          course: `${f.course || student.courseCode || 'APIDS'} - Core Analytics & Machine Learning`,
+          batch: f.batch || student.batch,
+          totalAmount: total,
+          baseFee: base,
+          gst: gst,
+          status: "Paid in Full",
+          paymentMode: f.modeOfPay || "Razorpay / UPI",
+          refNumber: f.referenceDoc || `PAY_${(f.date || '20260615').replace(/[^0-9]/g, '')}_${88120 + idx}`,
+          counselor: "Debendra Das Debadutta"
+        };
+      });
+    }
+
+    // Default fallback invoice if none recorded yet
+    const fallbackTotal = parseFloat(String(student.paidFee || 35000).replace(/[^0-9.]/g, '')) || 35000;
+    const fallbackBase = Math.round(fallbackTotal / 1.18);
+    return [
+      {
+        id: `DVA/2026-27/INV-0142`,
+        date: student.startDate || "15.06.2026",
+        student: student.name,
+        rollNo: student.studentId || student.rollNo,
+        branch: "Bhubaneswar Center",
+        course: `${student.courseCode || 'APIDS'} - Core Analytics & Machine Learning`,
+        batch: student.batch,
+        totalAmount: fallbackTotal,
+        baseFee: fallbackBase,
+        gst: fallbackTotal - fallbackBase,
+        status: "Paid in Full",
+        paymentMode: "Razorpay / UPI",
+        refNumber: "PAY_20260615_88129",
+        counselor: "Debendra Das Debadutta"
+      }
+    ];
+  }, [feesList, student]);
+
+  // Calculate total paid & due
+  const totalPaid = studentInvoices.reduce((sum, inv) => sum + (inv.totalAmount || 0), 0);
+  const committedFee = parseFloat(String(student?.totalFee || student?.committedFee || 65000).replace(/[^0-9.]/g, '')) || 65000;
+  const balanceFee = Math.max(0, committedFee - totalPaid);
 
   const handleSave = (e) => {
     e.preventDefault();
+    saveStudentProfile({
+      ...student,
+      name,
+      email,
+      phone
+    });
     setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    setTimeout(() => setSaved(false), 3000);
   };
 
   return (
@@ -74,19 +144,21 @@ export default function AccountProfilePage({ student }) {
           <span className="text-slate-900 font-semibold">Account Profile & Official Invoices</span>
         </div>
 
-        <button
-          onClick={() => setSelectedInvoice(studentInvoices[0])}
-          className="px-3.5 py-1.5 rounded-xl bg-teal-500/10 hover:bg-teal-500/20 text-teal-700 border border-teal-500/30 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer"
-        >
-          <FileText className="w-3.5 h-3.5" />
-          <span>Latest Fee Invoice</span>
-        </button>
+        {studentInvoices.length > 0 && (
+          <button
+            onClick={() => setSelectedInvoice(studentInvoices[0])}
+            className="px-3.5 py-1.5 rounded-xl bg-teal-500/10 hover:bg-teal-500/20 text-teal-700 border border-teal-500/30 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Latest Fee Invoice</span>
+          </button>
+        )}
       </div>
 
       {saved && (
         <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-          Profile updated successfully!
+          Profile updated successfully! All changes are synced with Admin Portal.
         </div>
       )}
 
@@ -94,16 +166,16 @@ export default function AccountProfilePage({ student }) {
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs space-y-6">
         <div className="flex items-center gap-5 pb-6 border-b border-slate-100">
           <img
-            src={student.avatar}
-            alt={student.name}
+            src={student?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256"}
+            alt={name || student?.name}
             className="w-20 h-20 rounded-2xl object-cover ring-4 ring-orange-500/20"
           />
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-orange-50 text-orange-600 border border-orange-200">
-              {student.batch}
+              {student?.batch || "BATCH 202606"}
             </span>
-            <h2 className="text-xl font-bold text-slate-900 mt-1">{student.name}</h2>
-            <p className="text-xs text-slate-500 font-mono">Student ID: {student.studentId}</p>
+            <h2 className="text-xl font-bold text-slate-900 mt-1">{name || student?.name}</h2>
+            <p className="text-xs text-slate-500 font-mono">Student ID: {student?.studentId || student?.rollNo}</p>
           </div>
         </div>
 
@@ -113,7 +185,9 @@ export default function AccountProfilePage({ student }) {
               <label className="text-xs font-bold text-slate-700 block mb-1">Full Legal Name</label>
               <input
                 type="text"
-                defaultValue={student.name}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
                 className="w-full text-xs p-3 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
               />
             </div>
@@ -121,7 +195,18 @@ export default function AccountProfilePage({ student }) {
               <label className="text-xs font-bold text-slate-700 block mb-1">Email Address</label>
               <input
                 type="email"
-                defaultValue={student.email}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full text-xs p-3 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">Phone Number</label>
+              <input
+                type="text"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 className="w-full text-xs p-3 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
               />
             </div>
@@ -130,16 +215,7 @@ export default function AccountProfilePage({ student }) {
               <input
                 type="text"
                 disabled
-                defaultValue={`${student.courseCode} - Advanced Program in Data Science`}
-                className="w-full text-xs p-3 rounded-xl border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">Batch Enrollment Date</label>
-              <input
-                type="text"
-                disabled
-                defaultValue={student.startDate}
+                value={`${student?.courseCode || 'APIDS'} - Advanced Program in Data Science`}
                 className="w-full text-xs p-3 rounded-xl border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed"
               />
             </div>
@@ -171,8 +247,17 @@ export default function AccountProfilePage({ student }) {
 
           <div className="flex items-center gap-2">
             <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
-              Total Paid: ₹65,000 (100%)
+              Total Paid: ₹{totalPaid.toLocaleString('en-IN')}
             </span>
+            {balanceFee > 0 ? (
+              <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-red-50 text-red-600 border border-red-200">
+                Balance Due: ₹{balanceFee.toLocaleString('en-IN')}
+              </span>
+            ) : (
+              <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-teal-50 text-teal-700 border border-teal-200">
+                Fee Cleared
+              </span>
+            )}
           </div>
         </div>
 

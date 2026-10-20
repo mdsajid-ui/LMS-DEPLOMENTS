@@ -2968,14 +2968,17 @@ export function RegistrationView({ showToast }) {
       phone: regForm.mobile1,
       course: regForm.course,
       batch: regForm.batchId,
-      regDate: "2026-10-01",
-      totalFee: `₹${parseInt(regForm.committedFee).toLocaleString('en-IN')}`,
-      paidFee: `₹${Math.round(parseInt(regForm.committedFee) * 0.5).toLocaleString('en-IN')}`,
-      dueFee: `₹${Math.round(parseInt(regForm.committedFee) * 0.5).toLocaleString('en-IN')}`,
+      regDate: regForm.date || new Date().toISOString().split('T')[0],
+      totalFee: `₹${parseInt(regForm.committedFee || 65000).toLocaleString('en-IN')}`,
+      paidFee: `₹${Math.round(parseInt(regForm.committedFee || 65000) * 0.5).toLocaleString('en-IN')}`,
+      dueFee: `₹${Math.round(parseInt(regForm.committedFee || 65000) * 0.5).toLocaleString('en-IN')}`,
       status: "Active",
       gender: regForm.gender,
       college: regForm.education || "University",
-      location: regForm.branch
+      location: regForm.branch,
+      dob: regForm.dob,
+      bloodGroup: regForm.bloodGroup,
+      address: regForm.address1
     };
 
     const updated = saveAdminStudent(created);
@@ -3789,10 +3792,16 @@ export function FeeView({ showToast }) {
       ...prev,
       studentId: idVal
     }));
-    const found = students.find(s => s.phone === idVal || s.rollNo?.includes(idVal));
+    const clean = idVal.trim().toLowerCase();
+    const found = students.find(s => 
+      (s.phone && s.phone.trim() === idVal.trim()) ||
+      (s.rollNo && (s.rollNo.trim().toLowerCase() === clean || s.rollNo.trim().toLowerCase().includes(clean))) ||
+      (s.email && s.email.trim().toLowerCase() === clean) ||
+      (s.name && s.name.trim().toLowerCase().includes(clean))
+    );
     if (found) {
-      const commFee = parseInt(found.totalFee?.replace(/[^0-9]/g, '') || 65000);
-      const paid = parseInt(found.paidFee?.replace(/[^0-9]/g, '') || 0);
+      const commFee = parseInt(String(found.totalFee || found.committedFee || 65000).replace(/[^0-9]/g, '')) || 65000;
+      const paid = parseInt(String(found.paidFee || 0).replace(/[^0-9]/g, '')) || 0;
       const bal = Math.max(0, commFee - paid);
       setFeeForm(prev => ({
         ...prev,
@@ -3812,21 +3821,33 @@ export function FeeView({ showToast }) {
       return;
     }
 
+    const clean = feeForm.studentId.trim().toLowerCase();
+    const matched = students.find(s => 
+      (s.phone && s.phone.trim() === feeForm.studentId.trim()) ||
+      (s.rollNo && (s.rollNo.trim().toLowerCase() === clean || s.rollNo.trim().toLowerCase().includes(clean))) ||
+      (s.email && s.email.trim().toLowerCase() === clean) ||
+      (s.name && s.name.trim().toLowerCase().includes(clean))
+    );
+
+    const resolvedName = matched?.name || feeForm.studentName || `STUDENT ${feeForm.studentId}`;
+    const resolvedRoll = matched?.rollNo || feeForm.studentId;
+
     saveAdminFee({
       date: feeForm.date,
       studentId: feeForm.studentId,
-      studentName: students.find(s => s.phone === feeForm.studentId)?.name || "STUDENT " + feeForm.studentId,
+      rollNo: resolvedRoll,
+      studentName: resolvedName,
       committedFee: feeForm.committedFee,
-      batch: feeForm.batch,
-      course: feeForm.course,
+      batch: feeForm.batch || matched?.batch,
+      course: feeForm.course || matched?.course,
       balance: Math.max(0, parseInt(feeForm.balance || 0) - parseInt(feeForm.amount || 0)).toString(),
       amount: feeForm.amount,
       modeOfPay: feeForm.modeOfPay,
       remarks: feeForm.remarks,
-      referenceDoc: feeForm.refDoc || "Receipt_INV_88392.pdf"
+      referenceDoc: feeForm.refDoc || `Receipt_INV_${Date.now().toString().slice(-5)}.pdf`
     });
 
-    showToast(`✓ Fee payment of ₹${parseInt(feeForm.amount).toLocaleString('en-IN')} submitted successfully!`);
+    showToast(`✓ Fee payment of ₹${parseInt(feeForm.amount).toLocaleString('en-IN')} submitted successfully for ${resolvedName}!`);
     setFeeForm(prev => ({
       ...prev,
       amount: "",
@@ -5287,12 +5308,16 @@ export function UploadResumeView({ showToast, onBack }) {
       showToast("Please select a Student ID");
       return;
     }
-    const student = students.find(s => s.phone === form.studentId || s.rollNo === form.studentId);
+    const student = students.find(s => 
+      (s.phone && s.phone === form.studentId) || 
+      (s.rollNo && s.rollNo === form.studentId) || 
+      (s.name && s.name.toLowerCase() === form.studentId.toLowerCase())
+    );
     saveAdminResume({
       studentId: form.studentId,
-      studentName: student ? student.name : "SK ABDUL SAJID",
-      course: form.course === "Select Course" ? "APIDS" : form.course,
-      batch: form.batch === "Select Batch" ? "Batch 202209" : form.batch,
+      studentName: student ? student.name : `STUDENT ${form.studentId}`,
+      course: form.course === "Select Course" ? (student?.course || "APIDS") : form.course,
+      batch: form.batch === "Select Batch" ? (student?.batch || "BATCH 202606") : form.batch,
       pdfLink: form.pdfLink,
       wordLink: form.wordLink
     });

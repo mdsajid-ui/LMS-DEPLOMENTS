@@ -14,10 +14,29 @@ import {
 import { getStoredResumes, saveAdminResume, subscribeToDataUpdates } from '../utils/lmsStorage';
 import { uploadToUpCloudStorage } from '../utils/upcloudStorage';
 
+function findStudentResume(list, student) {
+  if (!student || !list || !list.length) return null;
+  const sRoll = (student.studentId || student.rollNo || '').trim().toLowerCase();
+  const sName = (student.name || '').trim().toLowerCase();
+  const sPhone = (student.phone || student.studentId || '').trim();
+
+  return list.find(r => {
+    const rId = (r.studentId || r.rollNo || '').trim().toLowerCase();
+    const rName = (r.studentName || '').trim().toLowerCase();
+    const rPhone = (r.phone || r.studentId || '').trim();
+
+    return (
+      (sRoll && (rId === sRoll || rId.includes(sRoll))) ||
+      (sPhone && (rPhone === sPhone || rId === sPhone)) ||
+      (sName && (rName === sName || rName.includes(sName)))
+    );
+  }) || null;
+}
+
 export default function ResumePage({ student }) {
   const [resumeData, setResumeData] = useState(() => {
     const list = getStoredResumes();
-    return list.find(r => r.studentName?.toLowerCase().includes('sajid') || r.studentId === student?.studentId) || list[0] || null;
+    return findStudentResume(list, student);
   });
 
   const [hasResume, setHasResume] = useState(() => !!resumeData);
@@ -29,7 +48,7 @@ export default function ResumePage({ student }) {
   useEffect(() => {
     const unsub = subscribeToDataUpdates(() => {
       const list = getStoredResumes();
-      const match = list.find(r => r.studentName?.toLowerCase().includes('sajid') || r.studentId === student?.studentId) || list[0] || null;
+      const match = findStudentResume(list, student);
       setResumeData(match);
       setHasResume(!!match);
       if (match) {
@@ -61,17 +80,18 @@ export default function ResumePage({ student }) {
       setUploadedUrl(res.url);
 
       const saved = saveAdminResume({
-        studentId: student?.studentId || "9955774102",
-        studentName: student?.name || "SK ABDUL SAJID",
+        studentId: student?.studentId || student?.rollNo || "BBS202606010",
+        studentName: student?.name || "STUDENT",
         course: student?.courseCode || "APIDS",
         batch: student?.batch || "BATCH 202606",
         pdfLink: res.url,
         wordLink: res.url,
         originalFileName: file.name,
-        feedback: "ATS Score: 92/100. Stored in UpCloud Object Storage (b1storage). Approved for placements."
+        feedback: "ATS Score: 92/100. Stored in UpCloud Object Storage (b1storage). Under mentor review."
       });
 
-      setResumeData(saved[0]);
+      const myResume = findStudentResume(saved, student);
+      setResumeData(myResume || saved[0]);
       setHasResume(true);
       setUploadMessage(true);
       setTimeout(() => setUploadMessage(false), 4000);

@@ -18,7 +18,8 @@ import {
 } from 'lucide-react';
 import { assignmentsList, studentProfile } from '../data/mockData';
 import { downloadFile } from '../utils/excelHelper';
-import { getStoredAssignmentsList, subscribeToDataUpdates } from '../utils/lmsStorage';
+import { getStoredAssignmentsList, saveAdminAssignment, updateAdminAssignment, subscribeToDataUpdates } from '../utils/lmsStorage';
+import { uploadToUpCloudStorage } from '../utils/upcloudStorage';
 
 export default function AssignmentsPage({ student = studentProfile }) {
   const [assignments, setAssignments] = useState(() => {
@@ -112,7 +113,7 @@ export default function AssignmentsPage({ student = studentProfile }) {
     e.preventDefault();
   };
 
-  const handleSubmitSolution = () => {
+  const handleSubmitSolution = async () => {
     if (!uploadedFile) {
       alert("Please select or drop your solution file first (.xlsx, .sql, .py, .ipynb, .zip)");
       return;
@@ -121,37 +122,69 @@ export default function AssignmentsPage({ student = studentProfile }) {
     setIsUploading(true);
     setUploadProgress(20);
 
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            // Update assignment state
-            setAssignments(current => current.map(item => {
-              if (item.id === activeUploadAsn.id) {
-                return {
-                  ...item,
-                  status: 'Submitted',
-                  submittedFileName: uploadedFile.name,
-                  submittedFileSize: uploadedFile.size,
-                  submittedAt: new Date().toLocaleDateString('en-GB') + " " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                  studentNotes: uploadNotes
-                };
-              }
-              return item;
-            }));
-
-            setIsUploading(false);
-            setSubmissionSuccessMsg(`Assignment "${activeUploadAsn.title}" submitted successfully! Evaluator assigned.`);
-            setActiveUploadAsn(null);
-
-            setTimeout(() => setSubmissionSuccessMsg(""), 4500);
-          }, 400);
-          return 100;
+    let cloudUrl = '';
+    try {
+      if (uploadedFile.raw) {
+        setUploadProgress(50);
+        const upRes = await uploadToUpCloudStorage(uploadedFile.raw, 'assignments');
+        if (upRes && upRes.url) {
+          cloudUrl = upRes.url;
         }
-        return prev + 25;
-      });
-    }, 200);
+      }
+    } catch (err) {
+      console.warn('Direct cloud upload warning (fallback to local):', err);
+    }
+
+    setUploadProgress(90);
+
+    const submittedDateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+    const existingList = getStoredAssignmentsList();
+    const existingItem = existingList.find(a => 
+      (a.id === activeUploadAsn.id) || 
+      (a.title === activeUploadAsn.title && (a.rollNo === (student?.rollNo || student?.studentId) || a.studentName === student?.name))
+    );
+
+    const payload = {
+      studentName: student?.name || "STUDENT",
+      rollNo: student?.studentId || student?.rollNo || "BBS202606010",
+      batch: student?.batch || "BATCH 202606",
+      application: activeUploadAsn.module || "EXCEL BASE AND ADVANCED",
+      title: activeUploadAsn.title,
+      submittedFile: uploadedFile.name,
+      fileUrl: cloudUrl,
+      submittedDate: submittedDateStr,
+      status: "Pending",
+      remarks: uploadNotes || "Submitted for evaluation"
+    };
+
+    if (existingItem) {
+      updateAdminAssignment(existingItem.id, payload);
+    } else {
+      saveAdminAssignment(payload);
+    }
+
+    // Update assignment state locally
+    setAssignments(current => current.map(item => {
+      if (item.id === activeUploadAsn.id) {
+        return {
+          ...item,
+          status: 'Submitted',
+          submittedFileName: uploadedFile.name,
+          submittedFileSize: uploadedFile.size,
+          submittedAt: new Date().toLocaleDateString('en-GB') + " " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          studentNotes: uploadNotes
+        };
+      }
+      return item;
+    }));
+
+    setUploadProgress(100);
+    setTimeout(() => {
+      setIsUploading(false);
+      setSubmissionSuccessMsg(`Assignment "${activeUploadAsn.title}" submitted successfully to cloud! Evaluator assigned in Admin Portal.`);
+      setActiveUploadAsn(null);
+      setTimeout(() => setSubmissionSuccessMsg(""), 4500);
+    }, 400);
   };
 
   const handleDownloadTaskTemplate = (asn) => {

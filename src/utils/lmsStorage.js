@@ -453,6 +453,59 @@ export function saveStudentProfile(updatedProfile) {
     setSecureItem(STORAGE_KEYS.ACTIVE_PROFILE, merged);
   } catch (e) {}
 
+  // Sync back to Registered Students list so Admin Portal reflects student edits
+  try {
+    const students = getStoredStudents();
+    const targetRoll = (merged.rollNo || merged.studentId || '').trim().toLowerCase();
+    const targetEmail = (merged.email || '').trim().toLowerCase();
+    const targetPhone = (merged.phone || '').trim();
+    const targetName = (merged.name || '').trim().toLowerCase();
+
+    let synced = false;
+    const updatedStudents = students.map(s => {
+      const sRoll = (s.rollNo || '').trim().toLowerCase();
+      const sEmail = (s.email || '').trim().toLowerCase();
+      const sPhone = (s.phone || '').trim();
+      const sName = (s.name || '').trim().toLowerCase();
+
+      if (
+        (targetRoll && sRoll === targetRoll) ||
+        (targetEmail && sEmail === targetEmail) ||
+        (targetPhone && sPhone === targetPhone) ||
+        (targetName && sName === targetName)
+      ) {
+        synced = true;
+        return {
+          ...s,
+          name: merged.name || s.name,
+          email: merged.email || s.email,
+          phone: merged.phone || s.phone,
+          course: merged.course || merged.courseCode || s.course,
+          batch: merged.batch || s.batch,
+          dob: merged.dob || s.dob,
+          bloodGroup: merged.bloodGroup || s.bloodGroup,
+          address: merged.address || s.address,
+          city: merged.city || s.city,
+          state: merged.state || s.state,
+          pincode: merged.pincode || s.pincode,
+          qualification: merged.qualification || s.qualification,
+          college: merged.college || s.college,
+          passingYear: merged.passingYear || s.passingYear,
+          workExperience: merged.workExperience || s.workExperience,
+          linkedin: merged.linkedin || s.linkedin,
+          github: merged.github || s.github
+        };
+      }
+      return s;
+    });
+
+    if (synced) {
+      setSecureItem(STORAGE_KEYS.STUDENTS, updatedStudents);
+    }
+  } catch (err) {
+    console.error('Error syncing student profile to registered students:', err);
+  }
+
   notifyDataUpdated({
     type: 'profile',
     data: merged,
@@ -713,6 +766,47 @@ export function saveAdminFee(feeData) {
     setSecureItem(STORAGE_KEYS.FEES, updated);
   } catch (e) {}
 
+  // Interrelate with Student Registration: update student's paidFee and dueFee
+  try {
+    const students = getStoredStudents();
+    const cleanId = (newFee.rollNo || newFee.studentId || '').trim().toLowerCase();
+    const cleanName = (newFee.studentName || '').trim().toLowerCase();
+    const cleanPhone = (newFee.studentId || '').trim();
+
+    let studentUpdated = false;
+    const updatedStudents = students.map(s => {
+      const sRoll = (s.rollNo || '').trim().toLowerCase();
+      const sPhone = (s.phone || '').trim();
+      const sName = (s.name || '').trim().toLowerCase();
+
+      if (
+        (cleanId && (sRoll === cleanId || sRoll.includes(cleanId))) ||
+        (cleanPhone && sPhone === cleanPhone) ||
+        (cleanName && sName === cleanName)
+      ) {
+        studentUpdated = true;
+        const currentPaid = parseFloat(String(s.paidFee || 0).replace(/[^0-9.]/g, '')) || 0;
+        const addedAmount = parseFloat(String(newFee.amount || 0).replace(/[^0-9.]/g, '')) || 0;
+        const commFee = parseFloat(String(s.totalFee || s.committedFee || newFee.committedFee || 0).replace(/[^0-9.]/g, '')) || 0;
+        const newPaid = currentPaid + addedAmount;
+        const newDue = Math.max(0, commFee - newPaid);
+
+        return {
+          ...s,
+          paidFee: String(newPaid),
+          dueFee: String(newDue)
+        };
+      }
+      return s;
+    });
+
+    if (studentUpdated) {
+      setSecureItem(STORAGE_KEYS.STUDENTS, updatedStudents);
+    }
+  } catch (err) {
+    console.error('Error updating student balance in saveAdminFee:', err);
+  }
+
   notifyDataUpdated({
     type: 'fees',
     fee: newFee,
@@ -750,28 +844,62 @@ export function getStoredStudents() {
 
 export function saveAdminStudent(studentData) {
   const students = getStoredStudents();
-  const created = {
-    id: Date.now(),
-    rollNo: studentData.rollNo || `DVA-${(studentData.batch || '202606').replace(/[^0-9]/g, '')}-${Math.floor(Math.random() * 400 + 460)}`,
-    regDate: new Date().toISOString().split('T')[0],
-    status: "Active",
-    ...studentData
-  };
-  const updated = [created, ...students];
+  const targetRoll = (studentData.rollNo || '').trim().toLowerCase();
+  const existingIdx = targetRoll ? students.findIndex(s => (s.rollNo || '').trim().toLowerCase() === targetRoll) : -1;
+
+  let created;
+  let updated;
+
+  if (existingIdx >= 0) {
+    // Update existing student
+    created = {
+      ...students[existingIdx],
+      ...studentData
+    };
+    updated = [...students];
+    updated[existingIdx] = created;
+  } else {
+    // Add new student
+    created = {
+      id: Date.now(),
+      rollNo: studentData.rollNo || `DVA-${(studentData.batch || '202606').replace(/[^0-9]/g, '')}-${Math.floor(Math.random() * 400 + 460)}`,
+      regDate: new Date().toISOString().split('T')[0],
+      status: "Active",
+      ...studentData
+    };
+    updated = [created, ...students];
+  }
+
   try {
     setSecureItem(STORAGE_KEYS.STUDENTS, updated);
   } catch (e) {}
 
   // If this student matches current logged-in student, update active profile
-  if (created.name && created.name.toUpperCase().includes('SAJID')) {
-    saveStudentProfile({
-      name: created.name,
-      email: created.email,
-      phone: created.phone,
-      batch: created.batch,
-      course: created.course,
-      rollNo: created.rollNo
-    });
+  const active = getStoredStudentProfile();
+  if (active) {
+    const activeRoll = (active.studentId || active.rollNo || '').trim().toLowerCase();
+    const activeEmail = (active.email || '').trim().toLowerCase();
+    const activeName = (active.name || '').trim().toLowerCase();
+    const cRoll = (created.rollNo || '').trim().toLowerCase();
+    const cEmail = (created.email || '').trim().toLowerCase();
+    const cName = (created.name || '').trim().toLowerCase();
+
+    if (
+      (activeRoll && activeRoll === cRoll) ||
+      (activeEmail && activeEmail === cEmail) ||
+      (activeName && activeName === cName)
+    ) {
+      saveStudentProfile({
+        name: created.name,
+        email: created.email,
+        phone: created.phone,
+        batch: created.batch,
+        course: created.course,
+        courseCode: created.course || active.courseCode,
+        studentId: created.rollNo || active.studentId,
+        rollNo: created.rollNo || active.rollNo
+      });
+    }
   }
 
   notifyDataUpdated({

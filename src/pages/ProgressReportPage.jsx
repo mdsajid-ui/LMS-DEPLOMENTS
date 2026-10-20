@@ -36,6 +36,7 @@ import {
   Receipt
 } from 'lucide-react';
 import InvoiceFormatModal from '../components/InvoiceFormatModal';
+import { getStoredFees } from '../utils/lmsStorage';
 
 export default function ProgressReportPage({ student }) {
   // Navigation tabs: 'sms-performance', 'sms-reviews', 'skills', 'assignments', 'capstones'
@@ -45,6 +46,65 @@ export default function ProgressReportPage({ student }) {
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [reviewFilter, setReviewFilter] = useState('all'); // 'all', 'faculty', 'mentor', 'student'
   const [searchModule, setSearchModule] = useState('');
+
+  // Dynamically load invoice from stored fees
+  const dynamicInvoice = React.useMemo(() => {
+    if (!student) return null;
+    const fees = getStoredFees();
+    const sRoll = (student.studentId || student.rollNo || '').trim().toLowerCase();
+    const sName = (student.name || '').trim().toLowerCase();
+    const sPhone = (student.phone || student.studentId || '').trim();
+
+    const matched = fees.find(f => {
+      const fRoll = (f.rollNo || '').trim().toLowerCase();
+      const fStudentId = (f.studentId || '').trim().toLowerCase();
+      const fName = (f.studentName || '').trim().toLowerCase();
+
+      return (
+        (sRoll && (fRoll === sRoll || fStudentId === sRoll)) ||
+        (sPhone && (fStudentId === sPhone || fRoll === sPhone)) ||
+        (sName && (fName === sName || fName.includes(sName)))
+      );
+    });
+
+    if (matched) {
+      const total = parseFloat(String(matched.amount || 0).replace(/[^0-9.]/g, '')) || 65000;
+      const base = Math.round(total / 1.18);
+      return {
+        id: `DVA/2026-27/INV-${String(matched.id || 142).padStart(4, '0')}`,
+        date: matched.date || '15.06.2026',
+        student: matched.studentName || student.name,
+        rollNo: matched.rollNo || student.studentId || student.rollNo,
+        branch: "Bhubaneswar Center",
+        course: `${matched.course || student.courseCode || 'APIDS'} - Core Analytics & Machine Learning`,
+        batch: matched.batch || student.batch,
+        totalAmount: total,
+        baseFee: base,
+        gst: total - base,
+        status: "Paid in Full",
+        paymentMode: matched.modeOfPay || "Razorpay / UPI",
+        refNumber: matched.referenceDoc || "PAY_20260615_88129",
+        counselor: "Debendra Das Debadutta"
+      };
+    }
+
+    return {
+      id: "DVA/2026-27/INV-0142",
+      date: student.startDate || "15.06.2026",
+      student: student.name,
+      rollNo: student.studentId || student.rollNo,
+      branch: "Bhubaneswar Center",
+      course: `${student.courseCode || 'APIDS'} - Core Analytics & Machine Learning (Term 1)`,
+      batch: student.batch,
+      totalAmount: 65000,
+      baseFee: 55085,
+      gst: 9915,
+      status: "Paid in Full",
+      paymentMode: "Razorpay / UPI",
+      refNumber: "PAY_20260615_88129",
+      counselor: "Debendra Das Debadutta"
+    };
+  }, [student]);
 
   // 10 Standard i-SMS Curriculum Modules
   const smsModulesData = [
@@ -1299,22 +1359,7 @@ export default function ProgressReportPage({ student }) {
       {/* Official Tax Invoice Format Modal */}
       <InvoiceFormatModal
         isOpen={invoiceModalOpen}
-        invoice={{
-          id: "DVA/2026-27/INV-0142",
-          date: "15.06.2026",
-          student: student.name,
-          rollNo: student.studentId,
-          branch: "Bhubaneswar Center",
-          course: `${student.courseCode} - Core Analytics & Machine Learning (Term 1)`,
-          batch: student.batch,
-          totalAmount: 65000,
-          baseFee: 55085,
-          gst: 9915,
-          status: "Paid in Full",
-          paymentMode: "Razorpay / UPI",
-          refNumber: "PAY_20260615_88129",
-          counselor: "Debendra Das Debadutta"
-        }}
+        invoice={dynamicInvoice}
         onClose={() => setInvoiceModalOpen(false)}
       />
 

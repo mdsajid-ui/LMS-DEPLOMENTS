@@ -23,7 +23,7 @@ import { sanitizeString } from '../utils/securityShield';
 
 export default function LoginPage({ onStudentLoginSuccess, onAdminLoginSuccess }) {
   const [authRole, setAuthRole] = useState('student'); // 'student' | 'admin'
-  const [username, setUsername] = useState('DVA-202606-448');
+  const [username, setUsername] = useState('BBS202606010');
   const [password, setPassword] = useState('@2288');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
@@ -321,71 +321,106 @@ export default function LoginPage({ onStudentLoginSuccess, onAdminLoginSuccess }
           </div>
 
           <div className="grid grid-cols-2 gap-1.5">
-            {/* Student 1: SK Abdul Sajid */}
+            {/* Student 1: Indrajeet Jena */}
             <button
               type="button"
               onClick={() => handleSelectQuickStudent({
-                name: "SK ABDUL SAJID",
-                rollNo: "DVA-202606-448",
+                name: "INDRAJEET JENA",
+                rollNo: "BBS202606010",
+                email: "indrajeetjena1997@gmail.com",
                 batch: "BATCH 202606"
               })}
               className="p-2 bg-white hover:bg-orange-50 border border-slate-200 hover:border-orange-300 rounded-xl text-left transition-all cursor-pointer group"
             >
               <div className="font-bold text-slate-800 text-[11px] truncate group-hover:text-orange-600">
-                SK ABDUL SAJID
+                INDRAJEET JENA
               </div>
-              <div className="text-[10px] text-slate-500 font-mono">DVA-202606-448</div>
+              <div className="text-[10px] text-slate-500 font-mono">BBS202606010</div>
             </button>
 
-            {/* Student 2: Nagaraju Saraswathi */}
+            {/* Student 2: Ratnakar Nayak */}
             <button
               type="button"
               onClick={() => handleSelectQuickStudent({
-                name: "NAGARAJU SARASWATHI",
-                rollNo: "BLR202609008",
-                email: "snagaraju119@gmail.com",
-                batch: "BATCH 202609"
+                name: "RATNAKAR NAYAK",
+                rollNo: "BBS202607017",
+                email: "ratnakarnayak05@gmail.com",
+                batch: "BATCH 202607"
               })}
               className="p-2 bg-white hover:bg-orange-50 border border-slate-200 hover:border-orange-300 rounded-xl text-left transition-all cursor-pointer group"
             >
               <div className="font-bold text-slate-800 text-[11px] truncate group-hover:text-orange-600">
-                NAGARAJU S.
+                RATNAKAR NAYAK
               </div>
-              <div className="text-[10px] text-slate-500 font-mono">BLR202609008</div>
+              <div className="text-[10px] text-slate-500 font-mono">BBS202607017</div>
             </button>
 
-            {/* Student 3: Sahil Jain */}
+            {/* Student 3: Abhilash Sahoo */}
             <button
               type="button"
               onClick={() => handleSelectQuickStudent({
-                name: "SAHIL JAIN",
-                rollNo: "BLR202609001",
-                email: "sahiljain@gmail.com",
-                batch: "BATCH 202609"
+                name: "ABHILASH SAHOO",
+                rollNo: "BBS202606014",
+                email: "sahooabhilash96@gmail.com",
+                batch: "BATCH 202606"
               })}
               className="p-2 bg-white hover:bg-orange-50 border border-slate-200 hover:border-orange-300 rounded-xl text-left transition-all cursor-pointer group"
             >
               <div className="font-bold text-slate-800 text-[11px] truncate group-hover:text-orange-600">
-                SAHIL JAIN
+                ABHILASH SAHOO
               </div>
-              <div className="text-[10px] text-slate-500 font-mono">BLR202609001</div>
+              <div className="text-[10px] text-slate-500 font-mono">BBS202606014</div>
             </button>
 
-            {/* Student 4: Tapan Mahapatra */}
+            {/* Student 4: Anil Kumar Mishra */}
             <button
               type="button"
               onClick={() => handleSelectQuickStudent({
-                name: "TAPAN MAHAPATRA",
-                rollNo: "BBS202609009",
-                email: "pmahapatratapan@gmail.com",
-                batch: "BATCH 202609"
+                name: "ANIL KUMAR MISHRA",
+                rollNo: "BBS202606009",
+                email: "anilmishra6784@gmail.com",
+                batch: "BATCH 202606"
               })}
               className="p-2 bg-white hover:bg-orange-50 border border-slate-200 hover:border-orange-300 rounded-xl text-left transition-all cursor-pointer group"
             >
               <div className="font-bold text-slate-800 text-[11px] truncate group-hover:text-orange-600">
-                TAPAN MAHAPATRA
+                ANIL K. MISHRA
               </div>
-              <div className="text-[10px] text-slate-500 font-mono">BBS202609009</div>
+              <div className="text-[10px] text-slate-500 font-mono">BBS202606009</div>
+            </button>
+
+            {/* Student 5: Chandrai */}
+            <button
+              type="button"
+              onClick={() => handleSelectQuickStudent({
+                name: "CHANDRAI",
+                rollNo: "BLR202606015",
+                email: "chandrai2023@gmail.com",
+                batch: "BATCH 202606"
+              })}
+              className="p-2 bg-white hover:bg-orange-50 border border-slate-200 hover:border-orange-300 rounded-xl text-left transition-all cursor-pointer group"
+            >
+              <div className="font-bold text-slate-800 text-[11px] truncate group-hover:text-orange-600">
+                CHANDRAI
+              </div>
+              <div className="text-[10px] text-slate-500 font-mono">BLR202606015</div>
+            </button>
+
+            {/* Student 6: Rohan Rawal */}
+            <button
+              type="button"
+              onClick={() => handleSelectQuickStudent({
+                name: "ROHAN RAWAL",
+                rollNo: "BLR202606001",
+                email: "rohanrawal1994@gmail.com",
+                batch: "BATCH 202606"
+              })}
+              className="p-2 bg-white hover:bg-orange-50 border border-slate-200 hover:border-orange-300 rounded-xl text-left transition-all cursor-pointer group"
+            >
+              <div className="font-bold text-slate-800 text-[11px] truncate group-hover:text-orange-600">
+                ROHAN RAWAL
+              </div>
+              <div className="text-[10px] text-slate-500 font-mono">BLR202606001</div>
             </button>
           </div>
 
