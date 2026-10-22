@@ -1415,31 +1415,14 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
           )}
         </nav>
 
-        {/* macOS Sidebar Footer - Logout & Version Status */}
-        <div className={`p-3 border-t shrink-0 ${
-          isWhite ? 'border-slate-200 bg-slate-50/60' : 'border-white/10 bg-white/[0.02]'
-        }`}>
-          <button
-            type="button"
-            onClick={() => setIsAuthenticated(false)}
-            className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-inner active:scale-98 ${
-              isWhite 
-                ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80' 
-                : 'bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-red-200 border border-red-500/20'
-            }`}
-            title="Sign Out of Admin Portal"
-          >
-            <LogOut className="w-3.5 h-3.5 shrink-0" />
-            {sidebarOpen && <span>Sign Out</span>}
-          </button>
-          {sidebarOpen && (
-            <div className={`mt-2 text-center text-[9px] font-mono tracking-wider ${
-              isWhite ? 'text-slate-500' : 'text-slate-400'
-            }`}>
-              macOS Studio UI • DV Analytics
-            </div>
-          )}
-        </div>
+        {/* macOS Sidebar Footer - Version Status */}
+        {sidebarOpen && (
+          <div className={`p-3 border-t shrink-0 text-center text-[9px] font-mono tracking-wider ${
+            isWhite ? 'border-slate-200 bg-slate-50/60 text-slate-500' : 'border-white/10 bg-white/[0.02] text-slate-400'
+          }`}>
+            macOS Studio UI • DV Analytics
+          </div>
+        )}
       </aside>
 
       {/* Mobile Backdrop Overlay for Admin Sidebar Drawer */}
