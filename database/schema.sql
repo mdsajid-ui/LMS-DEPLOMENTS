@@ -305,6 +305,28 @@ CREATE TABLE `notifications` (
   FOREIGN KEY (`batch_id`) REFERENCES `batches`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- --------------------------------------------------------------------
+-- 10. VIDEO WATCH TIME FORENSICS & DRM ANTI-PIRACY LOGS
+-- --------------------------------------------------------------------
+DROP TABLE IF EXISTS `video_watch_logs`;
+CREATE TABLE `video_watch_logs` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` BIGINT NOT NULL,
+  `session_id` INT NOT NULL,
+  `batch_id` INT NOT NULL,
+  `total_duration_seconds` INT NOT NULL DEFAULT 7200,
+  `watched_seconds` INT NOT NULL DEFAULT 0,
+  `watch_percent` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+  `completed` TINYINT(1) DEFAULT 0,
+  `drm_watermark_verified` TINYINT(1) DEFAULT 1,
+  `client_ip` VARCHAR(45) DEFAULT '103.212.148.42',
+  `user_agent` VARCHAR(255) DEFAULT NULL,
+  `last_watched_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`batch_id`) REFERENCES `batches`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ====================================================================

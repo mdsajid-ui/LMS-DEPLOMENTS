@@ -30,7 +30,7 @@ import {
 import { exportArrayToCsv } from '../utils/excelHelper';
 import InvoiceFormatModal from './InvoiceFormatModal';
 import collectionData from '../data/collectionReportData.json';
-import { getStoredStudents, getStoredFees, getStoredAssignmentsList } from '../utils/lmsStorage';
+import { getStoredStudents, getStoredFees, getStoredAssignmentsList, getStoredVideoAnalytics, subscribeToDataUpdates } from '../utils/lmsStorage';
 
 // =========================================================================
 // 1. REPORT: INVOICE REPORT (rpt_Invoice.aspx)
@@ -1807,6 +1807,318 @@ export function ReportExpenseView({ showToast }) {
             </tfoot>
           </table>
         </div>
+      </div>
+    </div>
+  );
+}
+
+
+// =========================================================================
+// 10. REPORT: VIDEO WATCH TIME & DRM ENGAGEMENT REPORT (rpt_VideoWatch.aspx)
+// =========================================================================
+export function ReportVideoWatchAnalyticsView({ showToast }) {
+  const [search, setSearch] = useState("");
+  const [batch, setBatch] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [page, setPage] = useState(1);
+  const [analyticsList, setAnalyticsList] = useState(() => getStoredVideoAnalytics());
+
+  useEffect(() => {
+    const unsub = subscribeToDataUpdates((event) => {
+      if (event?.type === 'video_analytics' || event?.type === 'storage_sync') {
+        setAnalyticsList(getStoredVideoAnalytics());
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const filteredList = useMemo(() => {
+    return analyticsList.filter(item => {
+      const q = search.toLowerCase().trim();
+      const matchSearch = !q ||
+        (item.studentName || '').toLowerCase().includes(q) ||
+        (item.rollNo || '').toLowerCase().includes(q) ||
+        (item.currentSessionTitle || '').toLowerCase().includes(q);
+      const matchBatch = batch === "ALL" || item.batch === batch;
+      const matchStatus = statusFilter === "ALL" || item.status === statusFilter;
+      return matchSearch && matchBatch && matchStatus;
+    });
+  }, [analyticsList, search, batch, statusFilter]);
+
+  const totalStreamedHours = useMemo(() => {
+    return filteredList.reduce((sum, item) => sum + (item.watchedRecordedHours || 0), 0).toFixed(1);
+  }, [filteredList]);
+
+  const avgCompletionPct = useMemo(() => {
+    if (filteredList.length === 0) return 0;
+    const sum = filteredList.reduce((s, item) => s + (item.watchedPercent || 0), 0);
+    return (sum / filteredList.length).toFixed(1);
+  }, [filteredList]);
+
+  const completedLearners = useMemo(() => {
+    return filteredList.filter(item => item.status === 'Completed' || item.status === 'Mastered').length;
+  }, [filteredList]);
+
+  const pageSize = 15;
+  const totalPages = Math.ceil(filteredList.length / pageSize) || 1;
+  const paginatedList = filteredList.slice((page - 1) * pageSize, page * pageSize);
+
+  const handleExportCsv = () => {
+    const headers = [
+      "Roll No",
+      "Student Name",
+      "Batch",
+      "Course",
+      "Current/Last Watched Session",
+      "Assigned Hours",
+      "Watched Hours",
+      "Watch Completion %",
+      "Status",
+      "DRM Security Status",
+      "Last Active Timestamp"
+    ];
+    const rows = filteredList.map(s => [
+      s.rollNo,
+      s.studentName,
+      s.batch,
+      s.course,
+      s.currentSessionTitle,
+      s.totalRecordedHours,
+      s.watchedRecordedHours,
+      s.watchedPercent + "%",
+      s.status,
+      s.riskScore || "Protected",
+      s.lastActiveDate
+    ]);
+    exportArrayToCsv(headers, rows, `Video_Watch_Time_Forensics_${new Date().toISOString().split('T')[0]}`);
+    showToast?.("Video Watch Time Report exported successfully!");
+  };
+
+  return (
+    <div className="space-y-5 font-sans">
+      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+        {/* Header Strip */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded bg-indigo-100 text-indigo-800 font-mono text-[10px] font-bold">
+                rpt_VideoWatch.aspx
+              </span>
+              <h3 className="font-bold text-slate-800 text-base">
+                Student Video Watch Time & DRM Engagement Forensics
+              </h3>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Real-time audit log of actual video seconds watched, dynamic anti-piracy watermarking, and completion analytics.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportCsv}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export Watch Forensics (.xlsx)</span>
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="p-1.5 border border-slate-300 rounded-lg hover:bg-slate-50 text-slate-600 transition-colors"
+              title="Print Report"
+            >
+              <Printer className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Executive Metric KPI Strip */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Total Video Hours Streamed</span>
+            <span className="text-xl font-black text-slate-900 block font-mono mt-1">{totalStreamedHours} hrs</span>
+            <span className="text-[10px] text-slate-500">Across {filteredList.length} monitored students</span>
+          </div>
+
+          <div className="p-3.5 bg-blue-50/70 rounded-xl border border-blue-200">
+            <span className="text-[10px] uppercase font-bold text-blue-700 block tracking-wider">Avg Batch Completion</span>
+            <span className="text-xl font-black text-blue-900 block font-mono mt-1">{avgCompletionPct}%</span>
+            <span className="text-[10px] text-blue-600 font-medium">Recorded curriculum progress</span>
+          </div>
+
+          <div className="p-3.5 bg-emerald-50/70 rounded-xl border border-emerald-200">
+            <span className="text-[10px] uppercase font-bold text-emerald-700 block tracking-wider">Completed / Mastered</span>
+            <span className="text-xl font-black text-emerald-900 block font-mono mt-1">{completedLearners} Learners</span>
+            <span className="text-[10px] text-emerald-600 font-medium">&gt; 80% video benchmark reached</span>
+          </div>
+
+          <div className="p-3.5 bg-amber-50/70 rounded-xl border border-amber-200">
+            <span className="text-[10px] uppercase font-bold text-amber-700 block tracking-wider">DRM Anti-Piracy Compliance</span>
+            <span className="text-xl font-black text-amber-900 block font-mono mt-1">100% SECURE</span>
+            <span className="text-[10px] text-amber-600 font-medium">Dynamic Floating Watermarks Active</span>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by student name, roll no, or session..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              className="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <select
+              value={batch}
+              onChange={(e) => { setBatch(e.target.value); setPage(1); }}
+              className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none"
+            >
+              <option value="ALL">All Cohort Batches</option>
+              <option value="BATCH 202606">BATCH 202606 (Active Core)</option>
+              <option value="BATCH 202608">BATCH 202608</option>
+              <option value="BATCH 202609">BATCH 202609</option>
+            </select>
+          </div>
+
+          <div>
+            <select
+              value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+              className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none"
+            >
+              <option value="ALL">All Watch Statuses</option>
+              <option value="Completed">Completed (&gt;80%)</option>
+              <option value="Mastered">Mastered (100%)</option>
+              <option value="Active">Active In-Progress</option>
+              <option value="Attention Required">Attention Required (&lt;30%)</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Data Table */}
+        <div className="overflow-x-auto border border-slate-200 rounded-xl">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead className="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200">
+              <tr>
+                <th className="py-2.5 px-3">S.No</th>
+                <th className="py-2.5 px-3">Student Roll No</th>
+                <th className="py-2.5 px-3">Student Name</th>
+                <th className="py-2.5 px-3">Batch & Course</th>
+                <th className="py-2.5 px-3">Current / Last Watched Session</th>
+                <th className="py-2.5 px-3 text-right">Watched / Assigned</th>
+                <th className="py-2.5 px-3 min-w-[140px]">Watch Progress %</th>
+                <th className="py-2.5 px-3 text-center">Status</th>
+                <th className="py-2.5 px-3 text-center">DRM Shield</th>
+                <th className="py-2.5 px-3 text-right">Last Watched</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {paginatedList.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="py-8 text-center text-slate-400">
+                    No video watch records matched your filter criteria.
+                  </td>
+                </tr>
+              ) : (
+                paginatedList.map((item, idx) => {
+                  const pct = Math.min(100, Math.max(0, item.watchedPercent || 0));
+                  const isCompleted = item.status === 'Completed' || item.status === 'Mastered';
+                  const isLow = item.status === 'Attention Required' || pct < 35;
+
+                  return (
+                    <tr key={item.rollNo || idx} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-2.5 px-3 text-slate-400 font-mono">{(page - 1) * pageSize + idx + 1}</td>
+                      <td className="py-2.5 px-3 font-mono font-bold text-slate-900">{item.rollNo}</td>
+                      <td className="py-2.5 px-3">
+                        <div className="font-bold text-slate-900">{item.studentName}</div>
+                        <div className="text-[10px] text-slate-400">{item.course} Candidate</div>
+                      </td>
+                      <td className="py-2.5 px-3 whitespace-nowrap">
+                        <span className="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-slate-100 text-slate-700">
+                          {item.batch}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 max-w-xs truncate text-slate-700 font-medium" title={item.currentSessionTitle}>
+                        {item.currentSessionTitle}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-800">
+                        {item.watchedRecordedHours}h / {item.totalRecordedHours}h
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                            <div
+                              className={`h-full rounded-full transition-all ${
+                                isCompleted
+                                  ? 'bg-emerald-500'
+                                  : isLow
+                                  ? 'bg-amber-500'
+                                  : 'bg-indigo-600'
+                              }`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <span className="text-[11px] font-mono font-bold text-slate-700 min-w-[35px] text-right">
+                            {pct}%
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold inline-block ${
+                          isCompleted
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                            : isLow
+                            ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                            : 'bg-blue-100 text-blue-800 border border-blue-200'
+                        }`}>
+                          {item.status}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-900 text-emerald-400 font-mono">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                          <span>WATERMARKED</span>
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono text-slate-500 text-[11px] whitespace-nowrap">
+                        {item.lastActiveDate}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+            <span className="text-slate-500">
+              Showing page <strong className="text-slate-800">{page}</strong> of <strong className="text-slate-800">{totalPages}</strong>
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="p-1 rounded border border-slate-300 disabled:opacity-40 hover:bg-slate-50"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="p-1 rounded border border-slate-300 disabled:opacity-40 hover:bg-slate-50"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -196,6 +196,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     if (url.includes('rpt_mcq') || url.includes('report-mcq')) return 'report-mcq';
     if (url.includes('rpt_practical') || url.includes('report-practical')) return 'report-practical';
     if (url.includes('rpt_expense') || url.includes('report-expense')) return 'report-expense';
+    if (url.includes('rpt_videowatch') || url.includes('report-videowatch') || url.includes('videowatch')) return 'report-videowatch';
     if (url.includes('class.aspx') || url.includes('/class')) return 'class';
     if (url.includes('discussionforum') || url.includes('discussion-forum')) return 'discussion-forum';
     if (url.includes('appusers') || url.includes('app-users')) return 'app-users';
@@ -303,6 +304,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
     else if (menuKey === 'report-mcq') window.location.hash = '/admin/rpt_MCQ.aspx';
     else if (menuKey === 'report-practical') window.location.hash = '/admin/rpt_Practical.aspx';
     else if (menuKey === 'report-expense') window.location.hash = '/admin/rpt_Expense.aspx';
+    else if (menuKey === 'report-videowatch') window.location.hash = '/admin/rpt_VideoWatch.aspx';
     else if (menuKey === 'dashboard') window.location.hash = '/admin/dashboard.aspx';
     else window.location.hash = `/admin/${menuKey}.aspx`;
   };
@@ -448,7 +450,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
       id: 'reports',
       label: 'Enterprise Reports',
       icon: Mail,
-      badge: '12',
+      badge: '13',
       items: [
         { key: 'collection-recovery', name: 'Collection & Recovery', icon: IndianRupee, badge: 'Live' },
         { key: 'daily-collection', name: 'Daily Collection Report', icon: TrendingUp },
@@ -458,6 +460,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
         { key: 'report-outstanding', name: 'Outstanding Report', icon: AlertCircle },
         { key: 'report-feedback', name: 'Feedback Report', icon: CheckCircle2 },
         { key: 'report-attendance', name: 'Attendance Report', icon: Clock },
+        { key: 'report-videowatch', name: 'Video Watch Time & DRM Forensics', icon: Video, badge: 'Live DRM' },
         { key: 'report-assignment', name: 'Assignment Report', icon: ClipboardCheck },
         { key: 'report-mcq', name: 'MCQ Assessment', icon: FileText },
         { key: 'report-practical', name: 'Practical Lab Defense', icon: Database },
@@ -1590,6 +1593,7 @@ export default function AdminPortalPage({ onBackToStudentLms }) {
                 {activeMenu === 'report-mcq' && "MCQ & CAT Online Examination Report (rpt_MCQ.aspx)"}
                 {activeMenu === 'report-practical' && "Practical Lab & Industry Capstone Defense (rpt_Practical.aspx)"}
                 {activeMenu === 'report-expense' && "Center Operations Expenditure Ledger (rpt_Expense.aspx)"}
+                {activeMenu === 'report-videowatch' && "Student Video Watch Time & DRM Forensics (rpt_VideoWatch.aspx)"}
                 {activeMenu === 'dashboard' && "Monthly Collection"}
               </span>
             </div>

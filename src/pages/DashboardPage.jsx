@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import RadialGauge from '../components/RadialGauge';
 import { weeklyLearningAnalytics, courseCategories, studentProfile } from '../data/mockData';
+import { getStoredLiveClasses, subscribeToDataUpdates, getStudentVideoStats } from '../utils/lmsStorage';
 
 export default function DashboardPage({ 
   student = studentProfile, 
@@ -38,21 +39,24 @@ export default function DashboardPage({
   onOpenDvAssistant
 }) {
   // Read dynamic watch time from localStorage if updated during video playback
-  const [watchedHours, setWatchedHours] = useState(student.watchedRecordedHours);
-  const [watchPercentage, setWatchPercentage] = useState(student.watchedPercent);
+  const [liveClasses, setLiveClasses] = useState(() => getStoredLiveClasses());
+
+  const studentStats = getStudentVideoStats(student?.rollNo || student?.studentId || "DVA-202606-448");
+  const [watchedHours, setWatchedHours] = useState(studentStats?.watchedRecordedHours || student.watchedRecordedHours || 48.5);
+  const [watchPercentage, setWatchPercentage] = useState(studentStats?.watchedPercent || student.watchedPercent || 71.3);
 
   useEffect(() => {
-    try {
-      const storedMinutes = localStorage.getItem('dv_extra_watch_minutes');
-      if (storedMinutes) {
-        const extraHours = parseFloat(storedMinutes) / 60;
-        const newTotal = parseFloat((student.watchedRecordedHours + extraHours).toFixed(1));
-        setWatchedHours(newTotal);
-        setWatchPercentage(parseFloat(((newTotal / student.totalRecordedHours) * 100).toFixed(1)));
+    const unsub = subscribeToDataUpdates((event) => {
+      if (event?.type === 'live_classes' || event?.type === 'storage_sync') {
+        setLiveClasses(getStoredLiveClasses());
       }
-    } catch (e) {
-      // fallback
-    }
+      if (event?.type === 'video_analytics' || event?.type === 'storage_sync') {
+        const freshStats = getStudentVideoStats(student?.rollNo || student?.studentId || "DVA-202606-448");
+        setWatchedHours(freshStats.watchedRecordedHours || 48.5);
+        setWatchPercentage(freshStats.watchedPercent || 71.3);
+      }
+    });
+    return () => unsub();
   }, [student]);
 
   return (

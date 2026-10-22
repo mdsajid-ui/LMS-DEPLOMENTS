@@ -1,5 +1,5 @@
 import { excelSessions, sqlSessions, pythonSessions, assignmentsList, studentProfile } from '../data/mockData.js';
-import studentsMasterData from '../data/studentsMasterData.json';
+import studentsMasterData from '../data/studentsMasterData.json' with { type: 'json' };
 import { sealPayload, unsealPayload, sanitizeString } from './securityShield.js';
 
 const STORAGE_KEYS = {
@@ -10,7 +10,8 @@ const STORAGE_KEYS = {
   RESUMES: 'dva_lms_resumes_v1',
   INTERVIEW_KITS: 'dva_lms_interview_kits_v1',
   ACTIVE_PROFILE: 'dva_lms_active_profile_v1',
-  LIVE_CLASSES: 'dva_lms_live_classes_v1'
+  LIVE_CLASSES: 'dva_lms_live_classes_v1',
+  VIDEO_ANALYTICS: 'dva_lms_video_analytics_v1'
 };
 
 /**
@@ -1062,3 +1063,282 @@ export function deleteLiveClass(id) {
   return updated;
 }
 
+
+// ==========================================
+// 9. VIDEO WATCH TIME & DRM TRACKING ENGINE
+// ==========================================
+export const initialVideoAnalytics = [
+  {
+    rollNo: 'BBS202606010',
+    studentName: 'INDRAJEET JENA',
+    batch: 'BATCH 202606',
+    course: 'APIDS',
+    totalRecordedHours: 60.0,
+    watchedRecordedHours: 42.5,
+    watchedPercent: 70.8,
+    completedSessionsCount: 8,
+    totalSessionsCount: 12,
+    lastActiveDate: '2026-10-21 16:45',
+    currentSessionTitle: 'Python Pandas Data Analytics & Feature Extraction',
+    status: 'Active',
+    drmVerified: true,
+    riskScore: 'SECURE • Watermark Active'
+  },
+  {
+    rollNo: 'BBS202607017',
+    studentName: 'RATNAKAR NAYAK',
+    batch: 'BATCH 202606',
+    course: 'APIDS',
+    totalRecordedHours: 60.0,
+    watchedRecordedHours: 18.0,
+    watchedPercent: 30.0,
+    completedSessionsCount: 3,
+    totalSessionsCount: 12,
+    lastActiveDate: '2026-10-18 11:20',
+    currentSessionTitle: 'Excel Session 3: Dynamic Arrays & Lookups',
+    status: 'Attention Required',
+    drmVerified: true,
+    riskScore: 'SECURE • Watermark Active'
+  },
+  {
+    rollNo: 'BBS202606014',
+    studentName: 'ABHILASH SAHOO',
+    batch: 'BATCH 202606',
+    course: 'APIDA',
+    totalRecordedHours: 60.0,
+    watchedRecordedHours: 35.0,
+    watchedPercent: 58.3,
+    completedSessionsCount: 6,
+    totalSessionsCount: 12,
+    lastActiveDate: '2026-10-20 19:15',
+    currentSessionTitle: 'SQL Joins, Subqueries & CTE Optimization',
+    status: 'Active',
+    drmVerified: true,
+    riskScore: 'SECURE • Watermark Active'
+  },
+  {
+    rollNo: 'BBS202606009',
+    studentName: 'ANIL KUMAR MISHRA',
+    batch: 'BATCH 202606',
+    course: 'APIDS',
+    totalRecordedHours: 60.0,
+    watchedRecordedHours: 58.5,
+    watchedPercent: 97.5,
+    completedSessionsCount: 12,
+    totalSessionsCount: 12,
+    lastActiveDate: '2026-10-22 09:30',
+    currentSessionTitle: 'Machine Learning: Supervised Models & Evaluation',
+    status: 'Completed',
+    drmVerified: true,
+    riskScore: 'SECURE • Watermark Active'
+  },
+  {
+    rollNo: 'BLR202606015',
+    studentName: 'CHANDRAI',
+    batch: 'BATCH 202606',
+    course: 'APIDS',
+    totalRecordedHours: 60.0,
+    watchedRecordedHours: 22.0,
+    watchedPercent: 36.7,
+    completedSessionsCount: 4,
+    totalSessionsCount: 12,
+    lastActiveDate: '2026-10-19 14:10',
+    currentSessionTitle: 'SQL Window Functions & Aggregate Analytics',
+    status: 'Active',
+    drmVerified: true,
+    riskScore: 'SECURE • Watermark Active'
+  },
+  {
+    rollNo: 'BBS202606017',
+    studentName: 'KARABI KADAMBINI',
+    batch: 'BATCH 202606',
+    course: 'APIDS',
+    totalRecordedHours: 60.0,
+    watchedRecordedHours: 39.0,
+    watchedPercent: 65.0,
+    completedSessionsCount: 7,
+    totalSessionsCount: 12,
+    lastActiveDate: '2026-10-21 18:05',
+    currentSessionTitle: 'Python Data Structures, Functions & OOP',
+    status: 'Active',
+    drmVerified: true,
+    riskScore: 'SECURE • Watermark Active'
+  },
+  {
+    rollNo: 'BBS202606015',
+    studentName: 'JANMAJEYA MALLICK',
+    batch: 'BATCH 202606',
+    course: 'APIDS',
+    totalRecordedHours: 60.0,
+    watchedRecordedHours: 46.0,
+    watchedPercent: 76.7,
+    completedSessionsCount: 9,
+    totalSessionsCount: 12,
+    lastActiveDate: '2026-10-21 21:40',
+    currentSessionTitle: 'Power BI DAX Formulas & Interactive Dashboards',
+    status: 'Active',
+    drmVerified: true,
+    riskScore: 'SECURE • Watermark Active'
+  },
+  {
+    rollNo: 'BLR202606001',
+    studentName: 'ROHAN RAWAL',
+    batch: 'BATCH 202606',
+    course: 'APIDA',
+    totalRecordedHours: 60.0,
+    watchedRecordedHours: 52.0,
+    watchedPercent: 86.7,
+    completedSessionsCount: 10,
+    totalSessionsCount: 12,
+    lastActiveDate: '2026-10-22 08:15',
+    currentSessionTitle: 'Executive Data Storytelling & Power BI Reports',
+    status: 'Completed',
+    drmVerified: true,
+    riskScore: 'SECURE • Watermark Active'
+  },
+  {
+    rollNo: 'BLR202606006',
+    studentName: 'JEELAN KUMAR PATEL',
+    batch: 'BATCH 202606',
+    course: 'APIDA',
+    totalRecordedHours: 60.0,
+    watchedRecordedHours: 41.5,
+    watchedPercent: 69.2,
+    completedSessionsCount: 8,
+    totalSessionsCount: 12,
+    lastActiveDate: '2026-10-20 20:25',
+    currentSessionTitle: 'Excel Financial Modeling & Sensitivity Analysis',
+    status: 'Active',
+    drmVerified: true,
+    riskScore: 'SECURE • Watermark Active'
+  },
+  {
+    rollNo: 'BBS202606006',
+    studentName: 'AKANKSHA PATTNAIK',
+    batch: 'BATCH 202606',
+    course: 'APIDS',
+    totalRecordedHours: 60.0,
+    watchedRecordedHours: 60.0,
+    watchedPercent: 100.0,
+    completedSessionsCount: 12,
+    totalSessionsCount: 12,
+    lastActiveDate: '2026-10-22 10:10',
+    currentSessionTitle: 'End-to-End Generative AI & LangChain Deployment',
+    status: 'Mastered',
+    drmVerified: true,
+    riskScore: 'SECURE • Watermark Active'
+  },
+  {
+    rollNo: 'DVA-202606-448',
+    studentName: 'SK ABDUL SAJID',
+    batch: 'BATCH 202606',
+    course: 'APIDS',
+    totalRecordedHours: 68.0,
+    watchedRecordedHours: 48.5,
+    watchedPercent: 71.3,
+    completedSessionsCount: 14,
+    totalSessionsCount: 18,
+    lastActiveDate: '2026-10-22 11:35',
+    currentSessionTitle: 'Excel Base and Advanced: Session 2 Class 3',
+    status: 'Active',
+    drmVerified: true,
+    riskScore: 'SECURE • Watermark Active'
+  }
+];
+
+export function getStoredVideoAnalytics() {
+  if (typeof window === 'undefined') return initialVideoAnalytics;
+  try {
+    const parsed = getSecureItem(STORAGE_KEYS.VIDEO_ANALYTICS, null);
+    if (parsed && Array.isArray(parsed) && parsed.length > 0) return parsed;
+  } catch (e) {}
+  try {
+    setSecureItem(STORAGE_KEYS.VIDEO_ANALYTICS, initialVideoAnalytics);
+  } catch (e) {}
+  return initialVideoAnalytics;
+}
+
+export function saveVideoWatchProgress({
+  rollNo,
+  studentName,
+  batch = 'BATCH 202606',
+  course = 'APIDS',
+  sessionTitle,
+  watchIncrementSeconds = 5,
+  currentTime = 0,
+  duration = 7200
+}) {
+  const current = getStoredVideoAnalytics();
+  const targetRoll = (rollNo || '').trim().toLowerCase();
+  const existingIdx = current.findIndex(s => (s.rollNo || '').trim().toLowerCase() === targetRoll);
+
+  let updatedList;
+  const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
+
+  if (existingIdx >= 0) {
+    const existing = current[existingIdx];
+    const newWatchedHours = Math.min(
+      existing.totalRecordedHours || 60,
+      parseFloat((existing.watchedRecordedHours + (watchIncrementSeconds / 3600)).toFixed(2))
+    );
+    const newPercent = parseFloat(((newWatchedHours / (existing.totalRecordedHours || 60)) * 100).toFixed(1));
+    const completed = newPercent >= 80;
+
+    const updated = {
+      ...existing,
+      watchedRecordedHours: newWatchedHours,
+      watchedPercent: newPercent,
+      currentSessionTitle: sessionTitle || existing.currentSessionTitle,
+      lastActiveDate: nowStr,
+      status: completed ? 'Completed' : 'Active',
+      drmVerified: true
+    };
+    updatedList = [...current];
+    updatedList[existingIdx] = updated;
+  } else {
+    const newRecord = {
+      rollNo: rollNo || 'DVA-202606-448',
+      studentName: studentName || 'Student',
+      batch,
+      course,
+      totalRecordedHours: 60.0,
+      watchedRecordedHours: parseFloat((watchIncrementSeconds / 3600).toFixed(2)),
+      watchedPercent: parseFloat(((watchIncrementSeconds / 3600 / 60.0) * 100).toFixed(1)),
+      completedSessionsCount: 1,
+      totalSessionsCount: 12,
+      lastActiveDate: nowStr,
+      currentSessionTitle: sessionTitle || 'Live Lecture Video',
+      status: 'Active',
+      drmVerified: true,
+      riskScore: 'SECURE • Watermark Active'
+    };
+    updatedList = [newRecord, ...current];
+  }
+
+  try {
+    setSecureItem(STORAGE_KEYS.VIDEO_ANALYTICS, updatedList);
+  } catch (e) {}
+
+  notifyDataUpdated({
+    type: 'video_analytics',
+    analytics: updatedList,
+    message: 'Video watch time updated: ' + (studentName || rollNo) + ' (' + (sessionTitle || 'Class Video') + ')'
+  });
+
+  return updatedList;
+}
+
+export function getStudentVideoStats(rollNo) {
+  const analytics = getStoredVideoAnalytics();
+  const target = (rollNo || '').trim().toLowerCase();
+  const found = analytics.find(s => (s.rollNo || '').trim().toLowerCase() === target);
+  if (found) return found;
+  return {
+    totalRecordedHours: 60.0,
+    watchedRecordedHours: 42.5,
+    watchedPercent: 70.8,
+    completedSessionsCount: 8,
+    totalSessionsCount: 12,
+    status: 'Active'
+  };
+}

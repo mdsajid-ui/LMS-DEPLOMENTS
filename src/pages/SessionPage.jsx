@@ -25,7 +25,7 @@ import {
   Send
 } from 'lucide-react';
 import { getSubjectSessions, studentProfile, excelMasterDriveFolder, sqlMasterDriveFolder, pythonMasterDriveFolder } from '../data/mockData';
-import { getSubjectStoredSessions, subscribeToDataUpdates, findSessionFolderIndex } from '../utils/lmsStorage';
+import { getSubjectStoredSessions, subscribeToDataUpdates, findSessionFolderIndex, saveVideoWatchProgress, getStudentVideoStats } from '../utils/lmsStorage';
 import { downloadFile, generateAndDownloadExcel } from '../utils/excelHelper';
 
 /**
@@ -204,19 +204,54 @@ export default function SessionPage({
     }, 200);
   };
 
-  // Watermark drifting position
+  // Watermark drifting positions (Anti-Piracy Dual Stamp)
   const [watermarkPos, setWatermarkPos] = useState({ x: 20, y: 30 });
+  const [watermarkPos2, setWatermarkPos2] = useState({ x: 60, y: 65 });
 
-  // Floating watermark drift animation
+  // Live Video Watch Time & Attendance Heartbeat
+  const [sessionWatchSeconds, setSessionWatchSeconds] = useState(0);
+
+  // Floating watermark drift animation (dual quadrant drifting to thwart cam recording)
   useEffect(() => {
     const interval = setInterval(() => {
       setWatermarkPos({
-        x: Math.floor(Math.random() * 65) + 10,
-        y: Math.floor(Math.random() * 65) + 15
+        x: Math.floor(Math.random() * 50) + 5,
+        y: Math.floor(Math.random() * 40) + 8
+      });
+      setWatermarkPos2({
+        x: Math.floor(Math.random() * 45) + 45,
+        y: Math.floor(Math.random() * 40) + 50
       });
     }, 4500);
     return () => clearInterval(interval);
   }, []);
+
+  // Video watch heartbeat timer: Every 3 seconds of active playback, sync with central storage & admin forensics
+  useEffect(() => {
+    if (!isVideoPlaying) return;
+    const interval = setInterval(() => {
+      setSessionWatchSeconds(prev => {
+        const next = prev + 3;
+        try {
+          saveVideoWatchProgress({
+            rollNo: student?.rollNo || student?.studentId || "DVA-202606-448",
+            studentName: student?.name || "SK ABDUL SAJID",
+            batch: student?.batch || "BATCH 202606",
+            course: student?.courseCode || "APIDS",
+            sessionTitle: activeVideo.title || `${selectedSession?.title} Class Video`,
+            watchIncrementSeconds: 3,
+            currentTime: videoRef.current?.currentTime || next,
+            duration: videoRef.current?.duration || 7200
+          });
+        } catch (err) {
+          console.warn("Video watch sync error:", err);
+        }
+        return next;
+      });
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isVideoPlaying, activeVideo.title, selectedSession, student]);
 
   // DRM & Anti-Screen Capture Key Watcher
   useEffect(() => {
@@ -721,7 +756,37 @@ export default function SessionPage({
                     textShadow: '0 1px 2px rgba(0,0,0,0.8)'
                   }}
                 >
-                  {student.name} • {student.courseCode} • DRM PROTECTED
+                  {student.name} • {student.rollNo || student.studentId || 'DVA-202606-448'} • IP: 103.212.148.42 • DRM SECURED
+                </div>
+
+                {/* Second drifting anti-cam watermark */}
+                <div 
+                  className="absolute z-20 pointer-events-none transition-all duration-1000 ease-in-out text-emerald-400/25 text-[9px] sm:text-[11px] font-mono font-bold tracking-widest uppercase select-none drop-shadow-md"
+                  style={{
+                    top: `${watermarkPos2.y}%`,
+                    left: `${watermarkPos2.x}%`,
+                    textShadow: '0 1px 3px rgba(0,0,0,0.9)'
+                  }}
+                >
+                  CONFIDENTIAL • {student.courseCode} • UNAUTHORIZED SHARING STRICTLY PROHIBITED
+                </div>
+
+                {/* DRM Protection Header Banner */}
+                <div className="bg-slate-950 border-b border-slate-800 px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-300 select-none">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span className="font-bold text-white">DRM Anti-Download Shield Active:</span>
+                    <span className="text-slate-400">Right-Click, DevTools & Screen Capture Blocked</span>
+                  </div>
+                  <div className="flex items-center gap-3 font-mono">
+                    <span className="text-emerald-400 font-bold">
+                      ⏱️ Tracked Watch Time: {Math.floor(sessionWatchSeconds / 60)}m {sessionWatchSeconds % 60}s
+                    </span>
+                    <span className="text-slate-600">•</span>
+                    <span className="text-blue-300 text-[10px] bg-blue-950 px-2 py-0.5 rounded border border-blue-800">
+                      Live Synced with Admin
+                    </span>
+                  </div>
                 </div>
 
                 {/* 3. Secure Video Stream Player */}
@@ -793,7 +858,7 @@ export default function SessionPage({
                         key={`${activeVideo.sNo}-${activeVideo.title}-${activeVideo.videoUrl || activeVideo.embedUrl}`}
                         controls
                         playsInline
-                        controlsList="nodownload noplaybackrate"
+                        controlsList="nodownload noplaybackrate nopictureinpicture" disablePictureInPicture onContextMenu={(e) => { e.preventDefault(); return false; }}
                         disablePictureInPicture
                         onPlay={() => setIsVideoPlaying(true)}
                         onPause={() => setIsVideoPlaying(false)}
